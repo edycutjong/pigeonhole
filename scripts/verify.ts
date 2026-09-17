@@ -2,15 +2,16 @@
 // Proves: (1) offline predict() == on-chain factory.predict() for N random ids;
 //         (2) I2 (Σin − Σout == eth_getBalance) for every known pigeonhole;
 //         (3) factory.treasury() == the fact-sheet treasury.
-import { createPublicClient, http, parseAbi, getAddress, type Address, type Hex } from "viem";
-import { predict, saltOf, reduceLogs, ARC, type Movement } from "../src/lib/pigeonhole";
+import { createPublicClient, http, parseAbi, getAddress } from "viem";
+import { predict, saltOf, reduceLogs } from "../src/lib/pigeonhole";
+import { fetchMovements } from "../src/lib/logs";
 import deployment from "../deployments/arc-mainnet.json" with { type: "json" };
 
 const FACTORY = getAddress(deployment.factory as string);
 const TREASURY = getAddress(deployment.treasury as string);
 const N = Number(process.env.N ?? 50);
 
-const client = createPublicClient({ transport: http(ARC.rpcUrl) });
+const client = createPublicClient({ transport: http("https://rpc.mainnet.arc.io") });
 const factoryAbi = parseAbi(["function predict(bytes32) view returns (address)", "function treasury() view returns (address)"]);
 
 let fails = 0;
@@ -35,23 +36,12 @@ async function main() {
   console.log(`  ok: ${ok}/${N} offline predict() == on-chain predict()`);
 
   // (2) I2 for the known demo pigeonholes: reduce their system-emitter logs and compare to balance.
-  const knownIds = ["demo-paid"]; // grows as the seed script runs; discovery via Swept events happens in the page
+  const knownIds = ["demo-paid", "demo-erc20"]; // the two seeded cycles (native send; ERC-20 transfer()) — discovery via Swept events happens in the page
   for (const id of knownIds) {
     const p = predict(FACTORY, TREASURY, saltOf(id));
-    const transferEvent = { type: "event", name: "Transfer", inputs: [
-      { indexed: true, name: "from", type: "address" },
-      { indexed: true, name: "to", type: "address" },
-      { indexed: false, name: "value", type: "uint256" },
-    ]} as const;
+    // Chunked (≤9,000 blocks per call): the RPC rejects 10k+ spans with -32012. See src/lib/logs.ts.
     const from0 = BigInt((deployment as any).deployBlock ?? 0);
-    // Server-side topic filtering: the system emitter carries every native transfer, so filter by the pigeonhole.
-    const [inLogs, outLogs] = await Promise.all([
-      client.getLogs({ address: ARC.systemEmitter, event: transferEvent, args: { to: p }, fromBlock: from0, toBlock: "latest" }),
-      client.getLogs({ address: ARC.systemEmitter, event: transferEvent, args: { from: p }, fromBlock: from0, toBlock: "latest" }),
-    ]);
-    const movements: Movement[] = [...inLogs, ...outLogs].map((l) => ({
-      block: l.blockNumber!, logIndex: l.logIndex!, tx: l.transactionHash as Hex,
-      from: getAddress(l.args!.from as Address), to: getAddress(l.args!.to as Address), value: l.args!.value as bigint }));
+    const movements = await fetchMovements(client, p, from0, await client.getBlockNumber());
     const state = reduceLogs(p, movements);
     const balance = await client.getBalance({ address: p });
     if (state.unswept !== balance) fail(`I2 ${id} @ ${p}: unswept ${state.unswept} != balance ${balance}`);

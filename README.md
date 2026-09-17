@@ -10,7 +10,7 @@ with no key anywhere in the system.
 
 **[▶ Live on Arc mainnet](https://edycutjong.github.io/pigeonhole-arc/)** · [Factory `0x942b8c10…9A40`](https://explorer.arc.io/address/0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40) · [Demo & proof](./DEMO.md) · [Architecture](./ARCHITECTURE.md)
 
-![Arc mainnet](https://img.shields.io/badge/Arc-mainnet%205042-4ea1ff) ![USDC-as-gas](https://img.shields.io/badge/gas-USDC-3ddc84) ![tests](https://img.shields.io/badge/tests-25%20passing-3ddc84) ![license](https://img.shields.io/badge/license-MIT-blue)
+![Arc mainnet](https://img.shields.io/badge/Arc-mainnet%205042-4ea1ff) ![USDC-as-gas](https://img.shields.io/badge/gas-USDC-3ddc84) ![tests](https://img.shields.io/badge/tests-28%20passing-3ddc84) ![license](https://img.shields.io/badge/license-MIT-blue)
 
 </div>
 
@@ -37,22 +37,23 @@ It uses **Arc for the one property no other EVM chain has: USDC *is* the native 
 - On Arc, a codeless address holds native USDC and `SELFDESTRUCT` moves it (docs: *"SELFDESTRUCT is allowed on Arc, including during contract deployment"* and moves the native balance). On every other EVM chain USDC is an ERC-20 in the token contract — a self-destruct can't touch it, so the whole mechanism is impossible.
 - **USDC-as-gas** → deposit addresses, sweeps, and the merchant all live in one asset; no ETH, ever.
 - **EIP-7708 native `Transfer` logs** from the system emitter → "PAID" is a single `eth_getLogs`; **no backend, no database, no indexer.**
-- **Deterministic sub-second finality** → PAID flips within one block, no confirmation spinner.
+- **Deterministic finality** → a payment is final in the block that includes it; the page polls the log every 3 s and never shows a confirmation counter. (Latency was not benchmarked — see `DEMO.md`.)
 
 Take Arc out and you'd need: a key-management service (HD wallets + signing), an ERC-20 sweep contract per address or a hot wallet, an indexer to detect payments, and a separate gas token. Pigeonhole replaces all four with one 61-line contract and a static page.
 
 ## Proof (all on mainnet)
 
-- **Verified live:** `npm run verify` — offline `predict()` byte-matches on-chain `predict()` for 50 random ids, and invariant I2 (Σin − Σout == balance) holds. No wallet needed.
-- **25 tests:** 12 Foundry (incl. a fuzz test + invariants I1 post-sweep-delete, I3 funds-only-to-treasury) + 13 vitest (offline formula vs real on-chain addresses, the no-DB reducer, decimals).
-- **Benchmark (invariant I4):** steady-state balance-moving sweep ≈ **64,162 gas ≈ $0.0013** — see `bench/results.json` (N-sample; the spec pre-stated 64,140 from one probe, corrected here).
-- **Edge cases with tx links** (re-pay after sweep, empty sweep, native vs ERC-20 payment): [`DEMO.md`](./DEMO.md).
+- **Verified live:** `npm run verify` — offline `predict()` byte-matches on-chain `predict()` for 50 random ids, and invariant I2 (Σin − Σout == balance) holds for both seeded invoices. No wallet needed.
+- **28 tests:** 12 Foundry (incl. a fuzz test + invariants I1 post-sweep-delete, I3 funds-only-to-treasury) + 16 vitest (offline formula vs real on-chain addresses, the no-DB reducer, decimals, and three regression tests named for the `eth_getLogs` range defect they pin).
+- **Benchmark (invariant I4):** every balance-moving sweep on the production factory costs **64,162 gas ≈ $0.0013** — N=25 in `bench/results.json`, spread 12 gas (the probe factory, a different contract, measures 64,140).
+- **Edge cases with tx links** (re-pay after sweep, empty sweep, native send **and** ERC-20 `transfer()` payment — both flip PAID from the same system-emitter log): [`DEMO.md`](./DEMO.md).
 
 ## Run it
 ```sh
-cd build && npm install
+npm install
 npm run verify                 # read-only proof, no wallet
-cd contracts && forge test     # 12 contract tests
+npm test                       # 16 vitest
+forge test --root contracts    # 12 contract tests
 npm run dev                    # the page locally
 ```
 
@@ -65,9 +66,15 @@ key-optional payment primitives possible.
 - **Batch reconciliation** across thousands of invoices from `Swept` events alone.
 - A **primitive family** on the same Arc foundations: keeper-less standing orders (exact gas reimbursed in USDC), exactly-once payment keys, and card-style authorize/capture holds.
 
+## What we got wrong (dated, kept here rather than edited away)
+- **2026-09-17 — the `eth_getLogs` cap.** Day-2 code assumed the RPC allowed 100k-block spans; it allows 9,999 (10,000 → `-32012`). At ~2 blocks/s the live page would have frozen at "UNPAID" a few hours after deploy. Found by a pre-submission audit, fixed the same evening: every scan is chunked at 9,000 blocks, polled incrementally, and invoice URLs carry their creation block (`?from=`). Three regression tests pin it.
+- **2026-09-17 — "first-sweep cost 91,740".** The probe notes read the v1 sweep's 91,740 gas as the cost of sweeping a never-seen *address*. The bench refuted that: all 25 first sweeps cost 64,150–64,162. The extra 27,600 was the never-seen *beneficiary* (v1's wrong treasury). `DEMO.md` now says so.
+- **2026-09-17 — "64,140 corrected to 64,162".** Not a correction: 64,140 is the probe factory's bytecode, 64,162 is this one's. Different contracts, both right.
+
 ## Limitations (honest)
 - The treasury's immutability is also a **single point of failure**: if it were ever blocklisted, unswept invoices freeze until it's unblocked; recovery means a new factory.
-- The static page needs an **anonymous Arc RPC** (worked on 2026-09-17; the docs call early-mainnet RPC "permissioned").
+- The static page needs an **anonymous Arc RPC** (worked on 2026-09-17; the docs call early-mainnet RPC "permissioned"), and it scans logs in 9,000-block chunks — an invoice URL without `?from=` scans from the factory's deploy block, which gets slower every day (~19 extra calls per day of chain).
+- **Not built:** per-invoice unswept totals and a *Sweep all* button in the treasury view (`sweepMany` exists on-chain and is tested; the page calls `sweep` only). PAID latency is not benchmarked.
 - The `?amt=` amount is the merchant's claim — the chain proves what was *paid*.
 
 ## License

@@ -1,8 +1,9 @@
 #!/bin/zsh
 # Mainnet gas benchmark via cast (settles invariant I4). Retries around the flaky multi-backend RPC.
 RPC=https://rpc.mainnet.arc.io
-KS=~/.config/arc-microgrants/keystore/3550b005-480d-46dd-bb6d-7a531ff0772b
-PW=~/.config/arc-microgrants/keystore.pass
+# Your funded Arc keystore + its password file (any cast-compatible keystore works):
+#   KS=/path/to/keystore.json PW=/path/to/password.txt N=25 R=8 zsh scripts/bench.sh
+KS=${KS:?set KS=/path/to/keystore.json}; PW=${PW:?set PW=/path/to/password-file}
 F=0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40
 N=${N:-30}; R=${R:-10}
 SEND=(--rpc-url $RPC --keystore $KS --password-file $PW)

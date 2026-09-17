@@ -1,7 +1,8 @@
 // viem clients + Arc chain def + the RPC-capped log fetch the page depends on.
-import { createPublicClient, http, custom, defineChain, getAddress, parseAbi,
-  type Address, type Hex, type EIP1193Provider } from "viem";
-import { ARC, reduceLogs, type Movement, type InvoiceState } from "./lib/pigeonhole";
+import { createPublicClient, http, defineChain, getAddress, parseAbi,
+  type Address, type EIP1193Provider } from "viem";
+import { ARC, reduceLogs, type InvoiceState } from "./lib/pigeonhole";
+import { MovementCache, MAX_LOG_SPAN, spans } from "./lib/logs";
 import deployment from "../deployments/arc-mainnet.json";
 
 export const FACTORY = getAddress(deployment.factory);
@@ -25,51 +26,26 @@ export const factoryAbi = parseAbi([
   "event Swept(bytes32 indexed salt, address indexed pigeonhole, uint256 amount)",
 ]);
 
-const transferEvent = {
-  type: "event", name: "Transfer",
-  inputs: [
-    { indexed: true, name: "from", type: "address" },
-    { indexed: true, name: "to", type: "address" },
-    { indexed: false, name: "value", type: "uint256" },
-  ],
-} as const;
+// The public RPC rejects eth_getLogs spans of 10,000+ blocks (-32012) — see src/lib/logs.ts. Every scan is chunked
+// and the invoice view polls incrementally through this cache.
+const cache = new MovementCache(pub);
 
-const MAX_RANGE = 90_000n; // RPC caps eth_getLogs at 100k blocks / 2000 results — we filter by topic so results stay tiny
-
-async function getLogsChunked(args: { address: Address; argFilter: { to?: Address; from?: Address } }) {
-  const latest = await pub.getBlockNumber();
-  const out: any[] = [];
-  for (let start = DEPLOY_BLOCK; start <= latest; start += MAX_RANGE + 1n) {
-    const end = start + MAX_RANGE > latest ? latest : start + MAX_RANGE;
-    const logs = await pub.getLogs({ address: args.address, event: transferEvent, args: args.argFilter, fromBlock: start, toBlock: end });
-    out.push(...logs);
-  }
-  return out;
-}
-
-function toMovements(logs: any[]): Movement[] {
-  return logs.map((l) => ({
-    block: l.blockNumber as bigint, logIndex: l.logIndex as number, tx: l.transactionHash as Hex,
-    from: getAddress(l.args.from as Address), to: getAddress(l.args.to as Address), value: l.args.value as bigint,
-  }));
-}
-
-/** Full state for one pigeonhole, from the system emitter only (no double-count of the 6-dec ERC-20 log). */
-export async function invoiceState(pigeonhole: Address, amount18?: bigint): Promise<InvoiceState> {
-  const [inLogs, outLogs] = await Promise.all([
-    getLogsChunked({ address: ARC.systemEmitter, argFilter: { to: pigeonhole } }),
-    getLogsChunked({ address: ARC.systemEmitter, argFilter: { from: pigeonhole } }),
-  ]);
-  return reduceLogs(pigeonhole, toMovements([...inLogs, ...outLogs]), amount18);
+/**
+ * Full state for one pigeonhole, from the system emitter only (no double-count of the 6-dec ERC-20 log).
+ * `fromBlock` is the block the invoice was created at (carried in the URL as ?from=); without it we scan from the
+ * factory's deploy block, which gets slower as the chain grows (~170k blocks/day at 2 blocks/s).
+ */
+export async function invoiceState(pigeonhole: Address, amount18?: bigint, fromBlock: bigint = DEPLOY_BLOCK): Promise<InvoiceState> {
+  const movements = await cache.movements(pigeonhole, fromBlock < DEPLOY_BLOCK ? DEPLOY_BLOCK : fromBlock);
+  return reduceLogs(pigeonhole, movements, amount18);
 }
 
 /** All Swept events from the factory → the treasury view's source of truth. */
 export async function sweptEvents() {
   const latest = await pub.getBlockNumber();
   const out: any[] = [];
-  for (let start = DEPLOY_BLOCK; start <= latest; start += MAX_RANGE + 1n) {
-    const end = start + MAX_RANGE > latest ? latest : start + MAX_RANGE;
-    const logs = await pub.getContractEvents({ address: FACTORY, abi: factoryAbi, eventName: "Swept", fromBlock: start, toBlock: end });
+  for (const [a, b] of spans(DEPLOY_BLOCK, latest, MAX_LOG_SPAN)) {
+    const logs = await pub.getContractEvents({ address: FACTORY, abi: factoryAbi, eventName: "Swept", fromBlock: a, toBlock: b });
     out.push(...logs);
   }
   return out;

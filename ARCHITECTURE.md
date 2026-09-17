@@ -46,8 +46,8 @@ unswept = paidIn − sweptOut            (invariant I2: == eth_getBalance(pigeon
 status  = UNPAID | PAID (unswept ≥ asked) | SWEPT (paid>0 && unswept==0)
 ```
 
-The ERC-20 interface at `0x3600…0000` *also* logs an `transfer()` at 6 decimals — the reducer counts
-the system emitter only, never both. Ordering key is `(block, logIndex)`, never `block.timestamp`
+The ERC-20 interface at `0x3600…0000` also emits a 6-decimal `Transfer` for `transfer()` calls (two logs per ERC-20
+payment, proven in `DEMO.md`) — the reducer counts the system emitter only, never both. Ordering key is `(block, logIndex)`, never `block.timestamp`
 (Arc timestamps are non-decreasing, not strictly increasing). `src/lib/pigeonhole.ts` holds the pure
 `predict`/`reduceLogs`/`fmtUsdc18`; its `predict` is unit-tested to byte-match the on-chain
 `predict` against real mainnet addresses.
@@ -64,7 +64,7 @@ sequenceDiagram
   M-->>P: address + QR
   P->>H: native USDC send (21,000 gas)
   E-->>M: Transfer(P → H)   → PAID within 1 block (deterministic finality)
-  M->>F: sweep(salt)  (anyone; ~64,140 gas)
+  M->>F: sweep(salt)  (anyone; 64,162 gas, N=26)
   F->>H: create2 → constructor SELFDESTRUCT
   H->>T: whole balance
   E-->>M: Transfer(H → T) + Swept(salt, H, amount)
@@ -76,9 +76,9 @@ sequenceDiagram
 |---|---|
 | Contract | Solidity 0.8.30, Foundry, `evm_version=osaka`; deployed via the Arachnid CREATE2 factory (deterministic) |
 | Client | Vite + TypeScript + viem 2; a small hash router; `qrcode` for the QR; no framework |
-| State | none server-side — `eth_getLogs` (system emitter, topic-filtered) + `eth_getBalance` + `localStorage` for the merchant's own invoice ids |
-| Tests | 12 Foundry (incl. fuzz + I1/I3) + 13 vitest (predict vs on-chain, reducer, decimals) |
-| Scripts | `verify.ts` (offline==on-chain, I2), `bench.sh` (I4 gas distribution) |
+| State | none server-side — `eth_getLogs` (system emitter, topic-filtered, chunked ≤ 9,000 blocks and polled incrementally: the RPC rejects 10k+ spans) + `localStorage` for the merchant's own invoice ids and their creation blocks |
+| Tests | 12 Foundry (incl. fuzz + I1/I3) + 16 vitest (predict vs on-chain, reducer, decimals, `eth_getLogs` chunking) |
+| Scripts | `verify.ts` (offline==on-chain, I2 via `eth_getBalance`), `bench.sh` (I4 gas distribution) |
 | Hosting | GitHub Pages (static) |
 
 ## Residual risks (honest)

@@ -1,7 +1,7 @@
 import QRCode from "qrcode";
-import { encodeFunctionData, type Address, type Hex } from "viem";
+import { encodeFunctionData } from "viem";
 import { predict, saltOf, fmtUsdc18, ARC, type InvoiceState } from "./lib/pigeonhole";
-import { FACTORY, TREASURY, arc, factoryAbi, invoiceState, sweptEvents, connectWallet, txUrl, addrUrl } from "./chain";
+import { FACTORY, TREASURY, DEPLOY_BLOCK, pub, factoryAbi, invoiceState, sweptEvents, connectWallet, txUrl, addrUrl } from "./chain";
 
 const app = () => document.getElementById("app")!;
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]!));
@@ -9,7 +9,7 @@ const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 
 // localStorage: invoice ids this browser created (convenience only; treasury view also reads Swept events)
 const KEY = "pigeonhole.invoices";
-type Saved = { id: string; amount?: string };
+type Saved = { id: string; amount?: string; from?: string };
 const load = (): Saved[] => { try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch { return []; } };
 const remember = (s: Saved) => { const a = load().filter((x) => x.id !== s.id); a.unshift(s); try { localStorage.setItem(KEY, JSON.stringify(a.slice(0, 50))); } catch {} };
 
@@ -36,23 +36,28 @@ function viewNew() {
       <div class="row" style="margin-top:16px"><button id="go">Create deposit address →</button></div>
       <p class="hint">No transaction, no key. The address is <code>CREATE2(factory, keccak256(id), treasury)</code> — computed offline, verified on-chain.</p>
     </div>`;
-  const go = () => {
+  const go = async () => {
     const id = (document.getElementById("id") as HTMLInputElement).value.trim();
     const amt = (document.getElementById("amt") as HTMLInputElement).value.trim();
     if (!id) return;
-    remember({ id, amount: amt || undefined });
-    location.hash = `#/i/${encodeURIComponent(id)}${amt ? `?amt=${encodeURIComponent(amt)}` : ""}`;
+    // Record the creation block in the URL so the invoice view scans from here, not from the factory's deploy block
+    // (the RPC caps eth_getLogs at 10k blocks per call; the chain adds ~170k blocks a day).
+    const from = await pub.getBlockNumber().catch(() => DEPLOY_BLOCK);
+    remember({ id, amount: amt || undefined, from: from.toString() });
+    const q = new URLSearchParams(); if (amt) q.set("amt", amt); q.set("from", from.toString());
+    location.hash = `#/i/${encodeURIComponent(id)}?${q}`;
   };
   document.getElementById("go")!.onclick = go;
   (document.getElementById("id") as HTMLInputElement).addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
 }
 
 // ---------- Invoice detail ----------
-async function viewInvoice(id: string, amtStr?: string) {
+async function viewInvoice(id: string, amtStr?: string, fromStr?: string) {
   const salt = saltOf(id);
   const pigeonhole = predict(FACTORY, TREASURY, salt);
   const amount18 = amtStr ? BigInt(Math.round(parseFloat(amtStr) * 1e6)) * 10n ** 12n : undefined;
-  const filter = `eth_getLogs({ address: ${short(ARC.systemEmitter)}, topics: [Transfer, *, ${short(pigeonhole)}] })`;
+  const fromBlock = fromStr && /^\d+$/.test(fromStr) ? BigInt(fromStr) : (load().find((s) => s.id === id)?.from ? BigInt(load().find((s) => s.id === id)!.from!) : DEPLOY_BLOCK);
+  const filter = `eth_getLogs({ address: ${short(ARC.systemEmitter)}, topics: [Transfer, *, ${short(pigeonhole)}], fromBlock: ${fromBlock} })`;
   app().innerHTML = `
     <a class="muted" href="#/">← new invoice</a>
     <h1>Invoice <code>${esc(id)}</code></h1>
@@ -63,7 +68,7 @@ async function viewInvoice(id: string, amtStr?: string) {
         <div id="qr" class="qr" style="margin-top:14px"></div>
         <div class="row" style="margin-top:14px">
           <button id="pay">Pay with wallet${amtStr ? ` (${esc(amtStr)} USDC)` : ""}</button>
-          <button id="sweep" class="ghost">Sweep → treasury</button>
+          <button id="sweep" class="ghost" disabled>Sweep → treasury</button>
         </div>
         <p class="hint">Or send USDC to the address from any wallet on Arc. ${amtStr ? `Asked: <b>${esc(amtStr)} USDC</b>.` : ""}</p>
         <div id="msg" class="hint"></div>
@@ -85,8 +90,11 @@ async function viewInvoice(id: string, amtStr?: string) {
   QRCode.toCanvas(pigeonhole, { width: 180, margin: 1 }).then((c: HTMLCanvasElement) => document.getElementById("qr")!.appendChild(c)).catch(() => {});
 
   async function refresh() {
-    const s = await invoiceState(pigeonhole, amount18);
+    let s: InvoiceState;
+    try { s = await invoiceState(pigeonhole, amount18, fromBlock); }
+    catch (e: any) { document.getElementById("moves")!.innerHTML = `<p class="err">RPC error: ${esc(e.shortMessage || e.message || String(e))} — retrying…</p>`; return; }
     document.getElementById("st")!.innerHTML = badge(s.status);
+    (document.getElementById("sweep") as HTMLButtonElement).disabled = s.unswept === 0n; // nothing to sweep (spec: disabled at 0 unswept)
     document.getElementById("paidin")!.textContent = `${fmtUsdc18(s.paidIn)} USDC`;
     document.getElementById("unswept")!.textContent = `${fmtUsdc18(s.unswept)} USDC`;
     const rows = [...s.payments.map((m) => ["in", m]), ...s.sweeps.map((m) => ["out", m])] as ["in" | "out", typeof s.payments[0]][];
@@ -114,7 +122,7 @@ async function viewInvoice(id: string, amtStr?: string) {
     try {
       const { address, provider } = await connectWallet();
       const data = encodeFunctionData({ abi: factoryAbi, functionName: "sweep", args: [salt] });
-      const hash = (await provider.request({ method: "eth_sendTransaction", params: [{ from: address, to: FACTORY, data, maxFeePerGas: "0x4a817c800" /* 20 gwei */ }] })) as string;
+      const hash = (await provider.request({ method: "eth_sendTransaction", params: [{ from: address, to: FACTORY, data }] })) as string; // wallet estimates the fee (the base fee floor is 20 Gwei; never pin it)
       msg.innerHTML = `Sweeping: <a href="${txUrl(hash)}" target="_blank" rel="noopener">${short(hash)} ↗</a>`;
       setTimeout(refresh, 1500);
     } catch (e: any) { msg.innerHTML = `<span class="err">${esc(e.message || String(e))}</span>`; }
@@ -129,7 +137,7 @@ async function viewTreasury() {
     <div class="card"><h2>Invoices this browser created</h2><div id="mine"></div></div>`;
   const mine = load();
   document.getElementById("mine")!.innerHTML = mine.length ? `<table><thead><tr><th>id</th><th>asked</th><th></th></tr></thead><tbody>${
-    mine.map((m) => `<tr><td class="mono">${esc(m.id)}</td><td class="mono">${m.amount ? esc(m.amount) + " USDC" : "—"}</td><td><a href="#/i/${encodeURIComponent(m.id)}${m.amount ? `?amt=${encodeURIComponent(m.amount)}` : ""}">open</a></td></tr>`).join("")
+    mine.map((m) => { const q = new URLSearchParams(); if (m.amount) q.set("amt", m.amount); if (m.from) q.set("from", m.from); return `<tr><td class="mono">${esc(m.id)}</td><td class="mono">${m.amount ? esc(m.amount) + " USDC" : "—"}</td><td><a href="#/i/${encodeURIComponent(m.id)}${q.toString() ? "?" + q : ""}">open</a></td></tr>`; }).join("")
   }</tbody></table>` : `<p class="muted">None yet — create one from “New invoice”.</p>`;
   try {
     const evs = await sweptEvents();
@@ -145,7 +153,7 @@ function route() {
   const [path, query] = h.split("?");
   const params = new URLSearchParams(query || "");
   if (path === "/" || path === "") return viewNew();
-  if (path.startsWith("/i/")) return viewInvoice(decodeURIComponent(path.slice(3)), params.get("amt") || undefined);
+  if (path.startsWith("/i/")) return viewInvoice(decodeURIComponent(path.slice(3)), params.get("amt") || undefined, params.get("from") || undefined);
   if (path === "/treasury") return viewTreasury();
   return viewNew();
 }
