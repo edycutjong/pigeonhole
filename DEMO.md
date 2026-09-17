@@ -18,7 +18,7 @@
 | Sweep after a **native send** (production factory, `demo-paid`, 0.02 USDC) | 64,162 gas ≈ $0.0013; `Transfer(pigeonhole → treasury)` + `Swept` | [`0xe639255a…`](https://explorer.arc.io/tx/0xe639255a52b96c7f4733608776f6cd11eca3c615748350877d2ea384a6988ea6) |
 | **Pay via ERC-20 `transfer()`** (`demo-erc20`, `0x3600…0000.transfer(pigeonhole, 10000)`) | receipt has **two** logs: system emitter `0xffff…fffE` (1e16, 18-dec) + ERC-20 `0x3600…0000` (10000, 6-dec) — the page counts only the first, so PAID flips and nothing double-counts | [`0x64ce87be…`](https://explorer.arc.io/tx/0x64ce87be84ef57938c0af91b7c6a89c9eb736ff3a8627dbf2c4f1a069a936a64) |
 | Sweep of the ERC-20-paid address | 64,162 gas — same as the native-paid case; address back to code `0x` / nonce 0 | [`0xf5883aea…`](https://explorer.arc.io/tx/0xf5883aeae9a0c872241de57b348ebe688bf6f80b58542f7d5166bfc24b5f8111) |
-| Sweep of an empty address | harmless no-op, `Swept(…, 0)` | [`0x2daaf54a…`](https://explorer.arc.io/tx/0x2daaf54abdd9b42e8990a3573cf00c63cddfa4ac3d34a07c652fb7c9e8a9fef9) |
+| Sweep of an empty address (probe factory; production: 8 `bench-empty-*` rows in `bench/rows.csv` at 64,162) | harmless no-op, `Swept(…, 0)` | [`0x2daaf54a…`](https://explorer.arc.io/tx/0x2daaf54abdd9b42e8990a3573cf00c63cddfa4ac3d34a07c652fb7c9e8a9fef9) |
 | **Re-pay a swept address (later tx)** (probe factory) | succeeds — EIP-6780 fully deleted the throwaway, and Arc's destructed-account revert only applies *within* the same tx (measured, not doc-quoted) | [`0x531f09ff…`](https://explorer.arc.io/tx/0x531f09ffacdd006cb7c3f5c009e665ca62331c03cc867ebf5bdef2ef7cd6a76c) |
 | **Re-sweep** (probe factory) | 64,140 gas (the probe factory's bytecode; production is 64,162), balance to treasury, address reset again | [`0x631814ad…`](https://explorer.arc.io/tx/0x631814adf42ce99763ac5ca53859e0b0f677538707a6246a23843bb4e83fef51) |
 | Payer blocklisted / self-send | *documented only* — a blocklisted payer's tx reverts (no log, never PAID); a self-send emits no EIP-7708 log | — |
@@ -29,7 +29,7 @@ Screenshot of a same-tx create+destruct sweep rendering on the explorer (logged-
 ```sh
 npm install
 npm run verify                  # read-only: offline predict() == on-chain (N=50), invariant I2 for both seeded cycles. No wallet.
-npm test                        # 19 vitest: formula vs real addresses, the no-DB reducer, decimals, eth_getLogs chunking/dedupe/overlap
+npm test                        # 21 vitest: formula vs real addresses, the no-DB reducer, decimals, eth_getLogs chunking/dedupe/overlap/race
 git submodule update --init     # forge-std (or clone with --recurse-submodules)
 forge test --root contracts     # 12 contract tests incl. fuzz + I1/I3
 # gas benchmark (spends ~$0.05 of USDC on Arc; any funded cast keystore):

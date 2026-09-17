@@ -1,7 +1,7 @@
 import QRCode from "qrcode";
 import { encodeFunctionData } from "viem";
 import { predict, saltOf, fmtUsdc18, ARC, type InvoiceState } from "./lib/pigeonhole";
-import { FACTORY, TREASURY, DEPLOY_BLOCK, pub, factoryAbi, invoiceState, sweptEvents, connectWallet, txUrl, addrUrl } from "./chain";
+import { FACTORY, TREASURY, DEPLOY_BLOCK, pub, factoryAbi, invoiceState, sweptEvents, connectWallet, txUrl, addrUrl, type LiveInvoiceState } from "./chain";
 
 const app = () => document.getElementById("app")!;
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]!));
@@ -48,7 +48,8 @@ function viewNew() {
     // (the RPC caps eth_getLogs at 10k blocks per call; the chain adds ~170k blocks a day).
     const from = await pub.getBlockNumber().catch(() => DEPLOY_BLOCK);
     remember({ id, amount: amt || undefined, from: from.toString() });
-    const q = new URLSearchParams(); if (amt) q.set("amt", amt); q.set("from", from.toString());
+    const saved = load().find((s) => s.id === id)?.from; // an id created before keeps its original window
+    const q = new URLSearchParams(); if (amt) q.set("amt", amt); q.set("from", saved ?? from.toString());
     location.hash = `#/i/${encodeURIComponent(id)}?${q}`;
   };
   document.getElementById("go")!.onclick = go;
@@ -96,14 +97,14 @@ async function viewInvoice(id: string, amtStr?: string, fromStr?: string) {
   QRCode.toCanvas(pigeonhole, { width: 180, margin: 1 }).then((c: HTMLCanvasElement) => document.getElementById("qr")!.appendChild(c)).catch(() => {});
 
   async function refresh() {
-    let s: InvoiceState & { balance: bigint; i2: boolean };
+    let s: LiveInvoiceState;
     try { s = await invoiceState(pigeonhole, amount18, fromBlock); }
     catch (e: any) { document.getElementById("moves")!.innerHTML = `<p class="err">RPC error: ${esc(e.shortMessage || e.message || String(e))} — retrying…</p>`; return; }
     document.getElementById("st")!.innerHTML = badge(s.status);
     (document.getElementById("sweep") as HTMLButtonElement).disabled = s.unswept === 0n; // nothing to sweep (spec: disabled at 0 unswept)
     document.getElementById("paidin")!.textContent = `${fmtUsdc18(s.paidIn)} USDC`;
     document.getElementById("unswept")!.textContent = `${fmtUsdc18(s.unswept)} USDC`;
-    document.getElementById("i2")!.innerHTML = s.i2 ? `<span class="ok">holds</span> (eth_getBalance ${fmtUsdc18(s.balance)})` : `<span class="err">mismatch</span> — balance ${fmtUsdc18(s.balance)} USDC, rescanning`;
+    document.getElementById("i2")!.innerHTML = s.i2 ? `<span class="ok">holds</span> (eth_getBalance ${fmtUsdc18(s.balance)})${s.rescanned ? " · window widened" : ""}` : `<span class="err">mismatch</span> — Σlogs ${fmtUsdc18(s.unswept)} vs balance ${fmtUsdc18(s.balance)} USDC, re-checking next poll`;
     const rows = [...s.payments.map((m) => ["in", m]), ...s.sweeps.map((m) => ["out", m])] as ["in" | "out", typeof s.payments[0]][];
     rows.sort((a, b) => (a[1].block === b[1].block ? a[1].logIndex - b[1].logIndex : a[1].block < b[1].block ? -1 : 1));
     document.getElementById("moves")!.innerHTML = rows.length ? `<table><thead><tr><th>dir</th><th>value</th><th>block</th><th>tx</th></tr></thead><tbody>${

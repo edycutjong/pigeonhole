@@ -10,7 +10,7 @@ with no key anywhere in the system.
 
 **[▶ Live on Arc mainnet](https://edycutjong.github.io/pigeonhole-arc/)** · [Factory `0x942b8c10…9A40`](https://explorer.arc.io/address/0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40) · [Demo & proof](./DEMO.md) · [Architecture](./ARCHITECTURE.md)
 
-![Arc mainnet](https://img.shields.io/badge/Arc-mainnet%205042-4ea1ff) ![USDC-as-gas](https://img.shields.io/badge/gas-USDC-3ddc84) ![tests](https://img.shields.io/badge/tests-31%20passing-3ddc84) ![license](https://img.shields.io/badge/license-MIT-blue)
+![Arc mainnet](https://img.shields.io/badge/Arc-mainnet%205042-4ea1ff) ![USDC-as-gas](https://img.shields.io/badge/gas-USDC-3ddc84) ![tests](https://img.shields.io/badge/tests-33%20passing-3ddc84) ![license](https://img.shields.io/badge/license-MIT-blue)
 
 </div>
 
@@ -44,7 +44,7 @@ Take Arc out and you'd need: a key-management service (HD wallets + signing), an
 ## Proof (all on mainnet)
 
 - **Verified live:** `npm run verify` — offline `predict()` byte-matches on-chain `predict()` for 50 random ids, and invariant I2 (Σin − Σout == balance) holds for both seeded invoices. No wallet needed. The page runs the same I2 check on every refresh and shows it.
-- **31 tests:** 12 Foundry (incl. a fuzz test + invariants I1 no-code-after-sweep, I3 funds-only-to-treasury) + 19 vitest (offline formula vs real on-chain addresses, the no-DB reducer, decimals, and six regression tests named for the `eth_getLogs` defects they pin: the 10k-block cap, poll overlap, RPC head skew, re-created invoice ids).
+- **33 tests:** 12 Foundry (incl. a fuzz test + invariants I1 no-code-after-sweep, I3 funds-only-to-treasury) + 21 vitest (offline formula vs real on-chain addresses, the no-DB reducer, decimals, and eight regression tests named for the `eth_getLogs` defects they pin: the 10k-block cap, poll overlap, RPC head skew, re-created invoice ids, the invalidate-while-scanning race).
 - **Benchmark (invariant I4):** a balance-moving sweep on the production factory costs **64,162 gas (p50) ≈ $0.0013** — N=25 in `bench/results.json`, min 64,150 when the salt happens to contain a zero byte (calldata pricing, not execution); the probe factory, a different contract, measures 64,140.
 - **Edge cases with tx links** (re-pay after sweep, empty sweep, native send **and** ERC-20 `transfer()` payment — both flip PAID from the same system-emitter log): [`DEMO.md`](./DEMO.md).
 
@@ -52,7 +52,7 @@ Take Arc out and you'd need: a key-management service (HD wallets + signing), an
 ```sh
 npm install
 npm run verify                 # read-only proof, no wallet
-npm test                       # 19 vitest
+npm test                       # 21 vitest
 forge test --root contracts    # 12 contract tests (forge-std is a submodule: clone with --recurse-submodules or run `git submodule update --init`)
 npm run dev                    # the page locally
 ```
@@ -73,7 +73,7 @@ key-optional payment primitives possible.
 
 ## Limitations (honest)
 - The treasury's immutability is also a **single point of failure**: if it were ever blocklisted, unswept invoices freeze until it's unblocked; recovery means a new factory.
-- The static page needs an **anonymous Arc RPC** (worked on 2026-09-17; the docs call early-mainnet RPC "permissioned"), and it scans logs in 9,000-block chunks — an invoice URL without `?from=` scans from the factory's deploy block, which gets slower every day (~19 chunks ≈ 38 `eth_getLogs` calls per day of chain); the treasury view always scans from the deploy block.
+- The static page needs an **anonymous Arc RPC** (worked on 2026-09-17; the docs call early-mainnet RPC "permissioned"), and it scans logs in 9,000-block chunks — an invoice URL without `?from=` scans from the factory's deploy block, which gets slower every day (~19 chunks ≈ 38 `eth_getLogs` calls per day of chain); the treasury view always scans from the deploy block. When the live I2 check mismatches twice in a row, the page rescans that invoice from the deploy block — correct, but a full walk each time it happens.
 - **Not built:** per-invoice unswept totals and a *Sweep all* button in the treasury view (`sweepMany` exists on-chain and is tested; the page calls `sweep` only). PAID latency is not benchmarked.
 - The `?amt=` amount is the merchant's claim — the chain proves what was *paid*.
 

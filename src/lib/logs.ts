@@ -71,42 +71,51 @@ export class MovementCache {
   private scannedTo = new Map<string, bigint>();
   private scannedFrom = new Map<string, bigint>();
   private moves = new Map<string, Map<string, Movement>>();
-  private inflight = new Map<string, Promise<Movement[]>>();
+  private inflight = new Map<string, { from: bigint; gen: number; p: Promise<Movement[]> }>();
+  private gen = new Map<string, number>(); // bumped by invalidate(); a scan started before the bump must not write state
   constructor(private client: LogClient) {}
 
   /** Movements for `pigeonhole` from `fromBlock` to the chain head. A lower `fromBlock` than before widens the scan. */
-  movements(pigeonhole: Address, fromBlock: bigint): Promise<Movement[]> {
+  async movements(pigeonhole: Address, fromBlock: bigint): Promise<Movement[]> {
     const key = getAddress(pigeonhole);
     const running = this.inflight.get(key);
-    if (running) return running;
-    const p = this.scan(key, fromBlock).finally(() => this.inflight.delete(key));
-    this.inflight.set(key, p);
+    if (running) {
+      if (running.from <= fromBlock) return running.p;        // same or wider scan already in flight: share it
+      await running.p.catch(() => {});                          // narrower one: let it finish, then widen below
+    }
+    const gen = this.gen.get(key) ?? 0;
+    const p = this.scan(key, fromBlock, gen).finally(() => { if (this.inflight.get(key)?.p === p) this.inflight.delete(key); });
+    this.inflight.set(key, { from: fromBlock, gen, p });
     return p;
   }
 
-  /** Forget everything about one address so the next call rescans from its `fromBlock`. */
+  /** Forget everything about one address; any scan already in flight will not write its (stale) window back. */
   invalidate(pigeonhole: Address) {
     const key = getAddress(pigeonhole);
+    this.gen.set(key, (this.gen.get(key) ?? 0) + 1);
+    this.inflight.delete(key);
     this.scannedTo.delete(key); this.scannedFrom.delete(key); this.moves.delete(key);
   }
 
-  private async scan(key: Address, fromBlock: bigint): Promise<Movement[]> {
+  private async scan(key: Address, fromBlock: bigint, gen: number): Promise<Movement[]> {
     const latest = await this.client.getBlockNumber();
-    const bucket = this.moves.get(key) ?? new Map<string, Movement>();
-    this.moves.set(key, bucket);
+    const fresh = new Map<string, Movement>();
     const prevTo = this.scannedTo.get(key), prevFrom = this.scannedFrom.get(key);
-    // A caller asking for an earlier start than we ever scanned: fill the gap below first.
-    if (prevFrom !== undefined && fromBlock < prevFrom) {
-      for (const m of await fetchMovements(this.client, key, fromBlock, prevFrom - 1n)) bucket.set(keyOf(m), m);
-      this.scannedFrom.set(key, fromBlock);
+    let start: bigint, newFrom: bigint;
+    if (prevTo === undefined) { start = fromBlock; newFrom = fromBlock; }
+    else {
+      newFrom = prevFrom !== undefined && prevFrom < fromBlock ? prevFrom : fromBlock;
+      if (prevFrom !== undefined && fromBlock < prevFrom)      // caller wants earlier history: fill the gap below first
+        for (const m of await fetchMovements(this.client, key, fromBlock, prevFrom - 1n)) fresh.set(keyOf(m), m);
+      start = prevTo - RESCAN_OVERLAP; if (start < newFrom) start = newFrom;
     }
-    let start: bigint;
-    if (prevTo === undefined) { start = fromBlock; this.scannedFrom.set(key, fromBlock); }
-    else { start = prevTo - RESCAN_OVERLAP; if (start < (this.scannedFrom.get(key) ?? fromBlock)) start = this.scannedFrom.get(key) ?? fromBlock; }
-    if (start <= latest) {
-      for (const m of await fetchMovements(this.client, key, start, latest)) bucket.set(keyOf(m), m);
-      this.scannedTo.set(key, latest);
-    }
+    if (start <= latest) for (const m of await fetchMovements(this.client, key, start, latest)) fresh.set(keyOf(m), m);
+    if ((this.gen.get(key) ?? 0) !== gen) return [...fresh.values()];   // invalidated meanwhile: report, don't persist
+    const bucket = this.moves.get(key) ?? new Map<string, Movement>();
+    for (const [k, m] of fresh) bucket.set(k, m);
+    this.moves.set(key, bucket);
+    this.scannedFrom.set(key, newFrom);
+    if (start <= latest) this.scannedTo.set(key, latest); else if (prevTo !== undefined) this.scannedTo.set(key, prevTo);
     return [...bucket.values()];
   }
 }

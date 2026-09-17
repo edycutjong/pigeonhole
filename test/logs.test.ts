@@ -84,4 +84,30 @@ describe("eth_getLogs chunking — RPC rejects 10k+ block spans with -32012", ()
     expect(await cache.movements(P, latest + 1n)).toHaveLength(0);
     expect(calls).toHaveLength(0);
   });
+
+  it("invalidate() during an in-flight narrow scan does not let the stale scan write back (history stays findable)", async () => {
+    const deploy = 21_337_182n; const latest = deploy + 30_000n;
+    const logs = [{ blockNumber: deploy + 5n, logIndex: 0, transactionHash: "0xpay", args: { from: T, to: P, value: 9n } }];
+    let release!: () => void; const gate = new Promise<void>((r) => (release = r));
+    const { client } = fakeClient(latest, logs);
+    const slow: LogClient = { getBlockNumber: async () => latest, getLogs: async (a) => { await gate; return client.getLogs(a); } };
+    const cache = new MovementCache(slow);
+    const narrow = cache.movements(P, latest - 100n);          // in flight, will find nothing
+    cache.invalidate(P);
+    const wide = cache.movements(P, deploy);                    // must NOT share the narrow scan
+    release();
+    expect(await narrow).toHaveLength(0);
+    expect((await wide).map((m) => m.tx)).toEqual(["0xpay"]);
+    expect((await cache.movements(P, deploy)).map((m) => m.tx)).toEqual(["0xpay"]); // and the wide window persisted
+  });
+
+  it("a wider scan already in flight is shared; a narrower one is awaited then widened", async () => {
+    const deploy = 21_337_182n; const latest = deploy + 100n;
+    const { client, calls } = fakeClient(latest);
+    const cache = new MovementCache(client);
+    const wide = cache.movements(P, deploy);
+    const narrowReq = cache.movements(P, latest - 10n);
+    expect(await narrowReq).toBe(await wide);                   // shared promise result
+    expect(calls).toHaveLength(2);                              // one span, two directions — no second scan
+  });
 });

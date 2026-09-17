@@ -76,8 +76,8 @@ sequenceDiagram
 |---|---|
 | Contract | Solidity 0.8.30, Foundry, `evm_version=osaka`; deployed via the Arachnid CREATE2 factory (deterministic) |
 | Client | Vite + TypeScript + viem 2; a small hash router; `qrcode` for the QR; no framework |
-| State | none server-side — `eth_getLogs` (system emitter, topic-filtered, chunked ≤ 9,000 blocks, polled incrementally with a 10-block overlap and (tx, logIndex) dedupe: the RPC rejects 10k+ spans and its backends' heads can differ) + a live I2 check (`Σlogs == eth_getBalance`, rescans from the deploy block on mismatch) + `localStorage` for the merchant's own invoice ids and their creation blocks |
-| Tests | 12 Foundry (incl. fuzz + I1/I3) + 19 vitest (predict vs on-chain, reducer, decimals, `eth_getLogs` chunking/dedupe/overlap) |
+| State | none server-side — `eth_getLogs` (system emitter, topic-filtered, chunked ≤ 9,000 blocks, polled incrementally with a 10-block overlap and (tx, logIndex) dedupe: the RPC rejects 10k+ spans and its backends' heads can differ) + a live I2 check (`Σlogs == eth_getBalance`; two consecutive mismatches → rescan from the deploy block) + `localStorage` for the merchant's own invoice ids and their creation blocks |
+| Tests | 12 Foundry (incl. fuzz + I1/I3) + 21 vitest (predict vs on-chain, reducer, decimals, `eth_getLogs` chunking/dedupe/overlap/race) |
 | Scripts | `verify.ts` (offline==on-chain, I2 via `eth_getBalance`), `bench.sh` (I4 gas distribution) |
 | Hosting | GitHub Pages (static) |
 

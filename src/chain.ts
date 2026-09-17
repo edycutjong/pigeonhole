@@ -35,18 +35,31 @@ const cache = new MovementCache(pub);
  * `fromBlock` is the block the invoice was created at (carried in the URL as ?from=); without it we scan from the
  * factory's deploy block, which gets slower as the chain grows (~170k blocks/day at 2 blocks/s).
  */
-export async function invoiceState(pigeonhole: Address, amount18?: bigint, fromBlock: bigint = DEPLOY_BLOCK): Promise<InvoiceState & { balance: bigint; i2: boolean }> {
+const mismatches = new Map<string, number>(); // consecutive I2 mismatches per pigeonhole
+
+export type LiveInvoiceState = InvoiceState & { balance: bigint; i2: boolean; rescanned: boolean };
+
+export async function invoiceState(pigeonhole: Address, amount18?: bigint, fromBlock: bigint = DEPLOY_BLOCK): Promise<LiveInvoiceState> {
+  const key = getAddress(pigeonhole);
   const from = fromBlock < DEPLOY_BLOCK ? DEPLOY_BLOCK : fromBlock;
-  let [movements, balance] = await Promise.all([cache.movements(pigeonhole, from), pub.getBalance({ address: pigeonhole })]);
-  let state = reduceLogs(pigeonhole, movements, amount18);
-  // Invariant I2, checked live: Σin − Σout must equal the chain balance. If it does not, the scan window missed
-  // history (e.g. an invoice id re-created after it was already paid, or a skewed RPC head) — rescan from the deploy block.
-  if (state.unswept !== balance && from > DEPLOY_BLOCK) {
-    cache.invalidate(pigeonhole);
-    movements = await cache.movements(pigeonhole, DEPLOY_BLOCK);
-    state = reduceLogs(pigeonhole, movements, amount18);
+  let [movements, balance] = await Promise.all([cache.movements(key, from), pub.getBalance({ address: key })]);
+  let state = reduceLogs(key, movements, amount18);
+  let rescanned = false;
+  if (state.unswept === balance) mismatches.delete(key);
+  else {
+    // Invariant I2, checked live: Σin − Σout must equal the chain balance. One mismatch is usually RPC head skew
+    // (getBalance served by a backend ahead of getLogs) and heals on the next poll via the overlap re-read. Two in a
+    // row means the scan window is wrong (e.g. an invoice id re-created after it was paid): rescan from the deploy block.
+    const n = (mismatches.get(key) ?? 0) + 1; mismatches.set(key, n);
+    if (n >= 2 && from > DEPLOY_BLOCK) {
+      cache.invalidate(key);
+      movements = await cache.movements(key, DEPLOY_BLOCK);
+      state = reduceLogs(key, movements, amount18);
+      rescanned = true;
+      if (state.unswept === balance) mismatches.delete(key);
+    }
   }
-  return { ...state, balance, i2: state.unswept === balance };
+  return { ...state, balance, i2: state.unswept === balance, rescanned };
 }
 
 /** All Swept events from the factory → the treasury view's source of truth. */
