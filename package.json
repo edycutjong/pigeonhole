@@ -1,0 +1,19 @@
+{
+  "name": "pigeonhole",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "verify": "tsx scripts/verify.ts",
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2",
+    "viem": "^2.56.7",
+    "vitest": "^5.0.1"
+  },
+  "devDependencies": {}
+}

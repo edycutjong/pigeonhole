@@ -16,5 +16,6 @@
     "payTx": "0x5fdef1b0d140e493152a26ed361d3c185b024987987cf79e0de79becc9dad59f",
     "sweepTx": "0xe639255a52b96c7f4733608776f6cd11eca3c615748350877d2ea384a6988ea6",
     "sweepGas": 64162
-  }
+  },
+  "deployBlock": 21337182
 }
