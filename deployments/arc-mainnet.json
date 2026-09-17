@@ -1,0 +1,20 @@
+{
+  "network": "arc-mainnet",
+  "chainId": 5042,
+  "factory": "0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40",
+  "treasury": "0xA8965A47c9b6ed34F47B374f36cF6c752D24852a",
+  "deployTx": "0x3395aaf33688ce65e44627f74dfb50a106abeb4f9587f1488f45f6382a2247dc",
+  "deployedVia": "Arachnid CREATE2 factory 0x4e59b44847b379578588920cA78FbF26c0B4956C (deterministic)",
+  "salt": "0x0000000000000000000000000000000000000000000000000000000000000001",
+  "deployGas": 266797,
+  "deployedAt": "2026-09-17",
+  "verified": false,
+  "explorer": "https://explorer.arc.io/address/0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40",
+  "firstCycle": {
+    "salt": "keccak256(\"demo-paid\")",
+    "pigeonhole": "0xb356C620E45d8d8C884a6235dD660c32f0a1F26b",
+    "payTx": "0x5fdef1b0d140e493152a26ed361d3c185b024987987cf79e0de79becc9dad59f",
+    "sweepTx": "0xe639255a52b96c7f4733608776f6cd11eca3c615748350877d2ea384a6988ea6",
+    "sweepGas": 64162
+  }
+}
