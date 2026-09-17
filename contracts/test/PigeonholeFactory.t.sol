@@ -77,7 +77,7 @@ contract PigeonholeFactoryTest is Test {
         assertEq(swept, p, "returns predicted address");
         assertEq(TREASURY.balance, t0 + 1 ether, "treasury credited");
         assertEq(p.balance, 0, "pigeonhole drained");
-        assertEq(p.code.length, 0, "I1: code deleted (EIP-6780 same-tx)");
+        assertEq(p.code.length, 0, "I1: no runtime code at the address (the EIP-6780 delete itself is proven on mainnet, DEMO.md)");
     }
 
     function test_sweep_empty_is_noop_with_zero_amount() public {
@@ -121,5 +121,5 @@ contract PigeonholeFactoryTest is Test {
     }
 
     // NB: re-pay + re-sweep of the SAME address is a cross-tx property (EIP-6780 deletes at tx end).
-    // A Foundry test runs in one tx, so that path is proven on mainnet by scripts/verify.ts + probe rows 4-5.
+    // A Foundry test runs in one tx, so the re-pay-after-delete path is proven on mainnet only (DEMO.md re-pay/re-sweep rows).
 }

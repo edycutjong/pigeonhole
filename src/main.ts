@@ -11,7 +11,11 @@ const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 const KEY = "pigeonhole.invoices";
 type Saved = { id: string; amount?: string; from?: string };
 const load = (): Saved[] => { try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch { return []; } };
-const remember = (s: Saved) => { const a = load().filter((x) => x.id !== s.id); a.unshift(s); try { localStorage.setItem(KEY, JSON.stringify(a.slice(0, 50))); } catch {} };
+const remember = (s: Saved) => {
+  const prev = load().find((x) => x.id === s.id);
+  if (prev?.from) s.from = prev.from; // re-creating an id must never post-date its scan window (earlier payments would vanish)
+  const a = load().filter((x) => x.id !== s.id); a.unshift(s); try { localStorage.setItem(KEY, JSON.stringify(a.slice(0, 50))); } catch {}
+};
 
 function badge(st: InvoiceState["status"]) {
   const cls = st.toLowerCase();
@@ -55,6 +59,7 @@ function viewNew() {
 async function viewInvoice(id: string, amtStr?: string, fromStr?: string) {
   const salt = saltOf(id);
   const pigeonhole = predict(FACTORY, TREASURY, salt);
+  if (amtStr && !/^\d+(\.\d{1,6})?$/.test(amtStr)) amtStr = undefined; // ignore a malformed ?amt= instead of throwing
   const amount18 = amtStr ? BigInt(Math.round(parseFloat(amtStr) * 1e6)) * 10n ** 12n : undefined;
   const fromBlock = fromStr && /^\d+$/.test(fromStr) ? BigInt(fromStr) : (load().find((s) => s.id === id)?.from ? BigInt(load().find((s) => s.id === id)!.from!) : DEPLOY_BLOCK);
   const filter = `eth_getLogs({ address: ${short(ARC.systemEmitter)}, topics: [Transfer, *, ${short(pigeonhole)}], fromBlock: ${fromBlock} })`;
@@ -80,6 +85,7 @@ async function viewInvoice(id: string, amtStr?: string, fromStr?: string) {
           <span class="k">Treasury</span><span class="mono"><a href="${addrUrl(TREASURY)}" target="_blank" rel="noopener">${short(TREASURY)} ↗</a></span>
           <span class="k">Paid in</span><span class="mono" id="paidin">—</span>
           <span class="k">Unswept</span><span class="mono" id="unswept">—</span>
+          <span class="k">I2 · Σlogs == balance</span><span class="mono" id="i2">—</span>
         </div>
         <h2>Live log filter</h2>
         <div class="filter">${esc(filter)}</div>
@@ -90,13 +96,14 @@ async function viewInvoice(id: string, amtStr?: string, fromStr?: string) {
   QRCode.toCanvas(pigeonhole, { width: 180, margin: 1 }).then((c: HTMLCanvasElement) => document.getElementById("qr")!.appendChild(c)).catch(() => {});
 
   async function refresh() {
-    let s: InvoiceState;
+    let s: InvoiceState & { balance: bigint; i2: boolean };
     try { s = await invoiceState(pigeonhole, amount18, fromBlock); }
     catch (e: any) { document.getElementById("moves")!.innerHTML = `<p class="err">RPC error: ${esc(e.shortMessage || e.message || String(e))} — retrying…</p>`; return; }
     document.getElementById("st")!.innerHTML = badge(s.status);
     (document.getElementById("sweep") as HTMLButtonElement).disabled = s.unswept === 0n; // nothing to sweep (spec: disabled at 0 unswept)
     document.getElementById("paidin")!.textContent = `${fmtUsdc18(s.paidIn)} USDC`;
     document.getElementById("unswept")!.textContent = `${fmtUsdc18(s.unswept)} USDC`;
+    document.getElementById("i2")!.innerHTML = s.i2 ? `<span class="ok">holds</span> (eth_getBalance ${fmtUsdc18(s.balance)})` : `<span class="err">mismatch</span> — balance ${fmtUsdc18(s.balance)} USDC, rescanning`;
     const rows = [...s.payments.map((m) => ["in", m]), ...s.sweeps.map((m) => ["out", m])] as ["in" | "out", typeof s.payments[0]][];
     rows.sort((a, b) => (a[1].block === b[1].block ? a[1].logIndex - b[1].logIndex : a[1].block < b[1].block ? -1 : 1));
     document.getElementById("moves")!.innerHTML = rows.length ? `<table><thead><tr><th>dir</th><th>value</th><th>block</th><th>tx</th></tr></thead><tbody>${

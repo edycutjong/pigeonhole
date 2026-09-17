@@ -35,9 +35,18 @@ const cache = new MovementCache(pub);
  * `fromBlock` is the block the invoice was created at (carried in the URL as ?from=); without it we scan from the
  * factory's deploy block, which gets slower as the chain grows (~170k blocks/day at 2 blocks/s).
  */
-export async function invoiceState(pigeonhole: Address, amount18?: bigint, fromBlock: bigint = DEPLOY_BLOCK): Promise<InvoiceState> {
-  const movements = await cache.movements(pigeonhole, fromBlock < DEPLOY_BLOCK ? DEPLOY_BLOCK : fromBlock);
-  return reduceLogs(pigeonhole, movements, amount18);
+export async function invoiceState(pigeonhole: Address, amount18?: bigint, fromBlock: bigint = DEPLOY_BLOCK): Promise<InvoiceState & { balance: bigint; i2: boolean }> {
+  const from = fromBlock < DEPLOY_BLOCK ? DEPLOY_BLOCK : fromBlock;
+  let [movements, balance] = await Promise.all([cache.movements(pigeonhole, from), pub.getBalance({ address: pigeonhole })]);
+  let state = reduceLogs(pigeonhole, movements, amount18);
+  // Invariant I2, checked live: Σin − Σout must equal the chain balance. If it does not, the scan window missed
+  // history (e.g. an invoice id re-created after it was already paid, or a skewed RPC head) — rescan from the deploy block.
+  if (state.unswept !== balance && from > DEPLOY_BLOCK) {
+    cache.invalidate(pigeonhole);
+    movements = await cache.movements(pigeonhole, DEPLOY_BLOCK);
+    state = reduceLogs(pigeonhole, movements, amount18);
+  }
+  return { ...state, balance, i2: state.unswept === balance };
 }
 
 /** All Swept events from the factory → the treasury view's source of truth. */

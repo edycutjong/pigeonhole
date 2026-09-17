@@ -54,25 +54,59 @@ export async function fetchMovements(client: LogClient, pigeonhole: Address, fro
   return toMovements(out);
 }
 
+/** How many blocks to re-read on every incremental scan. The public RPC is load-balanced: `eth_getBlockNumber` and
+ *  `eth_getLogs` can be answered by backends whose heads differ, and a `toBlock` past the serving backend's head returns
+ *  `[]` with no error. Re-reading a short tail (deduped) closes that hole. */
+export const RESCAN_OVERLAP = 10n;
+
+const keyOf = (m: Movement) => `${m.tx}:${m.logIndex}`;
+
 /**
- * Incremental cache: the first call scans fromBlock..latest; later calls scan only the blocks since the last
- * scan, so a 3-second poll costs one small getLogs pair, not a full-history walk.
+ * Incremental, deduplicated cache: the first call scans fromBlock..latest; later calls scan only the blocks since the
+ * last scan (minus a small overlap), so a 3-second poll costs one small getLogs pair, not a full-history walk.
+ * Logs are keyed by (tx, logIndex) so overlapping polls and the overlap window never double-count, and concurrent
+ * callers for the same address share one in-flight scan.
  */
 export class MovementCache {
   private scannedTo = new Map<string, bigint>();
-  private moves = new Map<string, Movement[]>();
+  private scannedFrom = new Map<string, bigint>();
+  private moves = new Map<string, Map<string, Movement>>();
+  private inflight = new Map<string, Promise<Movement[]>>();
   constructor(private client: LogClient) {}
 
-  async movements(pigeonhole: Address, fromBlock: bigint): Promise<Movement[]> {
+  /** Movements for `pigeonhole` from `fromBlock` to the chain head. A lower `fromBlock` than before widens the scan. */
+  movements(pigeonhole: Address, fromBlock: bigint): Promise<Movement[]> {
     const key = getAddress(pigeonhole);
+    const running = this.inflight.get(key);
+    if (running) return running;
+    const p = this.scan(key, fromBlock).finally(() => this.inflight.delete(key));
+    this.inflight.set(key, p);
+    return p;
+  }
+
+  /** Forget everything about one address so the next call rescans from its `fromBlock`. */
+  invalidate(pigeonhole: Address) {
+    const key = getAddress(pigeonhole);
+    this.scannedTo.delete(key); this.scannedFrom.delete(key); this.moves.delete(key);
+  }
+
+  private async scan(key: Address, fromBlock: bigint): Promise<Movement[]> {
     const latest = await this.client.getBlockNumber();
-    const prev = this.scannedTo.get(key);
-    const start = prev === undefined ? fromBlock : prev + 1n;
+    const bucket = this.moves.get(key) ?? new Map<string, Movement>();
+    this.moves.set(key, bucket);
+    const prevTo = this.scannedTo.get(key), prevFrom = this.scannedFrom.get(key);
+    // A caller asking for an earlier start than we ever scanned: fill the gap below first.
+    if (prevFrom !== undefined && fromBlock < prevFrom) {
+      for (const m of await fetchMovements(this.client, key, fromBlock, prevFrom - 1n)) bucket.set(keyOf(m), m);
+      this.scannedFrom.set(key, fromBlock);
+    }
+    let start: bigint;
+    if (prevTo === undefined) { start = fromBlock; this.scannedFrom.set(key, fromBlock); }
+    else { start = prevTo - RESCAN_OVERLAP; if (start < (this.scannedFrom.get(key) ?? fromBlock)) start = this.scannedFrom.get(key) ?? fromBlock; }
     if (start <= latest) {
-      const fresh = await fetchMovements(this.client, key, start, latest);
-      this.moves.set(key, [...(this.moves.get(key) ?? []), ...fresh]);
+      for (const m of await fetchMovements(this.client, key, start, latest)) bucket.set(keyOf(m), m);
       this.scannedTo.set(key, latest);
     }
-    return this.moves.get(key) ?? [];
+    return [...bucket.values()];
   }
 }

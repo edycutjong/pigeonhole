@@ -64,7 +64,7 @@ sequenceDiagram
   M-->>P: address + QR
   P->>H: native USDC send (21,000 gas)
   E-->>M: Transfer(P → H)   → PAID within 1 block (deterministic finality)
-  M->>F: sweep(salt)  (anyone; 64,162 gas, N=26)
+  M->>F: sweep(salt)  (anyone; 64,162 gas p50, N=25)
   F->>H: create2 → constructor SELFDESTRUCT
   H->>T: whole balance
   E-->>M: Transfer(H → T) + Swept(salt, H, amount)
@@ -76,8 +76,8 @@ sequenceDiagram
 |---|---|
 | Contract | Solidity 0.8.30, Foundry, `evm_version=osaka`; deployed via the Arachnid CREATE2 factory (deterministic) |
 | Client | Vite + TypeScript + viem 2; a small hash router; `qrcode` for the QR; no framework |
-| State | none server-side — `eth_getLogs` (system emitter, topic-filtered, chunked ≤ 9,000 blocks and polled incrementally: the RPC rejects 10k+ spans) + `localStorage` for the merchant's own invoice ids and their creation blocks |
-| Tests | 12 Foundry (incl. fuzz + I1/I3) + 16 vitest (predict vs on-chain, reducer, decimals, `eth_getLogs` chunking) |
+| State | none server-side — `eth_getLogs` (system emitter, topic-filtered, chunked ≤ 9,000 blocks, polled incrementally with a 10-block overlap and (tx, logIndex) dedupe: the RPC rejects 10k+ spans and its backends' heads can differ) + a live I2 check (`Σlogs == eth_getBalance`, rescans from the deploy block on mismatch) + `localStorage` for the merchant's own invoice ids and their creation blocks |
+| Tests | 12 Foundry (incl. fuzz + I1/I3) + 19 vitest (predict vs on-chain, reducer, decimals, `eth_getLogs` chunking/dedupe/overlap) |
 | Scripts | `verify.ts` (offline==on-chain, I2 via `eth_getBalance`), `bench.sh` (I4 gas distribution) |
 | Hosting | GitHub Pages (static) |
 

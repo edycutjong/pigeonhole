@@ -10,7 +10,7 @@ SEND=(--rpc-url $RPC --keystore $KS --password-file $PW)
 OUT=bench/rows.csv; mkdir -p bench
 echo "kind,id,pigeonhole,gasUsed,effGasPriceWei,tx" > $OUT
 STAMP=$(date +%s)
-# retry: run "$@" up to 10x, echo stdout on first success, else fail
+# retry: run "$@" up to 12x, echo stdout on first success, else fail
 retry() { local n=0; local out; while [ $n -lt 12 ]; do if out=$("$@" 2>/dev/null); then print -r -- "$out"; return 0; fi; n=$((n+1)); done; return 1; }
 sweep_gas() { # $1 salt -> "gasUsed effGasPrice tx"
   local tx; tx=$(retry cast send $F "sweep(bytes32)" $1 "${SEND[@]}" --json | python3 -c "import json,sys;print(json.load(sys.stdin)['transactionHash'])") || return 1

@@ -2,7 +2,7 @@
 // chunks; the public Arc RPC rejects any span of 10,000+ blocks with -32012 "requested range too large".
 import { describe, it, expect } from "vitest";
 import { getAddress } from "viem";
-import { spans, fetchMovements, MovementCache, MAX_LOG_SPAN, type LogClient } from "../src/lib/logs";
+import { spans, fetchMovements, MovementCache, MAX_LOG_SPAN, RESCAN_OVERLAP, type LogClient } from "../src/lib/logs";
 
 const P = getAddress("0xb356C620E45d8d8C884a6235dD660c32f0a1F26b");
 const T = getAddress("0xA8965A47c9b6ed34F47B374f36cF6c752D24852a");
@@ -53,7 +53,35 @@ describe("eth_getLogs chunking — RPC rejects 10k+ block spans with -32012", ()
     expect(firstScan).toBe(6);
     latest += 7n; // 3 seconds of Arc
     await cache.movements(P, deploy);
-    expect(calls.length - firstScan).toBe(2); // one tiny span, both directions
-    expect(calls.at(-1)).toEqual([deploy + 20_000n + 1n, latest]);
+    expect(calls.length - firstScan).toBe(2); // one tiny span (with the overlap tail), both directions
+    expect(calls.at(-1)).toEqual([deploy + 20_000n - RESCAN_OVERLAP, latest]);
+  });
+
+  it("overlapping polls and the overlap tail never double-count a log (keyed by tx:logIndex)", async () => {
+    const deploy = 21_337_182n; let latest = deploy + 100n;
+    const logs = [{ blockNumber: deploy + 95n, logIndex: 3, transactionHash: "0xaa", args: { from: T, to: P, value: 5n } }];
+    const { client } = fakeClient(latest, logs);
+    const cache = new MovementCache({ getBlockNumber: async () => latest, getLogs: client.getLogs });
+    const [a, b] = await Promise.all([cache.movements(P, deploy), cache.movements(P, deploy)]); // concurrent
+    expect(a).toBe(b); // shared in-flight scan
+    latest += 3n; const again = await cache.movements(P, deploy); // overlap re-reads block deploy+95
+    expect(again.filter((m) => m.tx === "0xaa")).toHaveLength(1);
+  });
+
+  it("a lower fromBlock on a warm cache widens the scan instead of hiding earlier payments (re-created invoice id)", async () => {
+    const deploy = 21_337_182n; const latest = deploy + 50_000n;
+    const logs = [{ blockNumber: deploy + 10n, logIndex: 0, transactionHash: "0xold", args: { from: T, to: P, value: 7n } }];
+    const { client } = fakeClient(latest, logs);
+    const cache = new MovementCache(client);
+    expect(await cache.movements(P, latest - 100n)).toHaveLength(0);   // narrow window: the old payment is out of range
+    expect((await cache.movements(P, deploy)).map((m) => m.tx)).toEqual(["0xold"]); // widened: found, not duplicated
+  });
+
+  it("fromBlock beyond the head makes no RPC call and does not advance the scan", async () => {
+    const deploy = 21_337_182n; const latest = deploy + 10n;
+    const { client, calls } = fakeClient(latest);
+    const cache = new MovementCache(client);
+    expect(await cache.movements(P, latest + 1n)).toHaveLength(0);
+    expect(calls).toHaveLength(0);
   });
 });

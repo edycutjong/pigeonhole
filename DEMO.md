@@ -5,7 +5,7 @@
 ## 60-second reviewer path (≤ $0.10 of USDC on Arc, one wallet)
 1. Open the live URL → **New invoice** → type any id (e.g. `demo-1`) and `0.02` → **Create deposit address**.
 2. You get a fresh address + QR. Nothing is deployed yet — open it on the explorer and it's an empty account.
-3. **Pay with wallet** (or send 0.02 USDC to the address from any Arc wallet). Within one block the badge flips **PAID**, from a single `eth_getLogs` on the system emitter — no backend.
+3. **Pay with wallet** (or send 0.02 USDC to the address from any Arc wallet). On the next 3-second poll the badge flips **PAID**, from a single `eth_getLogs` on the system emitter — no backend. (Finality is one block; the poll-to-PAID latency is not benchmarked.)
 4. **Sweep → treasury**. One transaction (~$0.0013). The explorer shows the balance leaving the address for the treasury, and the address returns to *no code, nonce 0*.
 5. **Treasury view** lists that sweep, read from the factory's `Swept` events.
 
@@ -14,7 +14,7 @@
 | Case | Result | Tx |
 |---|---|---|
 | Pay a codeless predicted address (native send) | 1 log: `Transfer` from system emitter `0xffff…fffE` → "PAID" is one filter | [`0xc80df136…`](https://explorer.arc.io/tx/0xc80df1360ab2cd4851b998d323840f6bfee1317a61fd0bfea48856ff711bfbd3) |
-| Sweep to a **never-seen beneficiary** (v1 probe factory, wrong treasury `0x1804c8AB…` — a script bug) | 91,740 gas: +27,600 over steady state = the new-account cost of the *beneficiary*, not of the pigeonhole (every bench row is a first sweep of a never-seen address at 64,162) | [`0xb6fe10fe…`](https://explorer.arc.io/tx/0xb6fe10fe2575781f7811750463cddc7819c7d2bbac4ea7d97f4030864fb0e4a4) |
+| Sweep to a **never-seen beneficiary** (v1 probe factory, wrong treasury `0x1804c8AB…` — a script bug) | 91,740 gas: +27,600 over steady state = the new-account cost of the *beneficiary*, not of the pigeonhole (every bench row is a first sweep of a never-seen address at 64,150–64,162) | [`0xb6fe10fe…`](https://explorer.arc.io/tx/0xb6fe10fe2575781f7811750463cddc7819c7d2bbac4ea7d97f4030864fb0e4a4) |
 | Sweep after a **native send** (production factory, `demo-paid`, 0.02 USDC) | 64,162 gas ≈ $0.0013; `Transfer(pigeonhole → treasury)` + `Swept` | [`0xe639255a…`](https://explorer.arc.io/tx/0xe639255a52b96c7f4733608776f6cd11eca3c615748350877d2ea384a6988ea6) |
 | **Pay via ERC-20 `transfer()`** (`demo-erc20`, `0x3600…0000.transfer(pigeonhole, 10000)`) | receipt has **two** logs: system emitter `0xffff…fffE` (1e16, 18-dec) + ERC-20 `0x3600…0000` (10000, 6-dec) — the page counts only the first, so PAID flips and nothing double-counts | [`0x64ce87be…`](https://explorer.arc.io/tx/0x64ce87be84ef57938c0af91b7c6a89c9eb736ff3a8627dbf2c4f1a069a936a64) |
 | Sweep of the ERC-20-paid address | 64,162 gas — same as the native-paid case; address back to code `0x` / nonce 0 | [`0xf5883aea…`](https://explorer.arc.io/tx/0xf5883aeae9a0c872241de57b348ebe688bf6f80b58542f7d5166bfc24b5f8111) |
@@ -29,15 +29,17 @@ Screenshot of a same-tx create+destruct sweep rendering on the explorer (logged-
 ```sh
 npm install
 npm run verify                  # read-only: offline predict() == on-chain (N=50), invariant I2 for both seeded cycles. No wallet.
-npm test                        # 16 vitest: formula vs real addresses, the no-DB reducer, decimals, eth_getLogs chunking
+npm test                        # 19 vitest: formula vs real addresses, the no-DB reducer, decimals, eth_getLogs chunking/dedupe/overlap
+git submodule update --init     # forge-std (or clone with --recurse-submodules)
 forge test --root contracts     # 12 contract tests incl. fuzz + I1/I3
 # gas benchmark (spends ~$0.05 of USDC on Arc; any funded cast keystore):
 KS=/path/to/keystore.json PW=/path/to/password.txt N=25 R=8 zsh scripts/bench.sh
 ```
 
 ## Benchmark (invariant I4 — sweep gas)
-See `bench/results.json` and `bench/rows.csv`. Every balance-moving sweep on the production factory is **64,162 gas**
-(N=25 bench rows: min 64,150 / p50 64,162 / max 64,162, plus the two seeded cycles above at 64,162). The pre-stated
+See `bench/results.json` and `bench/rows.csv`. A balance-moving sweep on the production factory is **64,162 gas at p50**
+(N=25 bench rows: min 64,150 / p50 64,162 / max 64,162 — the three 64,150 rows are salts containing one zero byte, i.e. 12 gas of
+calldata pricing, not execution — plus the two seeded cycles above at 64,162). The pre-stated
 figure was 64,140, measured on the day-0 *probe* factory — a different contract (no `Create2Mismatch` check, no
 zero-treasury guard), not a mis-measurement of this one.
 
