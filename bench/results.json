@@ -1,0 +1,32 @@
+{
+  "network": "arc-mainnet",
+  "chainId": 5042,
+  "factory": "0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40",
+  "movingSweepGas": {
+    "n": 25,
+    "min": 64150,
+    "p50": 64162,
+    "p95": 64162,
+    "max": 64162,
+    "mean": 64161
+  },
+  "emptySweepGas": {
+    "n": 8,
+    "min": 64162,
+    "p50": 64162,
+    "p95": 64162,
+    "max": 64162,
+    "mean": 64162
+  },
+  "effGasPriceWei": {
+    "n": 33,
+    "min": 20010000000,
+    "p50": 20416666666,
+    "p95": 21163156157,
+    "max": 21362000000,
+    "mean": 20503042983
+  },
+  "preStated_I4": 64140,
+  "feeUsdc_at_p50": 0.001309974,
+  "note": "I4 pre-stated from probe n=1 (64,140). This is the N-sample mainnet distribution via cast."
+}
