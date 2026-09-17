@@ -82,7 +82,7 @@ async function viewInvoice(id: string, amtStr?: string) {
         <div id="moves"><p class="muted">Watching the system emitter…</p></div>
       </div>
     </div>`;
-  QRCode.toCanvas(pigeonhole, { width: 180, margin: 1 }).then((c) => document.getElementById("qr")!.appendChild(c)).catch(() => {});
+  QRCode.toCanvas(pigeonhole, { width: 180, margin: 1 }).then((c: HTMLCanvasElement) => document.getElementById("qr")!.appendChild(c)).catch(() => {});
 
   async function refresh() {
     const s = await invoiceState(pigeonhole, amount18);
