@@ -4,7 +4,7 @@
 //         (3) factory.treasury() == the fact-sheet treasury.
 import { createPublicClient, http, parseAbi, getAddress, type Address, type Hex } from "viem";
 import { predict, saltOf, reduceLogs, ARC, type Movement } from "../src/lib/pigeonhole";
-import deployment from "../deployments/arc-mainnet.json" assert { type: "json" };
+import deployment from "../deployments/arc-mainnet.json" with { type: "json" };
 
 const FACTORY = getAddress(deployment.factory as string);
 const TREASURY = getAddress(deployment.treasury as string);
