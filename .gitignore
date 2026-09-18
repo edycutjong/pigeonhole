@@ -6,3 +6,15 @@ __pycache__/
 dist/
 coverage/
 .DS_Store
+
+# Environment templates stay; real env files never enter the repo
+!.env.example
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# Lighthouse
+.lighthouseci/
