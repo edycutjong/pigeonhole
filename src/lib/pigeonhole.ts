@@ -1,6 +1,6 @@
 // Pigeonhole — pure client logic. No backend: every value here is derived from chain data.
 // The offline `predict` must byte-match the on-chain PigeonholeFactory.predict (verified by scripts/verify.ts).
-import { type Address, type Hex, keccak256, encodePacked, getAddress, concatHex, pad, slice } from "viem";
+import { type Address, type Hex, keccak256, encodePacked, getAddress, concatHex, slice } from "viem";
 
 /** Arc mainnet facts (arc_references_contract-addresses.md, usdc-system-events.md). */
 export const ARC = {
