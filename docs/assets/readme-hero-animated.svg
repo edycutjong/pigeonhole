@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" width="1280" height="320" role="img" aria-label="Pigeonhole — A throwaway contract is born at the blue codeless address, sweeps its USDC green into the treasury, and vanishes.">
+<!-- STORYBOARD (dur 8s — must equal this file's single master dur)
+  0-8%    steady state: plate + grid + aurora, mark, outlined wordmark, tagline, metric, tech line; the rack of four slots (blue = held),
+                        slot inv-0043 labelled UNPAID, the green treasury bar. Poster-safe: every brand element at opacity 1.
+  8-22%   trigger:      a payment comet flies from the right edge into slot inv-0043; a coin appears in the slot; label flips to PAID,
+                        caption "PAID — one eth_getLogs on the system emitter".                                    data-story="beat-2"
+  22-52%  mechanism:    A throwaway contract is born at the blue codeless address, sweeps its USDC green into the treasury, and vanishes.   data-story="beat-3"
+                        (green outline flashes on the slot = born; the slot's bottom edge opens; the coin drops into the bar turning green;
+                        caption "sweep(salt) · 22 bytes born · SELFDESTRUCT → treasury · gone")
+  52-80%  resolution:   bar glows; label flips to SWEPT · empty · reusable; the slot stays open. Residue persists to 94%.  data-story="beat-4"
+  80-100% breathe + seam fade: story captions fade 94-97%; the bottom edge returns 94-96%; frame 0 ≈ frame 100.
+-->
+  <defs>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="rgba(255,255,255,0.045)" stroke-width="1"/></pattern>
+    <linearGradient id="word" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4ea1ff"/><stop offset="1" stop-color="#7cc0ff"/></linearGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity="0"/><stop offset="0.5" stop-color="#ffffff" stop-opacity="0.07"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity="0"/><stop offset="0.5" stop-color="#ffffff" stop-opacity="0.75"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient>
+    <filter id="aurora" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="42"/></filter>
+    <filter id="coinGlow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="7"/></filter>
+    <filter id="barGlow" x="-10%" y="-150%" width="120%" height="400%"><feGaussianBlur stdDeviation="12"/></filter>
+    <clipPath id="holeClip"><g transform="translate(431,110)"><path d="M15.7 0L5.6 0L5.6-56L15.7-56L15.7-34.8L17.1-34.8Q17.8-36.1 19.1-37.4Q20.5-38.6 22.8-39.5Q25-40.3 28.6-40.3Q33.2-40.3 36.7-38.2Q40.2-36.1 42.1-32.4Q44-28.6 44-23.7L44 0L33.9 0L33.9-22.9Q33.9-27.4 31.7-29.6Q29.5-31.8 25.4-31.8Q20.8-31.8 18.2-28.8Q15.7-25.7 15.7-20.2L15.7 0M73.8 1.1Q67.8 1.1 63.1-1.3Q58.4-3.7 55.7-8.2Q53-12.8 53-19.2L53-20.5Q53-26.9 55.7-31.4Q58.4-36 63.1-38.4Q67.8-40.8 73.8-40.8Q79.7-40.8 84.4-38.4Q89.1-36 91.8-31.4Q94.6-26.9 94.6-20.5L94.6-19.2Q94.6-12.8 91.8-8.2Q89.1-3.7 84.4-1.3Q79.7 1.1 73.8 1.1M73.8-7.8Q78.4-7.8 81.4-10.8Q84.5-13.8 84.5-19.4L84.5-20.2Q84.5-25.8 81.5-28.8Q78.5-31.8 73.8-31.8Q69.1-31.8 66.1-28.8Q63-25.8 63-20.2L63-19.4Q63-13.8 66.1-10.8Q69.1-7.8 73.8-7.8M113.9 0L103.8 0L103.8-56L113.9-56L113.9 0M143.2 1.1Q137.3 1.1 132.8-1.4Q128.2-3.9 125.7-8.5Q123.2-13.1 123.2-19.4L123.2-20.3Q123.2-26.6 125.7-31.2Q128.2-35.8 132.6-38.3Q137.1-40.8 143-40.8Q148.9-40.8 153.2-38.2Q157.5-35.6 159.9-31Q162.3-26.4 162.3-20.3L162.3-16.9L133.4-16.9Q133.6-12.8 136.5-10.2Q139.4-7.7 143.5-7.7Q147.8-7.7 149.8-9.5Q151.8-11.4 152.8-13.6L161-9.3Q159.9-7.2 157.8-4.8Q155.7-2.3 152.2-0.6Q148.6 1.1 143.2 1.1M133.5-24.4L152.1-24.4Q151.8-27.8 149.3-29.9Q146.9-32 143-32Q138.9-32 136.5-29.9Q134.1-27.8 133.5-24.4"/></g></clipPath>
+    <clipPath id="plateClip"><rect x="0" y="0" width="1280" height="320" rx="24"/></clipPath>
+  </defs>
+  <style>
+    @keyframes driftA { from { transform: translate(0,0) } to { transform: translate(90px,30px) } }
+    @keyframes driftB { from { transform: translate(0,0) } to { transform: translate(-70px,-24px) } }
+    @keyframes pulse { 0%,100% { opacity: .78 } 50% { opacity: 1 } }
+    @keyframes breathe { 0%,52% { opacity: 0 } 60% { opacity: .25 } 80% { opacity: .1 } 94%,100% { opacity: 0 } }
+    .a1 { animation: driftA 17s ease-in-out infinite alternate; }
+    .a2 { animation: driftB 14s ease-in-out infinite alternate; }
+    .metric { animation: pulse 8s ease-in-out infinite; }
+    .breath { animation: breathe 8s linear infinite; }
+    [data-story] { will-change: opacity; }
+    .sans { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <!-- backdrop: opaque plate (mandatory), grid, two aurora blobs, one beam sweep per loop -->
+  <rect x="0" y="0" width="1280" height="320" rx="24" fill="#14181d"/>
+  <g clip-path="url(#plateClip)">
+    <rect x="0" y="0" width="1280" height="320" fill="url(#grid)"/>
+    <circle class="a1" cx="180" cy="60" r="150" fill="#4ea1ff" opacity="0.16" filter="url(#aurora)"/>
+    <circle class="a2" cx="1160" cy="290" r="150" fill="#3ddc84" opacity="0.14" filter="url(#aurora)"/>
+    <rect x="-300" y="-40" width="140" height="400" fill="url(#beam)" transform="skewX(-18)">
+      <animate attributeName="x" values="-300;-300;1500;1500" keyTimes="0;0.56;0.78;1" dur="8s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+  <rect x="0.5" y="0.5" width="1279" height="319" rx="24" fill="none" stroke="rgba(255,255,255,0.12)"/>
+
+  <!-- ===== LEFT: brand (everything inside x ≤ 520) ===== -->
+  <!-- mini mark (static geometry of icon.svg, with its own coin drop on the master beat) -->
+  <g transform="translate(40,34) scale(0.2)">
+    <rect x="32" y="32" width="448" height="448" rx="96" fill="#0b0d10" stroke="rgba(255,255,255,0.14)" stroke-width="4"/>
+    <g fill="none" stroke="#4ea1ff" stroke-width="14" stroke-linejoin="round">
+      <rect x="112" y="100" width="128" height="100" rx="14"/><rect x="272" y="100" width="128" height="100" rx="14"/><rect x="112" y="220" width="128" height="100" rx="14"/>
+      <path d="M272 320 V234 a14 14 0 0 1 14 -14 h100 a14 14 0 0 1 14 14 V320"/>
+      <path d="M272 320 H400" stroke-linecap="round"><animate attributeName="opacity" values="1;1;0;0;1;1" keyTimes="0;0.32;0.34;0.94;0.96;1" dur="8s" repeatCount="indefinite"/></path>
+    </g>
+    <rect x="112" y="392" width="288" height="36" rx="12" fill="#3ddc84"/>
+    <circle data-story="beat-2" cx="336" cy="270" r="30" fill="#4ea1ff" opacity="0">
+      <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.18;0.22;0.54;0.60;1" dur="8s" repeatCount="indefinite"/>
+      <animate attributeName="cy" values="270;270;410;410" keyTimes="0;0.34;0.50;1" dur="8s" repeatCount="indefinite"/>
+      <animate attributeName="fill" values="#4ea1ff;#4ea1ff;#3ddc84;#3ddc84" keyTimes="0;0.36;0.48;1" dur="8s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- outlined wordmark (Space Grotesk 700, opentype.js paths — never <text>) -->
+  <g transform="translate(160,110)"><path d="M15.8 0L5.3 0L5.3-56L28.3-56Q33.6-56 37.6-53.9Q41.7-51.8 44-47.9Q46.2-44.1 46.2-38.8L46.2-37.7Q46.2-32.5 43.9-28.6Q41.5-24.7 37.5-22.6Q33.4-20.5 28.3-20.5L15.8-20.5L15.8 0M15.8-46.4L15.8-30.1L27.3-30.1Q31-30.1 33.4-32.2Q35.7-34.2 35.7-37.8L35.7-38.6Q35.7-42.2 33.4-44.3Q31-46.4 27.3-46.4L15.8-46.4M64 0L53.9 0L53.9-39.7L64-39.7L64 0M59-44.3Q56.2-44.3 54.4-46.1Q52.5-47.8 52.5-50.7Q52.5-53.6 54.4-55.4Q56.2-57.1 59-57.1Q61.8-57.1 63.6-55.4Q65.4-53.6 65.4-50.7Q65.4-47.8 63.6-46.1Q61.8-44.3 59-44.3M73.3-19.7L73.3-21Q73.3-27.2 75.8-31.6Q78.2-36.1 82.4-38.4Q86.5-40.8 91.4-40.8Q96.8-40.8 99.6-38.9Q102.4-37 103.7-34.9L105.1-34.9L105.1-39.7L115-39.7L115 7Q115 11.1 112.6 13.6Q110.2 16 106.2 16L79.7 16L79.7 7.2L102.7 7.2Q105 7.2 105 4.8L105-5.5L103.5-5.5Q102.7-4.2 101.3-2.9Q99.8-1.6 97.4-0.7Q95 0.2 91.4 0.2Q86.5 0.2 82.4-2.2Q78.2-4.6 75.8-9Q73.3-13.4 73.3-19.7M94.2-8.6Q98.9-8.6 102-11.6Q105.1-14.6 105.1-19.9L105.1-20.7Q105.1-26.2 102-29.1Q99-32 94.2-32Q89.6-32 86.5-29.1Q83.4-26.2 83.4-20.7L83.4-19.9Q83.4-14.6 86.5-11.6Q89.6-8.6 94.2-8.6M144.3 1.1Q138.4 1.1 133.9-1.4Q129.4-3.9 126.8-8.5Q124.3-13.1 124.3-19.4L124.3-20.3Q124.3-26.6 126.8-31.2Q129.3-35.8 133.8-38.3Q138.2-40.8 144.2-40.8Q150-40.8 154.3-38.2Q158.6-35.6 161-31Q163.4-26.4 163.4-20.3L163.4-16.9L134.6-16.9Q134.7-12.8 137.6-10.2Q140.5-7.7 144.6-7.7Q148.9-7.7 150.9-9.5Q152.9-11.4 153.9-13.6L162.2-9.3Q161-7.2 158.9-4.8Q156.8-2.3 153.3-0.6Q149.8 1.1 144.3 1.1M134.6-24.4L153.2-24.4Q152.9-27.8 150.4-29.9Q148-32 144.1-32Q140-32 137.6-29.9Q135.2-27.8 134.6-24.4M191.3 1.1Q185.4 1.1 180.6-1.3Q175.9-3.7 173.2-8.2Q170.5-12.8 170.5-19.2L170.5-20.5Q170.5-26.9 173.2-31.4Q175.9-36 180.6-38.4Q185.4-40.8 191.3-40.8Q197.2-40.8 201.9-38.4Q206.6-36 209.4-31.4Q212.1-26.9 212.1-20.5L212.1-19.2Q212.1-12.8 209.4-8.2Q206.6-3.7 201.9-1.3Q197.2 1.1 191.3 1.1M191.3-7.8Q195.9-7.8 199-10.8Q202-13.8 202-19.4L202-20.2Q202-25.8 199-28.8Q196-31.8 191.3-31.8Q186.6-31.8 183.6-28.8Q180.6-25.8 180.6-20.2L180.6-19.4Q180.6-13.8 183.6-10.8Q186.6-7.8 191.3-7.8M231.4 0L221.4 0L221.4-39.7L231.3-39.7L231.3-34.5L232.7-34.5Q233.7-36.6 236.3-38.4Q239-40.3 244.3-40.3Q249-40.3 252.4-38.2Q255.9-36.1 257.8-32.4Q259.8-28.6 259.8-23.7L259.8 0L249.7 0L249.7-22.9Q249.7-27.4 247.5-29.6Q245.3-31.8 241.2-31.8Q236.6-31.8 234-28.8Q231.4-25.7 231.4-20.2" fill="#e8edf2"/></g>
+  <g transform="translate(431,110)"><path d="M15.7 0L5.6 0L5.6-56L15.7-56L15.7-34.8L17.1-34.8Q17.8-36.1 19.1-37.4Q20.5-38.6 22.8-39.5Q25-40.3 28.6-40.3Q33.2-40.3 36.7-38.2Q40.2-36.1 42.1-32.4Q44-28.6 44-23.7L44 0L33.9 0L33.9-22.9Q33.9-27.4 31.7-29.6Q29.5-31.8 25.4-31.8Q20.8-31.8 18.2-28.8Q15.7-25.7 15.7-20.2L15.7 0M73.8 1.1Q67.8 1.1 63.1-1.3Q58.4-3.7 55.7-8.2Q53-12.8 53-19.2L53-20.5Q53-26.9 55.7-31.4Q58.4-36 63.1-38.4Q67.8-40.8 73.8-40.8Q79.7-40.8 84.4-38.4Q89.1-36 91.8-31.4Q94.6-26.9 94.6-20.5L94.6-19.2Q94.6-12.8 91.8-8.2Q89.1-3.7 84.4-1.3Q79.7 1.1 73.8 1.1M73.8-7.8Q78.4-7.8 81.4-10.8Q84.5-13.8 84.5-19.4L84.5-20.2Q84.5-25.8 81.5-28.8Q78.5-31.8 73.8-31.8Q69.1-31.8 66.1-28.8Q63-25.8 63-20.2L63-19.4Q63-13.8 66.1-10.8Q69.1-7.8 73.8-7.8M113.9 0L103.8 0L103.8-56L113.9-56L113.9 0M143.2 1.1Q137.3 1.1 132.8-1.4Q128.2-3.9 125.7-8.5Q123.2-13.1 123.2-19.4L123.2-20.3Q123.2-26.6 125.7-31.2Q128.2-35.8 132.6-38.3Q137.1-40.8 143-40.8Q148.9-40.8 153.2-38.2Q157.5-35.6 159.9-31Q162.3-26.4 162.3-20.3L162.3-16.9L133.4-16.9Q133.6-12.8 136.5-10.2Q139.4-7.7 143.5-7.7Q147.8-7.7 149.8-9.5Q151.8-11.4 152.8-13.6L161-9.3Q159.9-7.2 157.8-4.8Q155.7-2.3 152.2-0.6Q148.6 1.1 143.2 1.1M133.5-24.4L152.1-24.4Q151.8-27.8 149.3-29.9Q146.9-32 143-32Q138.9-32 136.5-29.9Q134.1-27.8 133.5-24.4" fill="url(#word)"/></g>
+  <g clip-path="url(#holeClip)">
+    <rect x="345" y="40" width="70" height="90" fill="url(#shine)" transform="skewX(-20)">
+      <animate attributeName="x" values="345;345;645;645" keyTimes="0;0.60;0.72;1" dur="8s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+
+  <text class="sans" x="160" y="150" font-size="18" fill="#c3ccd6">A fresh USDC deposit address per invoice —</text>
+  <text class="sans" x="160" y="174" font-size="18" fill="#c3ccd6" font-weight="600">with no private key to guard.</text>
+  <text class="mono metric" x="160" y="214" font-size="18" fill="#3ddc84">$0.0013 per sweep · 64,162 gas · 0 keys</text>
+  <text class="mono" x="160" y="242" font-size="11" fill="#8592a0">Arc mainnet 5042 · native USDC · no backend, no database</text>
+  <text class="mono" x="160" y="262" font-size="11" fill="#8592a0">CREATE2 · SELFDESTRUCT · EIP-7708 logs · 33 tests · MIT</text>
+  <text class="mono" x="160" y="282" font-size="11" fill="#8592a0">factory 0x942b8c10…9A40 · github.io/pigeonhole-arc</text>
+
+  <!-- ===== RIGHT: the product story (x 570–1250) ===== -->
+  <text class="mono" x="620" y="30" font-size="12" fill="#8592a0">the pigeonhole rack — one slot per invoice, no locks (ids illustrative)</text>
+  <g fill="none" stroke="#4ea1ff" stroke-width="4" stroke-linejoin="round">
+    <rect x="620" y="42" width="140" height="66" rx="10"/>
+    <rect x="780" y="42" width="140" height="66" rx="10"/>
+    <path d="M940 108 V52 a10 10 0 0 1 10 -10 h120 a10 10 0 0 1 10 10 V108"/>
+    <path d="M940 108 H1080" stroke-linecap="round"><animate attributeName="opacity" values="1;1;0;0;1;1" keyTimes="0;0.32;0.34;0.94;0.96;1" dur="8s" repeatCount="indefinite"/></path>
+    <rect x="1100" y="42" width="140" height="66" rx="10"/>
+  </g>
+  <text class="mono" x="634" y="66" font-size="12" fill="#c3ccd6">inv-0041</text><text class="mono" x="634" y="92" font-size="11" fill="#3ddc84">swept · empty</text>
+  <text class="mono" x="794" y="66" font-size="12" fill="#c3ccd6">inv-0042</text><text class="mono" x="794" y="92" font-size="11" fill="#8592a0">unpaid</text>
+  <text class="mono" x="954" y="66" font-size="12" fill="#c3ccd6">inv-0043</text>
+  <text class="mono" x="954" y="92" font-size="11" fill="#8592a0">UNPAID<animate attributeName="opacity" values="1;1;0;0;1;1" keyTimes="0;0.19;0.21;0.95;0.97;1" dur="8s" repeatCount="indefinite"/></text>
+  <text class="mono" data-story="beat-2" x="954" y="92" font-size="11" fill="#4ea1ff" font-weight="600" opacity="0">PAID 0.02<animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.19;0.21;0.50;0.52;1" dur="8s" repeatCount="indefinite"/></text>
+  <text class="mono" data-story="beat-4" x="954" y="92" font-size="11" fill="#3ddc84" font-weight="600" opacity="0">SWEPT · empty<animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.50;0.52;0.94;0.97;1" dur="8s" repeatCount="indefinite"/></text>
+  <text class="mono" x="1114" y="66" font-size="12" fill="#c3ccd6">inv-0044</text><text class="mono" x="1114" y="92" font-size="11" fill="#8592a0">unpaid</text>
+
+  <!-- beat-2: the payment comet from any wallet -->
+  <g data-story="beat-2" opacity="0">
+    <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.08;0.09;0.19;0.21;1" dur="8s" repeatCount="indefinite"/>
+    <circle r="7" fill="#4ea1ff" filter="url(#coinGlow)"><animateMotion path="M1250,175 C1200,175 1100,120 1010,76" keyPoints="0;0;1;1" keyTimes="0;0.08;0.20;1" dur="8s" repeatCount="indefinite"/></circle>
+    <circle r="5" fill="#4ea1ff"><animateMotion path="M1250,175 C1200,175 1100,120 1010,76" keyPoints="0;0;1;1" keyTimes="0;0.08;0.20;1" dur="8s" repeatCount="indefinite"/></circle>
+  </g>
+  <text class="mono" data-story="beat-2" x="1060" y="180" font-size="12" fill="#4ea1ff" opacity="0">any wallet sends USDC →<animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.06;0.08;0.19;0.21;1" dur="8s" repeatCount="indefinite"/></text>
+
+  <!-- beat-2 caption: PAID from the log -->
+  <text class="mono" data-story="beat-2" x="620" y="150" font-size="12" fill="#4ea1ff" opacity="0">PAID — one eth_getLogs on the system emitter 0xffff…fffE · no backend<animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.20;0.22;0.31;0.33;1" dur="8s" repeatCount="indefinite"/></text>
+
+  <!-- beat-3: born → sweep → gone -->
+  <rect data-story="beat-3" x="940" y="42" width="140" height="66" rx="10" fill="none" stroke="#3ddc84" stroke-width="4" opacity="0">
+    <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.29;0.32;0.37;0.44;1" dur="8s" repeatCount="indefinite"/>
+  </rect>
+  <text class="mono" data-story="beat-3" x="620" y="150" font-size="12" fill="#3ddc84" opacity="0">sweep(salt) · 22-byte contract born at the address · SELFDESTRUCT → treasury · gone<animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.33;0.35;0.94;0.97;1" dur="8s" repeatCount="indefinite"/></text>
+  <text class="mono" data-story="beat-3" x="620" y="172" font-size="11" fill="#8592a0" opacity="0">EIP-6780 deletes it in the same tx → code 0x, nonce 0 → payable and sweepable again<animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.36;0.38;0.94;0.97;1" dur="8s" repeatCount="indefinite"/></text>
+
+  <!-- the coin: held in the slot, swept into the bar -->
+  <g data-story="beat-2" opacity="0">
+    <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.19;0.21;0.54;0.60;1" dur="8s" repeatCount="indefinite"/>
+    <circle cx="1010" cy="76" r="13" fill="#4ea1ff" filter="url(#coinGlow)" opacity="0.7">
+      <animate attributeName="cy" values="76;76;262;262" keyTimes="0;0.34;0.50;1" dur="8s" repeatCount="indefinite"/>
+      <animate attributeName="fill" values="#4ea1ff;#4ea1ff;#3ddc84;#3ddc84" keyTimes="0;0.36;0.48;1" dur="8s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="1010" cy="76" r="11" fill="#4ea1ff">
+      <animate attributeName="cy" values="76;76;262;262" keyTimes="0;0.34;0.50;1" dur="8s" repeatCount="indefinite"/>
+      <animate attributeName="fill" values="#4ea1ff;#4ea1ff;#3ddc84;#3ddc84" keyTimes="0;0.36;0.48;1" dur="8s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- treasury bar (brand layer) + beat-4 glow -->
+  <rect x="620" y="244" width="620" height="38" rx="10" fill="#3ddc84"/>
+  <rect data-story="beat-4" x="620" y="244" width="620" height="38" rx="10" fill="#3ddc84" filter="url(#barGlow)" opacity="0">
+    <animate attributeName="opacity" values="0;0;1;0.45;0.45;0;0" keyTimes="0;0.48;0.53;0.62;0.90;0.96;1" dur="8s" repeatCount="indefinite"/>
+  </rect>
+  <rect class="breath" data-story="beat-4" x="620" y="244" width="620" height="38" rx="10" fill="#ffffff" opacity="0"/>
+  <text class="mono" x="638" y="268" font-size="13" font-weight="600" fill="#04121f">treasury 0xA896…852a — immutable · the only place funds can ever go</text>
+  <text class="mono" x="620" y="304" font-size="11" fill="#8592a0">only on Arc: USDC is the native balance — SELFDESTRUCT moves it, sends emit EIP-7708 logs</text>
+</svg>

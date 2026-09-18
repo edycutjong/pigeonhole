@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Pigeonhole — sweeps a codeless deposit address into the treasury: a coin leaves an open slot and lands in the green treasury bar">
+  <defs>
+    <linearGradient id="coin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="var(--primary, #4ea1ff)"/>
+      <stop offset="100%" stop-color="var(--accent, #3ddc84)"/>
+    </linearGradient>
+    <linearGradient id="sweep" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="var(--primary, #4ea1ff)"/>
+      <stop offset="100%" stop-color="var(--accent, #3ddc84)"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="10" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- plate: opaque, so the mark holds on GitHub light AND dark -->
+  <rect x="32" y="32" width="448" height="448" rx="96" fill="var(--bg-plate, #14181d)" stroke="rgba(255,255,255,0.14)" stroke-width="4"/>
+
+  <!-- the pigeonhole rack: four slots, no locks. state: held (blue) -->
+  <g fill="none" stroke="var(--held, #4ea1ff)" stroke-width="14" stroke-linejoin="round">
+    <rect x="112" y="100" width="128" height="100" rx="14"/>
+    <rect x="272" y="100" width="128" height="100" rx="14"/>
+    <rect x="112" y="220" width="128" height="100" rx="14"/>
+    <!-- the swept slot: open at the bottom — the coin has left through it -->
+    <path d="M272 320 V234 a14 14 0 0 1 14 -14 h100 a14 14 0 0 1 14 14 V320"/>
+  </g>
+
+  <!-- sweep stroke: from the open slot straight down into the treasury bar -->
+  <path d="M336 300 V372" stroke="url(#sweep)" stroke-width="14" stroke-linecap="round" fill="none"/>
+  <path d="M312 352 L336 380 L360 352" stroke="var(--swept, #3ddc84)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- the coin, mid-sweep, turning from held to swept -->
+  <circle cx="336" cy="322" r="30" fill="url(#coin)" filter="url(#glow)"/>
+
+  <!-- treasury bar: state: swept (green). the only place funds can land -->
+  <rect x="112" y="392" width="288" height="36" rx="12" fill="var(--swept, #3ddc84)"/>
+</svg>

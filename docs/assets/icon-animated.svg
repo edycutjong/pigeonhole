@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Pigeonhole — A throwaway contract is born at the blue codeless address, sweeps its USDC green into the treasury, and vanishes.">
+<!-- STORYBOARD (dur 6s — must equal this file's single master dur)
+  0-10%   steady state: plate, four closed pigeonhole slots (blue = held), green treasury bar. No coin. Poster-safe.
+  10-28%  trigger:      a coin fades in inside the lower-right slot and a ripple rings it — the payment landed.   data-story="beat-2"
+  28-55%  mechanism:    A throwaway contract is born at the blue codeless address, sweeps its USDC green into the treasury, and vanishes.   data-story="beat-3"
+                        (green outline flashes on the slot = born; the slot's bottom edge disappears; the coin drops and turns green as it reaches the bar)
+  55-80%  resolution:   the bar glows and breathes; the slot stays open and empty; the coin is absorbed.          data-story="beat-4"
+  80-100% breathe + seam fade: story layers are already out by 62-70%; the bottom edge returns 94-98% so frame 0 and frame 100 match.
+-->
+  <defs>
+    <linearGradient id="sweep" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4ea1ff"/><stop offset="100%" stop-color="#3ddc84"/>
+    </linearGradient>
+    <filter id="coinGlow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="9"/></filter>
+    <filter id="barGlow" x="-20%" y="-120%" width="140%" height="340%"><feGaussianBlur stdDeviation="14"/></filter>
+  </defs>
+  <style>
+    @keyframes breathe { 0%,50% { opacity: 0 } 60% { opacity: .28 } 78% { opacity: .12 } 92%,100% { opacity: 0 } }
+    .breath { animation: breathe 6s linear infinite; }
+    [data-story] { will-change: opacity; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <!-- brand layer: fully visible at t=0 -->
+  <rect x="32" y="32" width="448" height="448" rx="96" fill="#14181d" stroke="rgba(255,255,255,0.14)" stroke-width="4"/>
+  <g fill="none" stroke="#4ea1ff" stroke-width="14" stroke-linejoin="round">
+    <rect x="112" y="100" width="128" height="100" rx="14"/>
+    <rect x="272" y="100" width="128" height="100" rx="14"/>
+    <rect x="112" y="220" width="128" height="100" rx="14"/>
+    <!-- the story slot: U-shape stays; the bottom edge (lid) opens at the sweep -->
+    <path d="M272 320 V234 a14 14 0 0 1 14 -14 h100 a14 14 0 0 1 14 14 V320"/>
+    <path d="M272 320 H400" stroke-linecap="round">
+      <animate attributeName="opacity" values="1;1;0;0;1;1" keyTimes="0;0.30;0.33;0.94;0.98;1" dur="6s" repeatCount="indefinite"/>
+    </path>
+  </g>
+  <rect x="112" y="392" width="288" height="36" rx="12" fill="#3ddc84"/>
+
+  <!-- beat-4: treasury glow (blurred duplicate) + breathe -->
+  <rect data-story="beat-4" x="112" y="392" width="288" height="36" rx="12" fill="#3ddc84" filter="url(#barGlow)" opacity="0">
+    <animate attributeName="opacity" values="0;0;1;0.5;0.5;0;0" keyTimes="0;0.48;0.53;0.60;0.90;0.96;1" dur="6s" repeatCount="indefinite"/>
+  </rect>
+  <rect class="breath" data-story="beat-4" x="112" y="392" width="288" height="36" rx="12" fill="#ffffff" opacity="0"/>
+
+  <!-- beat-2: ripple when the payment lands -->
+  <circle data-story="beat-2" cx="336" cy="270" r="30" fill="none" stroke="#4ea1ff" stroke-width="6" opacity="0">
+    <animate attributeName="r" values="30;30;78;78" keyTimes="0;0.14;0.27;1" dur="6s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;0;0.9;0;0" keyTimes="0;0.14;0.16;0.27;1" dur="6s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- beat-3: the throwaway is born — a green outline flashes on the slot, then it is gone -->
+  <rect data-story="beat-3" x="272" y="220" width="128" height="100" rx="14" fill="none" stroke="#3ddc84" stroke-width="14" opacity="0">
+    <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.28;0.31;0.36;0.42;1" dur="6s" repeatCount="indefinite"/>
+  </rect>
+
+  <!-- beat-2 → beat-3: the coin — held (blue) in the slot, swept (green) into the bar -->
+  <g data-story="beat-2" opacity="0">
+    <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.10;0.16;0.56;0.62;1" dur="6s" repeatCount="indefinite"/>
+    <circle cx="336" cy="270" r="34" fill="#4ea1ff" filter="url(#coinGlow)" opacity="0.7">
+      <animate attributeName="cy" values="270;270;410;410" keyTimes="0;0.33;0.50;1" dur="6s" repeatCount="indefinite"/>
+      <animate attributeName="fill" values="#4ea1ff;#4ea1ff;#3ddc84;#3ddc84" keyTimes="0;0.36;0.48;1" dur="6s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="336" cy="270" r="30" fill="#4ea1ff">
+      <animate attributeName="cy" values="270;270;410;410" keyTimes="0;0.33;0.50;1" dur="6s" repeatCount="indefinite"/>
+      <animate attributeName="fill" values="#4ea1ff;#4ea1ff;#3ddc84;#3ddc84" keyTimes="0;0.36;0.48;1" dur="6s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+</svg>

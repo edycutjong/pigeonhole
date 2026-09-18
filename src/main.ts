@@ -155,6 +155,56 @@ async function viewTreasury() {
   } catch (e: any) { document.getElementById("tbl")!.innerHTML = `<p class="err">${esc(e.message || String(e))}</p>`; }
 }
 
+// ---------- Judge / reviewer page (no auth, no wallet, no RPC needed to render) ----------
+export const CLAIM = "A fresh USDC deposit address per invoice, no key to guard, swept in one transaction. Live on Arc mainnet.";
+function viewJudge() {
+  const tx = (h: string, label: string) => `<a href="${txUrl(h)}" target="_blank" rel="noopener">${label} ↗</a>`;
+  app().innerHTML = `
+    <section class="hero"><h1>For reviewers</h1><p id="claim">${CLAIM}</p></section>
+    <div class="split">
+      <div class="card">
+        <h2>The 60-second path (one Arc wallet, ≤ $0.10)</h2>
+        <ol class="steps">
+          <li><a href="#/">New invoice</a> → type any id and <code>0.02</code> → <b>Create deposit address</b>. No transaction; the address is CREATE2 arithmetic.</li>
+          <li>Open the address on the <a href="${addrUrl(TREASURY)}" target="_blank" rel="noopener">explorer ↗</a>: an empty account, no code, nonce 0.</li>
+          <li><b>Pay with wallet</b> (or send 0.02 USDC from any Arc wallet). The badge flips <b>PAID</b> on the next 3-second poll — one <code>eth_getLogs</code> on the system emitter, no backend.</li>
+          <li><b>Sweep → treasury</b>. One transaction (~$0.0013): the throwaway is born at that address, moves the balance, and is deleted in the same tx.</li>
+          <li><a href="#/treasury">Treasury</a> lists the sweep from the factory's <code>Swept</code> events.</li>
+        </ol>
+        <h2>No wallet? Read the receipts</h2>
+        <ul class="steps">
+          <li>Pay a codeless address → ${tx("0xc80df1360ab2cd4851b998d323840f6bfee1317a61fd0bfea48856ff711bfbd3", "0xc80df136…")}</li>
+          <li>Sweep, 64,162 gas ≈ $0.0013 → ${tx("0xe639255a52b96c7f4733608776f6cd11eca3c615748350877d2ea384a6988ea6", "0xe639255a…")}</li>
+          <li>Pay via ERC-20 <code>transfer()</code> → ${tx("0x64ce87be84ef57938c0af91b7c6a89c9eb736ff3a8627dbf2c4f1a069a936a64", "0x64ce87be…")} · its sweep → ${tx("0xf5883aeae9a0c872241de57b348ebe688bf6f80b58542f7d5166bfc24b5f8111", "0xf5883aea…")}</li>
+          <li>Re-pay a swept address (later tx) → ${tx("0x531f09ffacdd006cb7c3f5c009e665ca62331c03cc867ebf5bdef2ef7cd6a76c", "0x531f09ff…")} · re-sweep → ${tx("0x631814adf42ce99763ac5ca53859e0b0f677538707a6246a23843bb4e83fef51", "0x631814ad…")}</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2>Receipt block</h2>
+        <div class="kv">
+          <span class="k">Chain</span><span class="mono">Arc mainnet · 5042</span>
+          <span class="k">Factory</span><span class="mono"><a href="${addrUrl(FACTORY)}" target="_blank" rel="noopener">${short(FACTORY)} ↗</a></span>
+          <span class="k">Treasury</span><span class="mono"><a href="${addrUrl(TREASURY)}" target="_blank" rel="noopener">${short(TREASURY)} ↗</a></span>
+          <span class="k">Sweep gas</span><span class="mono">64,162 p50 · N=25 · ≈ $0.0013</span>
+          <span class="k">Tests</span><span class="mono">37 (12 Foundry + 25 vitest)</span>
+          <span class="k">Property cases</span><span class="mono">20,000 (fast-check, 4 properties)</span>
+          <span class="k">Backend</span><span class="mono">none — eth_getLogs only</span>
+          <span class="k">Keys held</span><span class="mono">0</span>
+        </div>
+        <h2>Reproduce (read-only, no wallet)</h2>
+        <div class="filter">npm install &amp;&amp; npm run verify &amp;&amp; npm test
+git submodule update --init &amp;&amp; forge test --root contracts</div>
+        <h2>Honest limitations</h2>
+        <ul class="steps">
+          <li>The immutable treasury is a single point of failure: if it were blocklisted, unswept invoices freeze until a new factory.</li>
+          <li>The page needs an anonymous Arc RPC and scans logs in 9,000-block chunks — invoice URLs without <code>?from=</code> get slower every day.</li>
+          <li>PAID latency is not benchmarked; <code>sweepMany</code> is on-chain and tested but the page calls <code>sweep</code> only.</li>
+        </ul>
+        <p class="hint"><a href="https://github.com/edycutjong/pigeonhole-arc" target="_blank" rel="noopener">Repository ↗</a> · <a href="https://github.com/edycutjong/pigeonhole-arc/blob/main/DEMO.md" target="_blank" rel="noopener">DEMO.md ↗</a> · <a href="https://github.com/edycutjong/pigeonhole-arc/blob/main/ARCHITECTURE.md" target="_blank" rel="noopener">ARCHITECTURE.md ↗</a></p>
+      </div>
+    </div>`;
+}
+
 // ---------- Router ----------
 function route() {
   const h = location.hash.slice(1) || "/";
@@ -163,6 +213,7 @@ function route() {
   if (path === "/" || path === "") return viewNew();
   if (path.startsWith("/i/")) return viewInvoice(decodeURIComponent(path.slice(3)), params.get("amt") || undefined, params.get("from") || undefined);
   if (path === "/treasury") return viewTreasury();
+  if (path === "/judge") return viewJudge();
   return viewNew();
 }
 document.addEventListener("click", (e) => {
