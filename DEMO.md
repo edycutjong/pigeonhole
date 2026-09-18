@@ -36,6 +36,13 @@ forge test --root contracts     # 12 contract tests incl. fuzz + I1/I3
 KS=/path/to/keystore.json PW=/path/to/password.txt N=25 R=8 zsh scripts/bench.sh
 ```
 
+## Source verification (honest status)
+The explorer's `/api` sits behind a Cloudflare managed challenge, so `forge verify-contract --verifier blockscout` cannot
+submit (2026-09-18) and the factory shows as *unverified* on explorer.arc.io. What is provable without the explorer: the
+on-chain runtime code (972 bytes, keccak256 `0x8806de8d0cfd20d31fcebdd6252ca2065fb6954d2a5398d65177e38d6c28cada`) is
+**byte-identical** to `forge build`'s `deployedBytecode` for `contracts/src/PigeonholeFactory.sol` (solc 0.8.30, osaka,
+optimizer 200) once the immutable treasury is substituted — zero mismatching bytes. Recipe in `deployments/arc-mainnet.json`.
+
 ## Benchmark (invariant I4 — sweep gas)
 See `bench/results.json` and `bench/rows.csv`. A balance-moving sweep on the production factory is **64,162 gas at p50**
 (N=25 bench rows: min 64,150 / p50 64,162 / max 64,162 — the three 64,150 rows are salts containing one zero byte, i.e. 12 gas of

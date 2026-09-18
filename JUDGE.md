@@ -27,6 +27,7 @@ Full edge-case table with the empty-sweep and never-seen-beneficiary cases: [`DE
 | | |
 |---|---|
 | Factory | [`0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40`](https://explorer.arc.io/address/0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40) (deployed via the deterministic CREATE2 factory, 266,797 gas) |
+| Source | unverified on the explorer (its API is behind a Cloudflare challenge) — but the on-chain runtime code is byte-identical to `forge build` output, keccak `0x8806de8d…`, see [`DEMO.md`](./DEMO.md#source-verification-honest-status) |
 | Treasury | [`0xA8965A47c9b6ed34F47B374f36cF6c752D24852a`](https://explorer.arc.io/address/0xA8965A47c9b6ed34F47B374f36cF6c752D24852a) |
 | Sweep gas | **64,162 p50** (N=25 in [`bench/results.json`](./bench/results.json); min 64,150 — salts with a zero byte) ≈ **$0.0013** |
 | Tests | **37** — 12 Foundry (fuzz + invariants I1/I3) + 25 vitest (8 regression tests named for the `eth_getLogs` defects they pin) |
