@@ -60,9 +60,9 @@ function mechanismSvg() {
       <text class="an st-unpaid" x="500" y="158" font-size="14" font-weight="700" fill="#8b97a6">UNPAID</text>
       <text class="an st-paid" x="500" y="158" font-size="14" font-weight="700" fill="#7cc0ff" opacity="0">PAID · 0.02 USDC</text>
       <text class="an st-swept" x="500" y="158" font-size="14" font-weight="700" fill="#3ddc84" opacity="0">SWEPT · empty · reusable</text>
-      <text class="an st-code" x="500" y="186" font-size="12.5" fill="#8b97a6">code 0x · nonce 0 · no key</text>
-      <text class="an st-born" x="500" y="186" font-size="12.5" fill="#3ddc84" opacity="0">22 bytes · PUSH20 treasury; SELFDESTRUCT</text>
-      <text x="500" y="212" font-size="12" fill="#8b97a6">CREATE2(factory, keccak256(id), treasury)</text>
+      <text class="an st-code" x="500" y="186" font-size="11.5" fill="#8b97a6">code 0x · nonce 0 · no key</text>
+      <text class="an st-born" x="500" y="186" font-size="11.5" fill="#3ddc84" opacity="0">22 bytes · PUSH20 treasury; SELFDESTRUCT</text>
+      <text x="500" y="212" font-size="11.5" fill="#8b97a6">CREATE2(factory, keccak256(id), treasury)</text>
     </g>
     <!-- the coin: at the wallet → into the slot → down into the treasury, turning green as it lands -->
     <g class="an coin" transform="translate(0,0)">
@@ -83,7 +83,7 @@ function mechanismSvg() {
     <g class="an cap-sweep" opacity="0">
       <text class="sans" x="820" y="124" font-size="17" font-weight="700" fill="#3ddc84">sweep(salt) — one transaction</text>
       <text class="mo" x="820" y="150" font-size="13" fill="#c3ccd6">a 22-byte contract is born at the address,</text>
-      <text class="mo" x="820" y="170" font-size="13" fill="#c3ccd6">moves the balance, SELFDESTRUCTs to the treasury</text>
+      <text class="mo" x="820" y="170" font-size="13" fill="#c3ccd6">moves the balance, SELFDESTRUCTs to treasury</text>
       <text class="mo" x="820" y="190" font-size="13" fill="#8b97a6">64,162 gas ≈ $0.0013 · anyone may call it</text>
     </g>
     <g class="an cap-gone" opacity="0">
@@ -233,6 +233,8 @@ function viewNew() {
     const q = new URLSearchParams(); if (amt) q.set("amt", amt); q.set("from", saved ?? from.toString());
     location.hash = `#/i/${encodeURIComponent(id)}?${q}`;
   };
+  const frame = document.querySelector<HTMLElement>(".mech .frame");
+  if (frame && matchMedia("(max-width: 760px)").matches) frame.scrollLeft = 300; // phones: open on the slot, not the wallet
   document.getElementById("go")!.onclick = go;
   for (const f of ["id", "amt"]) (document.getElementById(f) as HTMLInputElement).addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
   (document.getElementById("id") as HTMLInputElement).addEventListener("input", (e) => { (document.getElementById("iderr") as HTMLElement).hidden = true; (e.target as HTMLInputElement).removeAttribute("aria-invalid"); });
@@ -245,21 +247,24 @@ function viewNew() {
 function liveProof(demo: `0x${string}`) {
   const set = (id: string, html: string) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
   const salt = saltOf(DEMO_ID);
-  Promise.allSettled([
-    pub.getCode({ address: demo }), pub.getTransactionCount({ address: demo }), pub.getBalance({ address: demo }),
-    pub.readContract({ address: FACTORY, abi: factoryAbi, functionName: "predict", args: [salt] }),
-  ]).then(([code, nonce, bal, pred]) => {
-    if ([code, nonce, bal, pred].every((r) => r.status === "rejected")) {
-      for (const id of ["hero-live", "lp-bal-tag", "lp-head-tag"]) { const el = document.getElementById(id); if (el) { el.classList.add("off"); } }
-      const hero = document.getElementById("hero-live"); if (hero) hero.innerHTML = "<i></i>Arc mainnet · chain 5042 — <b>RPC unavailable</b> right now";
-    }
-    if (code.status === "fulfilled" && nonce.status === "fulfilled") set("lp-code", `${code.value ?? "0x"} · nonce ${nonce.value}`);
-    if (bal.status === "fulfilled") set("lp-bal", `${fmtUsdc18(bal.value)}<small>USDC now</small>`);
-    if (pred.status === "fulfilled") set("lp-pred", pred.value.toLowerCase() === demo.toLowerCase() ? `<span class="ok">✓</span> ${short(pred.value)}` : `<span class="err">≠</span> ${short(pred.value)}`);
+  const done = { code: false, bal: false, pred: false };
+  const reads = () => Promise.allSettled([
+    done.code ? Promise.reject() : Promise.all([pub.getCode({ address: demo }), pub.getTransactionCount({ address: demo })]),
+    done.bal ? Promise.reject() : pub.getBalance({ address: demo }),
+    done.pred ? Promise.reject() : pub.readContract({ address: FACTORY, abi: factoryAbi, functionName: "predict", args: [salt] }),
+  ]).then(([cn, bal, pred]) => {
+    const allDown = [cn, bal, pred].every((r) => r.status === "rejected") && !done.code && !done.bal && !done.pred;
+    for (const id of ["hero-live", "lp-bal-tag", "lp-head-tag"]) document.getElementById(id)?.classList.toggle("off", allDown);
+    const hero = document.getElementById("hero-live");
+    if (hero) hero.innerHTML = allDown ? "<i></i>Arc mainnet · chain 5042 — <b>RPC unavailable</b> right now, retrying" : "<i></i>Live on <b>Arc mainnet</b> · chain 5042";
+    if (cn.status === "fulfilled") { done.code = true; set("lp-code", `${cn.value[0] ?? "0x"} · nonce ${cn.value[1]}`); } else if (!done.code) set("lp-code", `<small>RPC unavailable · retrying</small>`);
+    if (bal.status === "fulfilled") { done.bal = true; set("lp-bal", `${fmtUsdc18(bal.value)}<small>USDC now</small>`); } else if (!done.bal) set("lp-bal", `<small>RPC unavailable · retrying</small>`);
+    if (pred.status === "fulfilled") { done.pred = true; set("lp-pred", pred.value.toLowerCase() === demo.toLowerCase() ? `<span class="ok">✓</span> ${short(pred.value)}` : `<span class="err">≠</span> ${short(pred.value)}`); } else if (!done.pred) set("lp-pred", `<small>RPC unavailable · retrying</small>`);
   });
-  const head = () => pub.getBlockNumber().then((n) => set("lp-head", `#${n.toLocaleString("en-US")}`)).catch(() => {});
-  head();
+  reads();
+  const head = () => { pub.getBlockNumber().then((n) => set("lp-head", `#${n.toLocaleString("en-US")}`)).catch(() => {}); if (!(done.code && done.bal && done.pred)) reads(); };
   const iv = setInterval(head, 8000);
+  pub.getBlockNumber().then((n) => set("lp-head", `#${n.toLocaleString("en-US")}`)).catch(() => {});
   window.addEventListener("hashchange", () => clearInterval(iv), { once: true });
 }
 
@@ -466,6 +471,8 @@ function route() {
     const current = href === "#/" ? path === "/" || path === "" || path.startsWith("/i/") : href === `#${path}`;
     if (current) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
   });
+  const title = (t: string) => { document.title = t ? `${t} · Pigeonhole` : "Pigeonhole — keyless USDC deposit addresses on Arc"; };
+  title(path.startsWith("/i/") ? `Invoice ${decodeURIComponent(path.slice(3))}` : path === "/treasury" ? "Treasury" : path === "/judge" ? "For reviewers" : "");
   if (path === "/" || path === "") return viewNew();
   if (path.startsWith("/i/")) { const id = decodeURIComponent(path.slice(3)).trim(); if (!id) { location.hash = "#/"; return; } return viewInvoice(id, params.get("amt") || undefined, params.get("from") || undefined); }
   if (path === "/treasury") return viewTreasury();

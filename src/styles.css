@@ -225,7 +225,7 @@ tr:last-child td { border-bottom: 0; }
 /* the coin: wallet (0,0) → slot (+220,0) → treasury (+220,+160); sits at the wallet from 6 %, flies 12–20 %, drops 42–50 %, absorbed by 60 % */
 .mech .coin { transform-box: fill-box; animation-name: coinmove; }
 @keyframes coinmove {
-  0%, 12% { transform: translate(0, 0) } 20%, 42% { transform: translate(220px, 0) } 50%, 100% { transform: translate(220px, 160px) }
+  0%, 12% { transform: translate(0, 0) } 20%, 42% { transform: translate(240px, 0) } 50%, 100% { transform: translate(240px, 160px) }
 }
 .mech .coin-a { animation-name: coinvis; } /* the coin exists 6–60 % */
 @keyframes coinvis { 0%, 4% { opacity: 0 } 6%, 56% { opacity: 1 } 60%, 100% { opacity: 0 } }
@@ -263,6 +263,8 @@ tr:last-child td { border-bottom: 0; }
 .proof .stat .s .ok { color: var(--ok); }
 .proof .stat .tag { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .proof .stat .tag.live { color: var(--ok); }
+.proof .stat .tag.live.off { color: var(--muted); } .proof .stat .tag.live.off i { background: var(--dim); animation: none; }
+.proof .stat .v small.only, .proof .stat .v > small:only-child { margin: 0; font-size: 12px; color: var(--muted); font-weight: 500; letter-spacing: 0; }
 .proof .stat .tag.live i { width: 6px; height: 6px; }
 
 .cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -319,7 +321,7 @@ tr:last-child td { border-bottom: 0; }
   .topbar { height: auto; padding-top: 10px; padding-bottom: 10px; flex-wrap: wrap; }
   .topbar nav { width: 100%; margin: 0 -6px; gap: 0; }
   .topbar nav a { font-size: 13px; padding: 10px 8px; }
-  .mech .frame { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent); mask-image: linear-gradient(90deg, #000 88%, transparent); }
+  .mech .frame { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; -webkit-mask-image: linear-gradient(90deg, #000 94%, transparent); mask-image: linear-gradient(90deg, #000 94%, transparent); }
   .mech svg { min-width: 1120px; }
   .mech .scrollhint { display: block; }
   .split, .cmp, .limits, .mech .steps4 { grid-template-columns: 1fr; }

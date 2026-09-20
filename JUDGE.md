@@ -14,12 +14,13 @@ Live mirror of this page: **https://pigeonhole.edycu.dev/#/judge** (no auth, no 
 ## No wallet? Read the receipts (all on Arc mainnet, chain 5042)
 | What | Tx |
 |---|---|
-| Pay a codeless predicted address (native send) | [`0xc80df136…`](https://explorer.arc.io/tx/0xc80df1360ab2cd4851b998d323840f6bfee1317a61fd0bfea48856ff711bfbd3) |
-| Sweep — 64,162 gas ≈ $0.0013, `Transfer(pigeonhole → treasury)` + `Swept` | [`0xe639255a…`](https://explorer.arc.io/tx/0xe639255a52b96c7f4733608776f6cd11eca3c615748350877d2ea384a6988ea6) |
+| Pay `demo-paid` — 0.02 USDC native send to the codeless address (production factory) | [`0x5fdef1b0…`](https://explorer.arc.io/tx/0x5fdef1b0d140e493152a26ed361d3c185b024987987cf79e0de79becc9dad59f) |
+| Its sweep — 64,162 gas ≈ $0.0013, `Transfer(pigeonhole → treasury)` + `Swept` | [`0xe639255a…`](https://explorer.arc.io/tx/0xe639255a52b96c7f4733608776f6cd11eca3c615748350877d2ea384a6988ea6) |
+| Pay a codeless predicted address (native send) — day-0 probe factory | [`0xc80df136…`](https://explorer.arc.io/tx/0xc80df1360ab2cd4851b998d323840f6bfee1317a61fd0bfea48856ff711bfbd3) |
 | Pay via ERC-20 `transfer()` (two logs; the page counts one) | [`0x64ce87be…`](https://explorer.arc.io/tx/0x64ce87be84ef57938c0af91b7c6a89c9eb736ff3a8627dbf2c4f1a069a936a64) |
 | Its sweep — same 64,162 gas | [`0xf5883aea…`](https://explorer.arc.io/tx/0xf5883aeae9a0c872241de57b348ebe688bf6f80b58542f7d5166bfc24b5f8111) |
-| Re-pay an already-swept address (later tx) | [`0x531f09ff…`](https://explorer.arc.io/tx/0x531f09ffacdd006cb7c3f5c009e665ca62331c03cc867ebf5bdef2ef7cd6a76c) |
-| Re-sweep it | [`0x631814ad…`](https://explorer.arc.io/tx/0x631814adf42ce99763ac5ca53859e0b0f677538707a6246a23843bb4e83fef51) |
+| Re-pay an already-swept address (later tx) — probe factory | [`0x531f09ff…`](https://explorer.arc.io/tx/0x531f09ffacdd006cb7c3f5c009e665ca62331c03cc867ebf5bdef2ef7cd6a76c) |
+| Re-sweep it — 64,140 gas (the probe factory's bytecode) | [`0x631814ad…`](https://explorer.arc.io/tx/0x631814adf42ce99763ac5ca53859e0b0f677538707a6246a23843bb4e83fef51) |
 
 Full edge-case table with the empty-sweep and never-seen-beneficiary cases: [`DEMO.md`](./DEMO.md).
 

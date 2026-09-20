@@ -13,7 +13,7 @@
 
 | Case | Result | Tx |
 |---|---|---|
-| Pay a codeless predicted address (native send) | 1 log: `Transfer` from system emitter `0xffff…fffE` → "PAID" is one filter | [`0xc80df136…`](https://explorer.arc.io/tx/0xc80df1360ab2cd4851b998d323840f6bfee1317a61fd0bfea48856ff711bfbd3) |
+| Pay a codeless predicted address (native send) — day-0 probe factory | 1 log: `Transfer` from system emitter `0xffff…fffE` → "PAID" is one filter | [`0xc80df136…`](https://explorer.arc.io/tx/0xc80df1360ab2cd4851b998d323840f6bfee1317a61fd0bfea48856ff711bfbd3) |
 | Sweep to a **never-seen beneficiary** (v1 probe factory, wrong treasury `0x1804c8AB…` — a script bug) | 91,740 gas: +27,600 over steady state = the new-account cost of the *beneficiary*, not of the pigeonhole (every bench row is a first sweep of a never-seen address at 64,150–64,162) | [`0xb6fe10fe…`](https://explorer.arc.io/tx/0xb6fe10fe2575781f7811750463cddc7819c7d2bbac4ea7d97f4030864fb0e4a4) |
 | Sweep after a **native send** (production factory, `demo-paid`, 0.02 USDC) | 64,162 gas ≈ $0.0013; `Transfer(pigeonhole → treasury)` + `Swept` | [`0xe639255a…`](https://explorer.arc.io/tx/0xe639255a52b96c7f4733608776f6cd11eca3c615748350877d2ea384a6988ea6) |
 | **Pay via ERC-20 `transfer()`** (`demo-erc20`, `0x3600…0000.transfer(pigeonhole, 10000)`) | receipt has **two** logs: system emitter `0xffff…fffE` (1e16, 18-dec) + ERC-20 `0x3600…0000` (10000, 6-dec) — the page counts only the first, so PAID flips and nothing double-counts | [`0x64ce87be…`](https://explorer.arc.io/tx/0x64ce87be84ef57938c0af91b7c6a89c9eb736ff3a8627dbf2c4f1a069a936a64) |
