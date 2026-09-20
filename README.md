@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/icon.svg" alt="Pigeonhole" width="88" height="88">
+<img src="docs/assets/icon-animated.svg" alt="Pigeonhole" width="144" height="144">
 
 # Pigeonhole
 

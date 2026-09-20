@@ -36,6 +36,9 @@ jobs:
             patch) PA=$((PA+1)) ;;
           esac
           NEXT="v${MA}.${MI}.${PA}"
+          # package.json is the floor: releases start at its version (v1.0.0), bumps continue from there
+          FLOOR="v$(node -p "require('./package.json').version")"
+          if [ "$(printf '%s\n%s\n' "$NEXT" "$FLOOR" | sort -V | head -1)" != "$FLOOR" ]; then NEXT="$FLOOR"; fi
           echo "Bump: $BUMP  ${LAST:-none} -> $NEXT"
           { echo "next=$NEXT"; echo "bump=$BUMP"; echo "skip=false"; } >> "$GITHUB_OUTPUT"
 
