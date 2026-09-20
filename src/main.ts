@@ -1,7 +1,7 @@
 import QRCode from "qrcode";
 import { encodeFunctionData } from "viem";
 import { predict, saltOf, fmtUsdc18, ARC, type InvoiceState } from "./lib/pigeonhole";
-import { FACTORY, TREASURY, DEPLOY_BLOCK, pub, factoryAbi, invoiceState, sweptEvents, connectWallet, txUrl, addrUrl, type LiveInvoiceState } from "./chain";
+import { FACTORY, TREASURY, DEPLOY_BLOCK, pub, factoryAbi, invoiceState, sweptEvents, connectWallet, txUrl, addrUrl, onScanProgress, type LiveInvoiceState } from "./chain";
 
 const app = () => document.getElementById("app")!;
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]!));
@@ -319,6 +319,11 @@ async function viewInvoice(id: string, amtStr?: string, fromStr?: string) {
     .catch(() => { const el = document.getElementById("pred"); if (el) el.innerHTML = `offline formula · on-chain check unavailable (RPC)`; });
   let verified = false;
   let gone = false; // set when the route changes; declared here so refresh() can see it
+  // First read of an old invoice walks its whole history at the RPC's pace (~3 getLogs/s): say so, with a count.
+  const offProgress = onScanProgress((addr, p) => {
+    if (verified || gone || addr.toLowerCase() !== pigeonhole.toLowerCase() || p.total < 2) return;
+    const el = document.getElementById("moves"); if (el) el.innerHTML = `<p class="muted">Reading history from the system emitter · chunk ${p.done} / ${p.total} · to block ${p.toBlock}</p>`;
+  });
   async function refresh() {
     let s: LiveInvoiceState;
     const stale = document.getElementById("stale");
@@ -344,7 +349,7 @@ async function viewInvoice(id: string, amtStr?: string, fromStr?: string) {
   }
   // Register the cleanup BEFORE the first (possibly slow) scan: leaving the route must never leave a poller behind.
   let iv: ReturnType<typeof setInterval> | undefined;
-  window.addEventListener("hashchange", () => { gone = true; if (iv !== undefined) clearInterval(iv); }, { once: true });
+  window.addEventListener("hashchange", () => { gone = true; offProgress(); if (iv !== undefined) clearInterval(iv); }, { once: true });
   const tick = async () => { if (gone) return; await refresh(); };
   await tick();
   if (!gone) iv = setInterval(tick, 3000);
@@ -452,7 +457,7 @@ git submodule update --init &amp;&amp; forge test --root contracts</div>
         <h2>Honest limitations</h2>
         <ul class="steps">
           <li>The immutable treasury is a single point of failure: if it were blocklisted, unswept invoices freeze until a new factory.</li>
-          <li>The page needs an anonymous Arc RPC and scans logs in 9,000-block chunks — invoice URLs without <code>?from=</code> get slower every day.</li>
+          <li>The page needs an anonymous Arc RPC and scans logs in 9,000-block chunks, paced to that RPC's ≈3 calls/s — the first read of a months-old invoice takes minutes (progress is shown; the walk is checkpointed in the browser, so it is never repeated).</li>
           <li>PAID latency is not benchmarked; <code>sweepMany</code> is on-chain and tested but the page calls <code>sweep</code> only.</li>
           <li>The <code>?amt=</code> is the merchant's claim — the chain proves what was <em>paid</em>.</li>
         </ul>

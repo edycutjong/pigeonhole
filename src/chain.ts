@@ -2,7 +2,7 @@
 import { createPublicClient, http, defineChain, getAddress, parseAbi,
   type Address, type EIP1193Provider } from "viem";
 import { ARC, reduceLogs, type InvoiceState } from "./lib/pigeonhole";
-import { MovementCache, MAX_LOG_SPAN, spans } from "./lib/logs";
+import { MovementCache, MAX_LOG_SPAN, CALL_PACE_MS, spans, withRetry } from "./lib/logs";
 import deployment from "../deployments/arc-mainnet.json";
 
 export const FACTORY = getAddress(deployment.factory);
@@ -28,7 +28,9 @@ export const factoryAbi = parseAbi([
 
 // The public RPC rejects eth_getLogs spans of 10,000+ blocks (-32012) — see src/lib/logs.ts. Every scan is chunked
 // and the invoice view polls incrementally through this cache.
-const cache = new MovementCache(pub);
+const cache = new MovementCache(pub, typeof localStorage === "undefined" ? undefined : localStorage);
+/** Subscribe to walk progress for one address (the invoice view shows "chunk d / t"). Returns an unsubscribe. */
+export function onScanProgress(f: (pigeonhole: Address, p: import("./lib/logs").Progress) => void) { cache.onProgress = f; return () => { if (cache.onProgress === f) cache.onProgress = undefined; }; }
 
 /**
  * Full state for one pigeonhole, from the system emitter only (no double-count of the 6-dec ERC-20 log).
@@ -66,8 +68,11 @@ export async function invoiceState(pigeonhole: Address, amount18?: bigint, fromB
 export async function sweptEvents() {
   const latest = await pub.getBlockNumber();
   const out: any[] = [];
+  let first = true;
   for (const [a, b] of spans(DEPLOY_BLOCK, latest, MAX_LOG_SPAN)) {
-    const logs = await pub.getContractEvents({ address: FACTORY, abi: factoryAbi, eventName: "Swept", fromBlock: a, toBlock: b });
+    if (!first) await new Promise((r) => setTimeout(r, CALL_PACE_MS)); // same pacing + retry as the invoice walk
+    first = false;
+    const logs = await withRetry(() => pub.getContractEvents({ address: FACTORY, abi: factoryAbi, eventName: "Swept", fromBlock: a, toBlock: b }));
     out.push(...logs);
   }
   return out;
