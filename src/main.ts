@@ -50,11 +50,17 @@ function mechanismSvg() {
     <text class="an cap-send mo" x="282" y="150" font-size="12.5" fill="#7cc0ff" opacity="0">sends USDC to the address →</text>
     <!-- the pigeonhole slot: an outline with a separate floor that opens during the sweep -->
     <text class="mo" x="420" y="72" font-size="12.5" fill="#8b97a6">the pigeonhole — invoice ${DEMO_ID} · no lock, no key</text>
-    <path d="M420 230 V106 a16 16 0 0 1 16 -16 h338 a16 16 0 0 1 16 16 V230" fill="rgba(78,161,255,.04)" stroke="#4ea1ff" stroke-width="3" stroke-linejoin="round"/>
-    <path class="an floor" d="M420 230 H790" stroke="#4ea1ff" stroke-width="3" stroke-linecap="round"/>
+    <path d="M436 230 a16 16 0 0 1 -16 -16 V106 a16 16 0 0 1 16 -16 h338 a16 16 0 0 1 16 16 V214 a16 16 0 0 1 -16 16" fill="rgba(78,161,255,.04)" stroke="#4ea1ff" stroke-width="3" stroke-linejoin="round" stroke-linecap="butt"/>
+    <path class="an floor" d="M436 230 H774" stroke="#4ea1ff" stroke-width="3" stroke-linecap="butt"/>
     <!-- the throwaway contract: born (green outline) at 34 %, SELFDESTRUCT at 58 % -->
-    <rect class="an born" x="420" y="90" width="370" height="140" rx="16" fill="none" stroke="#3ddc84" stroke-width="10" opacity="0" stroke-opacity=".18"/>
-    <rect class="an born" x="420" y="90" width="370" height="140" rx="16" fill="none" stroke="#3ddc84" stroke-width="3" opacity="0"/>
+    <g class="an born" opacity="0" stroke="#3ddc84" stroke-width="10" stroke-opacity=".18" fill="none" stroke-linecap="butt">
+      <path d="M436 230 a16 16 0 0 1 -16 -16 V106 a16 16 0 0 1 16 -16 h338 a16 16 0 0 1 16 16 V214 a16 16 0 0 1 -16 16"/>
+      <path class="an floor" d="M436 230 H774"/>
+    </g>
+    <g class="an born" opacity="0" stroke="#3ddc84" stroke-width="3" fill="none" stroke-linecap="butt">
+      <path d="M436 230 a16 16 0 0 1 -16 -16 V106 a16 16 0 0 1 16 -16 h338 a16 16 0 0 1 16 16 V214 a16 16 0 0 1 -16 16"/>
+      <path class="an floor" d="M436 230 H774"/>
+    </g>
     <g class="mo">
       <text x="500" y="128" font-size="16" fill="#e8edf2">${short(demo)}</text>
       <text class="an st-unpaid" x="500" y="158" font-size="14" font-weight="700" fill="#8b97a6">UNPAID</text>
