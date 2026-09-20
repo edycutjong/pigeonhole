@@ -202,4 +202,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
+          cname: pigeonhole.edycu.dev
           commit_message: "deploy pigeonhole ${{ github.sha }}"

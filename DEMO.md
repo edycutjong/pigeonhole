@@ -1,6 +1,6 @@
 # DEMO — Pigeonhole
 
-**Live:** https://edycutjong.github.io/pigeonhole-arc/ · **Factory:** [`0x942b8c10…9A40`](https://explorer.arc.io/address/0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40) · **Arc mainnet (5042)**
+**Live:** https://pigeonhole.edycu.dev/ · **Factory:** [`0x942b8c10…9A40`](https://explorer.arc.io/address/0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40) · **Arc mainnet (5042)**
 
 ## 60-second reviewer path (≤ $0.10 of USDC on Arc, one wallet)
 1. Open the live URL → **New invoice** → type any id (e.g. `demo-1`) and `0.02` → **Create deposit address**.
@@ -13,7 +13,7 @@
 
 | Case | Result | Tx |
 |---|---|---|
-| Pay a codeless predicted address (native send) | 1 log: `Transfer` from system emitter `0xffff…fffE` → "PAID" is one filter | [`0xc80df136…`](https://explorer.arc.io/tx/0xc80df1360ab2cd4851b998d323840f6bfee1317a61fd0bfea48856ff711bfbd3) |
+| Pay a codeless predicted address (native send) — day-0 probe factory | 1 log: `Transfer` from system emitter `0xffff…fffE` → "PAID" is one filter | [`0xc80df136…`](https://explorer.arc.io/tx/0xc80df1360ab2cd4851b998d323840f6bfee1317a61fd0bfea48856ff711bfbd3) |
 | Sweep to a **never-seen beneficiary** (v1 probe factory, wrong treasury `0x1804c8AB…` — a script bug) | 91,740 gas: +27,600 over steady state = the new-account cost of the *beneficiary*, not of the pigeonhole (every bench row is a first sweep of a never-seen address at 64,150–64,162) | [`0xb6fe10fe…`](https://explorer.arc.io/tx/0xb6fe10fe2575781f7811750463cddc7819c7d2bbac4ea7d97f4030864fb0e4a4) |
 | Sweep after a **native send** (production factory, `demo-paid`, 0.02 USDC) | 64,162 gas ≈ $0.0013; `Transfer(pigeonhole → treasury)` + `Swept` | [`0xe639255a…`](https://explorer.arc.io/tx/0xe639255a52b96c7f4733608776f6cd11eca3c615748350877d2ea384a6988ea6) |
 | **Pay via ERC-20 `transfer()`** (`demo-erc20`, `0x3600…0000.transfer(pigeonhole, 10000)`) | receipt has **two** logs: system emitter `0xffff…fffE` (1e16, 18-dec) + ERC-20 `0x3600…0000` (10000, 6-dec) — the page counts only the first, so PAID flips and nothing double-counts | [`0x64ce87be…`](https://explorer.arc.io/tx/0x64ce87be84ef57938c0af91b7c6a89c9eb736ff3a8627dbf2c4f1a069a936a64) |
@@ -35,6 +35,13 @@ forge test --root contracts     # 12 contract tests incl. fuzz + I1/I3
 # gas benchmark (spends ~$0.05 of USDC on Arc; any funded cast keystore):
 KS=/path/to/keystore.json PW=/path/to/password.txt N=25 R=8 zsh scripts/bench.sh
 ```
+
+## Source verification (honest status)
+The explorer's `/api` sits behind a Cloudflare managed challenge, so `forge verify-contract --verifier blockscout` cannot
+submit (2026-09-18) and the factory shows as *unverified* on explorer.arc.io. What is provable without the explorer: the
+on-chain runtime code (972 bytes, keccak256 `0x8806de8d0cfd20d31fcebdd6252ca2065fb6954d2a5398d65177e38d6c28cada`) is
+**byte-identical** to `forge build`'s `deployedBytecode` for `contracts/src/PigeonholeFactory.sol` (solc 0.8.30, osaka,
+optimizer 200) once the immutable treasury is substituted — zero mismatching bytes. Recipe in `deployments/arc-mainnet.json`.
 
 ## Benchmark (invariant I4 — sweep gas)
 See `bench/results.json` and `bench/rows.csv`. A balance-moving sweep on the production factory is **64,162 gas at p50**

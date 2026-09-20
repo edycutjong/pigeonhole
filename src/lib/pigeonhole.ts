@@ -64,7 +64,9 @@ export type InvoiceState = {
  */
 export function reduceLogs(pigeonhole: Address, movements: Movement[], amount18?: bigint): InvoiceState {
   const p = getAddress(pigeonhole);
-  const sorted = [...movements].sort((a, b) => (a.block === b.block ? a.logIndex - b.logIndex : a.block < b.block ? -1 : 1));
+  // Canonical (block, logIndex, tx) order. The tx tie-break is unobservable on real chain data (logIndex is unique within a
+  // block) but makes the reducer a total order, so any permutation of the same logs renders identically (property test).
+  const sorted = [...movements].sort((a, b) => (a.block === b.block ? (a.logIndex - b.logIndex || (a.tx < b.tx ? -1 : a.tx > b.tx ? 1 : 0)) : a.block < b.block ? -1 : 1));
   const payments: Movement[] = [];
   const sweeps: Movement[] = [];
   let paidIn = 0n;

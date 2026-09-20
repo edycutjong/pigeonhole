@@ -1,0 +1,54 @@
+{
+  "generated": "2026-09-20T16:38:38Z",
+  "toBlock": "21867277",
+  "rpc": "https://rpc.mainnet.arc.io",
+  "note": "eth_getLogs history of the seeded invoices, committed so the page walks only the tail; refresh with `npm run checkpoints`; `npm run verify` checks every movement against its receipt",
+  "pigeonholes": {
+    "0xb356c620e45d8d8c884a6235dd660c32f0a1f26b": {
+      "id": "demo-paid",
+      "from": "21337182",
+      "to": "21867277",
+      "moves": [
+        {
+          "block": "21337228",
+          "logIndex": 27,
+          "tx": "0x5fdef1b0d140e493152a26ed361d3c185b024987987cf79e0de79becc9dad59f",
+          "from": "0xA8965A47c9b6ed34F47B374f36cF6c752D24852a",
+          "to": "0xb356C620E45d8d8C884a6235dD660c32f0a1F26b",
+          "value": "20000000000000000"
+        },
+        {
+          "block": "21337236",
+          "logIndex": 31,
+          "tx": "0xe639255a52b96c7f4733608776f6cd11eca3c615748350877d2ea384a6988ea6",
+          "from": "0xb356C620E45d8d8C884a6235dD660c32f0a1F26b",
+          "to": "0xA8965A47c9b6ed34F47B374f36cF6c752D24852a",
+          "value": "20000000000000000"
+        }
+      ]
+    },
+    "0x0986f94ad0960255a819f360c24f2ec2f8085558": {
+      "id": "demo-erc20",
+      "from": "21337182",
+      "to": "21867277",
+      "moves": [
+        {
+          "block": "21345737",
+          "logIndex": 52,
+          "tx": "0x64ce87be84ef57938c0af91b7c6a89c9eb736ff3a8627dbf2c4f1a069a936a64",
+          "from": "0xA8965A47c9b6ed34F47B374f36cF6c752D24852a",
+          "to": "0x0986f94AD0960255a819f360C24F2Ec2f8085558",
+          "value": "10000000000000000"
+        },
+        {
+          "block": "21345762",
+          "logIndex": 93,
+          "tx": "0xf5883aeae9a0c872241de57b348ebe688bf6f80b58542f7d5166bfc24b5f8111",
+          "from": "0x0986f94AD0960255a819f360C24F2Ec2f8085558",
+          "to": "0xA8965A47c9b6ed34F47B374f36cF6c752D24852a",
+          "value": "10000000000000000"
+        }
+      ]
+    }
+  }
+}

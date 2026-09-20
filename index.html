@@ -5,27 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Pigeonhole — keyless USDC deposit addresses on Arc</title>
   <meta name="description" content="A fresh USDC deposit address per invoice, no private key to guard, swept to your treasury in one transaction. Live on Arc mainnet." />
-  <link rel="icon" href="./favicon.svg" />
+  <meta name="theme-color" content="#0b0d10" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="./icon-512.png" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Pigeonhole" />
   <meta property="og:title" content="Pigeonhole — keyless USDC deposit addresses on Arc" />
   <meta property="og:description" content="A fresh USDC deposit address per invoice, no private key to guard, swept to your treasury in one transaction. Live on Arc mainnet." />
-  <meta property="og:url" content="https://edycutjong.github.io/pigeonhole-arc/" />
-  <meta property="og:image" content="https://edycutjong.github.io/pigeonhole-arc/og-image.png?v=2" />
+  <meta property="og:url" content="https://pigeonhole.edycu.dev/" />
+  <meta property="og:image" content="https://pigeonhole.edycu.dev/og-image.png?v=2" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="Pigeonhole — $0.0013 per sweep, 0 keys. A fresh USDC deposit address per invoice on Arc mainnet." />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Pigeonhole — keyless USDC deposit addresses on Arc" />
   <meta name="twitter:description" content="A fresh USDC deposit address per invoice, no private key to guard, swept to your treasury in one transaction. Live on Arc mainnet." />
-  <meta name="twitter:image" content="https://edycutjong.github.io/pigeonhole-arc/og-image.png?v=2" />
+  <meta name="twitter:image" content="https://pigeonhole.edycu.dev/og-image.png?v=2" />
   <link rel="stylesheet" href="./src/styles.css" />
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="#/"><span class="mark">▦</span> Pigeonhole</a>
-    <nav>
+    <a class="brand" href="#/"><span class="mark" aria-hidden="true"><svg viewBox="0 0 512 512" fill="none"><rect x="32" y="32" width="448" height="448" rx="96" fill="#14181d" stroke="rgba(255,255,255,.14)" stroke-width="8"/><g stroke="#4ea1ff" stroke-width="26" stroke-linejoin="round"><rect x="112" y="100" width="128" height="100" rx="14"/><rect x="272" y="100" width="128" height="100" rx="14"/><rect x="112" y="220" width="128" height="100" rx="14"/><path d="M272 320 V234 a14 14 0 0 1 14 -14 h100 a14 14 0 0 1 14 14 V320"/></g><circle cx="336" cy="322" r="34" fill="#4ea1ff"/><rect x="112" y="392" width="288" height="40" rx="14" fill="#3ddc84"/></svg></span> Pigeonhole</a>
+    <nav aria-label="Primary">
       <a href="#/">New invoice</a>
       <a href="#/treasury">Treasury</a>
       <a href="#/judge">For reviewers</a>
@@ -35,7 +36,7 @@
   <main id="app"><p class="muted">Loading…</p></main>
   <footer class="foot">
     <span>Arc mainnet · chain 5042 · no backend, no database — state is <code>eth_getLogs</code></span>
-    <span>Factory <code>0x942b8c10…9A40</code> · MIT</span>
+    <span>Factory <a href="https://explorer.arc.io/address/0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40" target="_blank" rel="noopener"><code>0x942b…9A40</code> ↗</a> · <a href="https://github.com/edycutjong/pigeonhole/blob/main/LICENSE" target="_blank" rel="noopener">MIT</a></span>
   </footer>
   <script type="module" src="./src/main.ts"></script>
 </body>

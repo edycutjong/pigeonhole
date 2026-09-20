@@ -2,7 +2,7 @@
 // chunks; the public Arc RPC rejects any span of 10,000+ blocks with -32012 "requested range too large".
 import { describe, it, expect } from "vitest";
 import { getAddress } from "viem";
-import { spans, fetchMovements, MovementCache, MAX_LOG_SPAN, RESCAN_OVERLAP, type LogClient } from "../src/lib/logs";
+import { spans, fetchMovements, withRetry, MovementCache, MAX_LOG_SPAN, RESCAN_OVERLAP, type LogClient } from "../src/lib/logs";
 
 const P = getAddress("0xb356C620E45d8d8C884a6235dD660c32f0a1F26b");
 const T = getAddress("0xA8965A47c9b6ed34F47B374f36cF6c752D24852a");
@@ -11,6 +11,7 @@ const T = getAddress("0xA8965A47c9b6ed34F47B374f36cF6c752D24852a");
 function fakeClient(latest: bigint, logs: any[] = []) {
   const calls: [bigint, bigint][] = [];
   const client: LogClient = {
+    pace: 0,
     getBlockNumber: async () => latest,
     getLogs: async ({ fromBlock, toBlock, args }) => {
       if (toBlock - fromBlock + 1n >= 10_000n) throw Object.assign(new Error("requested range too large"), { code: -32012 });
@@ -40,13 +41,25 @@ describe("eth_getLogs chunking — RPC rejects 10k+ block spans with -32012", ()
     const { client } = fakeClient(latest, logs);
     const m = await fetchMovements(client, P, deploy, latest);
     expect(m.map((x) => x.tx)).toEqual(["0x01", "0x02", "0x03"]);
+
+    // 2026-09-20: the public RPC answers bursts with -32005 "rate limit exceeded" (HTTP 200). A transient error on a
+    // chunk is retried with backoff instead of failing the walk; a non-transient one (-32012) still throws at once.
+    let failures = 0;
+    const flaky: LogClient = { pace: 0, getBlockNumber: client.getBlockNumber, getLogs: async (a) => {
+      if (failures < 3) { failures++; throw Object.assign(new Error("rate limit exceeded"), { code: -32005 }); }
+      return client.getLogs(a);
+    } };
+    const m2 = await withRetry(() => fetchMovements(flaky, P, deploy, latest), 4, 1);
+    expect(m2.map((x) => x.tx)).toEqual(["0x01", "0x02", "0x03"]);
+    expect(failures).toBe(3);
+    await expect(withRetry(() => { throw Object.assign(new Error("requested range too large"), { code: -32012 }); }, 4, 1)).rejects.toThrow(/range too large/);
   });
 
   it("the invoice poll is incremental: the second refresh asks only for blocks since the last scan", async () => {
     const deploy = 21_337_182n;
     let latest = deploy + 20_000n;
     const { client, calls } = fakeClient(latest);
-    const dyn: LogClient = { getBlockNumber: async () => latest, getLogs: client.getLogs };
+    const dyn: LogClient = { pace: 0, getBlockNumber: async () => latest, getLogs: client.getLogs };
     const cache = new MovementCache(dyn);
     await cache.movements(P, deploy);
     const firstScan = calls.length; // 3 chunks × 2 directions
@@ -55,6 +68,30 @@ describe("eth_getLogs chunking — RPC rejects 10k+ block spans with -32012", ()
     await cache.movements(P, deploy);
     expect(calls.length - firstScan).toBe(2); // one tiny span (with the overlap tail), both directions
     expect(calls.at(-1)).toEqual([deploy + 20_000n - RESCAN_OVERLAP, latest]);
+
+    // Checkpointing (2026-09-20): a first walk that dies on its last chunk keeps the chunks it did read, and the next
+    // poll resumes from the last completed chunk (minus the overlap) instead of re-walking the whole history.
+    const head = deploy + 30_000n;                             // 4 chunks
+    let getLogsCalls = 0;
+    const dying: LogClient = { pace: 0, getBlockNumber: async () => head, getLogs: async (a) => {
+      getLogsCalls++;
+      if (a.fromBlock >= deploy + 27_000n && getLogsCalls <= 8) throw Object.assign(new Error("requested range too large"), { code: -32012 }); // 4th chunk, first pass only
+      return client.getLogs(a);
+    } };
+    const c2 = new MovementCache(dying);
+    await expect(c2.movements(P, deploy)).rejects.toThrow();
+    const before = getLogsCalls;
+    await c2.movements(P, deploy);                             // resumes: only the overlap tail + the 4th chunk
+    expect(getLogsCalls - before).toBe(2);
+
+    // A committed checkpoint (the seeded invoices ship one) makes the first read a tail walk, not a history walk.
+    const { client: c3, calls: calls3 } = fakeClient(head);
+    const seeded = new MovementCache({ pace: 0, getBlockNumber: async () => head, getLogs: c3.getLogs });
+    const mv = { block: deploy + 5n, logIndex: 0, tx: "0xseed" as `0x${string}`, from: T, to: P, value: 1n };
+    seeded.seed(P, deploy, head - 100n, [mv]);
+    const got = await seeded.movements(P, deploy);
+    expect(calls3.length).toBe(2);                            // one span (100 blocks + overlap), both directions
+    expect(got.map((m) => m.tx)).toContain("0xseed");
   });
 
   it("overlapping polls and the overlap tail never double-count a log (keyed by tx:logIndex)", async () => {

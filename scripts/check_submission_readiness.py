@@ -34,7 +34,7 @@ if bench.exists():
 readme = root / "README.md"
 if readme.exists():
     t = readme.read_text()
-    check("edycutjong.github.io/pigeonhole-arc" in t or "http" in t, "README has no live URL")
+    check("pigeonhole.edycu.dev" in t or "http" in t, "README has no live URL")
     check(re.search(r"\b\d+\s+tests?\b", t, re.I), "README does not state a test count")
 else:
     errs.append("README.md missing")
