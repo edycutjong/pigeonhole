@@ -97,7 +97,7 @@ function mechanismSvg() {
     <rect class="an bar-glow" x="420" y="305" width="720" height="40" rx="12" fill="#ffffff" opacity="0" fill-opacity=".35"/>
     <rect class="an bar-glow" x="414" y="299" width="732" height="52" rx="16" fill="none" stroke="#3ddc84" stroke-width="8" stroke-opacity=".25" opacity="0"/>
     <text class="mo" x="500" y="330" font-size="14" font-weight="700" fill="#04121f">treasury ${short(TREASURY)} — immutable · the only place funds can ever go</text>
-    <text class="mo" x="420" y="372" font-size="12.5" fill="#8b97a6">only on Arc: USDC is the native balance — SELFDESTRUCT can move it, and every send is a system-emitter log</text>
+    <text class="mo" x="420" y="372" font-size="12" fill="#8b97a6">only on Arc: USDC is the native balance — SELFDESTRUCT can move it, every send is a system-emitter log</text>
   </svg>`;
 }
 

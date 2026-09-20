@@ -230,11 +230,11 @@ tr:last-child td { border-bottom: 0; }
 .mech .coin-blue { animation-name: coinblue; } @keyframes coinblue { 0%, 44% { opacity: 1 } 50%, 100% { opacity: 0 } }
 .mech .coin-green { animation-name: coingreen; } @keyframes coingreen { 0%, 44% { opacity: 0 } 50%, 100% { opacity: 1 } }
 /* slot status labels */
-.mech .st-unpaid { animation-name: stunpaid; } @keyframes stunpaid { 0%, 19% { opacity: 1 } 21%, 95% { opacity: 0 } 98%, 100% { opacity: 1 } }
+.mech .st-unpaid { animation-name: stunpaid; } @keyframes stunpaid { 0%, 19% { opacity: 1 } 21%, 96.5% { opacity: 0 } 98.5%, 100% { opacity: 1 } }
 .mech .st-paid { animation-name: stpaid; } @keyframes stpaid { 0%, 21.5% { opacity: 0 } 23.5%, 50% { opacity: 1 } 52%, 100% { opacity: 0 } }
-.mech .st-swept { animation-name: stswept; } @keyframes stswept { 0%, 52.5% { opacity: 0 } 54.5%, 94% { opacity: 1 } 97%, 100% { opacity: 0 } }
-.mech .st-code { animation-name: stcode; } @keyframes stcode { 0%, 33% { opacity: 1 } 35%, 57% { opacity: 0 } 60%, 100% { opacity: 1 } }
-.mech .st-born { animation-name: stborn; } @keyframes stborn { 0%, 33% { opacity: 0 } 35%, 57% { opacity: 1 } 60%, 100% { opacity: 0 } }
+.mech .st-swept { animation-name: stswept; } @keyframes stswept { 0%, 52.5% { opacity: 0 } 54.5%, 94% { opacity: 1 } 96%, 100% { opacity: 0 } }
+.mech .st-code { animation-name: stcode; } @keyframes stcode { 0%, 33% { opacity: 1 } 35%, 58% { opacity: 0 } 60%, 100% { opacity: 1 } }
+.mech .st-born { animation-name: stborn; } @keyframes stborn { 0%, 32.5% { opacity: 0 } 34.5%, 56% { opacity: 1 } 58%, 100% { opacity: 0 } }
 /* the throwaway: green outline appears (born) 34 %, vanishes (SELFDESTRUCT) 58 % · the slot's bottom edge opens while the coin drops */
 .mech .born { animation-name: born; } @keyframes born { 0%, 33% { opacity: 0 } 35%, 55% { opacity: 1 } 58%, 100% { opacity: 0 } }
 .mech .floor { animation-name: floor; } @keyframes floor { 0%, 40% { opacity: 1 } 42%, 56% { opacity: 0 } 58%, 100% { opacity: 1 } }
