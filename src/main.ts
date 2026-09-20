@@ -21,7 +21,7 @@ function badge(st: InvoiceState["status"]) {
   const cls = st.toLowerCase();
   return `<span class="badge ${cls}"><span class="dot"></span>${st}</span>`;
 }
-function copyBtn(text: string) { return `<span class="copy" role="button" tabindex="0" aria-label="Copy address" data-copy="${esc(text)}">copy</span>`; }
+function copyBtn(text: string) { return `<span class="copy" role="button" tabindex="0" title="Copy address to the clipboard" aria-live="polite" data-copy="${esc(text)}">copy</span>`; }
 
 // ---------- New invoice (the landing page) ----------
 const DEMO_ID = "demo-paid"; // seeded first cycle on the production factory (deployments/arc-mainnet.json) — SWEPT forever
@@ -108,7 +108,7 @@ function viewNew() {
   app().innerHTML = `
     <section class="hero">
       <div>
-        <span class="live"><i></i>Live on <b>Arc mainnet</b> · chain 5042</span>
+        <span class="live" id="hero-live"><i></i>Live on <b>Arc mainnet</b> · chain 5042</span>
         <h1>A USDC address per invoice — <span class="hl">with no key to guard.</span></h1>
         <p class="sub">Type an invoice id and get a fresh Arc deposit address that exists <b>before any contract does</b>.
         When it's paid, one permissionless transaction sweeps it to the treasury and the address vanishes —
@@ -137,6 +137,7 @@ function viewNew() {
       <p class="lede">The contract that moves the money exists for exactly one transaction, so there is never a key to steal.
       This is the seeded <code>${DEMO_ID}</code> invoice; everything below is what its address really went through.</p>
       <div class="frame">${mechanismSvg()}<div class="prog" aria-hidden="true"><i></i></div></div>
+      <p class="scrollhint" aria-hidden="true">← the diagram scrolls sideways →</p>
       <ol class="steps4">
         <li><b><i>01</i>A codeless address</b><code>CREATE2(factory, keccak256(id), treasury)</code> — computed offline. No code, no key, no transaction to create it.</li>
         <li><b><i>02</i>USDC arrives → PAID</b>Any wallet sends USDC. The page reads one <code>eth_getLogs</code> on the system emitter. No backend, no database.</li>
@@ -151,10 +152,10 @@ function viewNew() {
       <p class="lede">The seeded <code>${DEMO_ID}</code> cycle was paid and swept on the production factory. Its address is codeless again —
       you can check each read against the explorer.</p>
       <div class="proof">
-        <a class="stat" href="${DEMO_URL}"><span class="tag live"><i class="dot"></i>eth_getBalance</span><div><div class="v" id="lp-bal">—</div><div class="s">${DEMO_ID} → ${short(demo)} · paid 0.02 USDC, swept in tx 0xe639…8ea6 (receipts below) · open the invoice →</div></div></a>
-        <div class="stat"><span class="tag">eth_getCode · nonce</span><div><div class="v" id="lp-code">—</div><div class="s">the address after its sweep: nothing to steal, nothing to guard</div></div></div>
+        <div class="stat"><span class="tag live" id="lp-bal-tag"><i class="dot"></i>eth_getBalance</span><div><div class="v" id="lp-bal">—</div><div class="s">${DEMO_ID} → ${short(demo)} · paid 0.02 USDC, swept in ${ext(txUrl("0xe639255a52b96c7f4733608776f6cd11eca3c615748350877d2ea384a6988ea6"), "0xe639…8ea6 ↗")} · <a href="${DEMO_URL}">open the invoice →</a></div></div></div>
+        <a class="stat" href="${addrUrl(demo)}" target="_blank" rel="noopener"><span class="tag">eth_getCode · nonce</span><div><div class="v" id="lp-code">—</div><div class="s">the address after its sweep: nothing to steal, nothing to guard · explorer ↗</div></div></a>
         <a class="stat" href="${addrUrl(FACTORY)}" target="_blank" rel="noopener"><span class="tag">eth_call predict()</span><div><div class="v" id="lp-pred">—</div><div class="s">factory ${short(FACTORY)} · offline formula vs on-chain ↗</div></div></a>
-        <div class="stat"><span class="tag live"><i class="dot"></i>eth_blockNumber</span><div><div class="v acc" id="lp-head">—</div><div class="s">Arc mainnet · chain 5042 · deterministic finality</div></div></div>
+        <div class="stat"><span class="tag live" id="lp-head-tag"><i class="dot"></i>eth_blockNumber</span><div><div class="v acc" id="lp-head">—</div><div class="s">Arc mainnet · chain 5042 · deterministic finality</div></div></div>
       </div>
     </section>
 
@@ -183,15 +184,16 @@ function viewNew() {
       <h2 id="rec">Measured, tested, and linked — not promised.</h2>
       <p class="lede">The benchmark is N=25 balance-moving sweeps on the production factory; the receipts are the seeded cycles and the edge cases.</p>
       <div class="receipts">
-        <div class="card"><h2>Mainnet receipts</h2><ul class="rlist">
-          <li><span>Pay a codeless predicted address (native send)</span>${tx("0xc80df1360ab2cd4851b998d323840f6bfee1317a61fd0bfea48856ff711bfbd3", "0xc80df136…")}</li>
-          <li><span>Sweep — 64,162 gas ≈ $0.0013, <code>Transfer(pigeonhole → treasury)</code> + <code>Swept</code></span>${tx("0xe639255a52b96c7f4733608776f6cd11eca3c615748350877d2ea384a6988ea6", "0xe639255a…")}</li>
+        <div class="card"><h3>Mainnet receipts</h3><ul class="rlist">
+          <li><span>Pay <code>${DEMO_ID}</code> — 0.02 USDC native send to the codeless address</span>${tx("0x5fdef1b0d140e493152a26ed361d3c185b024987987cf79e0de79becc9dad59f", "0x5fdef1b0…")}</li>
+          <li><span>Sweep it — 64,162 gas ≈ $0.0013, <code>Transfer(pigeonhole → treasury)</code> + <code>Swept</code></span>${tx("0xe639255a52b96c7f4733608776f6cd11eca3c615748350877d2ea384a6988ea6", "0xe639255a…")}</li>
+          <li><span>Pay a codeless predicted address (native send) · day-0 probe factory</span>${tx("0xc80df1360ab2cd4851b998d323840f6bfee1317a61fd0bfea48856ff711bfbd3", "0xc80df136…")}</li>
           <li><span>Pay via ERC-20 <code>transfer()</code> — two logs, the page counts one</span>${tx("0x64ce87be84ef57938c0af91b7c6a89c9eb736ff3a8627dbf2c4f1a069a936a64", "0x64ce87be…")}</li>
           <li><span>Its sweep — the same 64,162 gas</span>${tx("0xf5883aeae9a0c872241de57b348ebe688bf6f80b58542f7d5166bfc24b5f8111", "0xf5883aea…")}</li>
-          <li><span>Re-pay an already-swept address (later tx)</span>${tx("0x531f09ffacdd006cb7c3f5c009e665ca62331c03cc867ebf5bdef2ef7cd6a76c", "0x531f09ff…")}</li>
-          <li><span>Re-sweep it</span>${tx("0x631814adf42ce99763ac5ca53859e0b0f677538707a6246a23843bb4e83fef51", "0x631814ad…")}</li>
+          <li><span>Re-pay an already-swept address (later tx) · probe factory</span>${tx("0x531f09ffacdd006cb7c3f5c009e665ca62331c03cc867ebf5bdef2ef7cd6a76c", "0x531f09ff…")}</li>
+          <li><span>Re-sweep it — 64,140 gas (the probe factory's bytecode)</span>${tx("0x631814adf42ce99763ac5ca53859e0b0f677538707a6246a23843bb4e83fef51", "0x631814ad…")}</li>
         </ul></div>
-        <div class="card"><h2>Numbers</h2><div class="numbers">
+        <div class="card"><h3>Numbers</h3><div class="numbers">
           <div class="stat"><div class="v">64,162</div><div class="l">gas per sweep · p50, N=25</div></div>
           <div class="stat"><div class="v">≈ $0.0013</div><div class="l">per sweep · at the measured p50 gas price</div></div>
           <div class="stat"><div class="v">37</div><div class="l">tests · 12 Foundry + 25 vitest</div></div>
@@ -247,6 +249,10 @@ function liveProof(demo: `0x${string}`) {
     pub.getCode({ address: demo }), pub.getTransactionCount({ address: demo }), pub.getBalance({ address: demo }),
     pub.readContract({ address: FACTORY, abi: factoryAbi, functionName: "predict", args: [salt] }),
   ]).then(([code, nonce, bal, pred]) => {
+    if ([code, nonce, bal, pred].every((r) => r.status === "rejected")) {
+      for (const id of ["hero-live", "lp-bal-tag", "lp-head-tag"]) { const el = document.getElementById(id); if (el) { el.classList.add("off"); } }
+      const hero = document.getElementById("hero-live"); if (hero) hero.innerHTML = "<i></i>Arc mainnet · chain 5042 — <b>RPC unavailable</b> right now";
+    }
     if (code.status === "fulfilled" && nonce.status === "fulfilled") set("lp-code", `${code.value ?? "0x"} · nonce ${nonce.value}`);
     if (bal.status === "fulfilled") set("lp-bal", `${fmtUsdc18(bal.value)}<small>USDC now</small>`);
     if (pred.status === "fulfilled") set("lp-pred", pred.value.toLowerCase() === demo.toLowerCase() ? `<span class="ok">✓</span> ${short(pred.value)}` : `<span class="err">≠</span> ${short(pred.value)}`);
@@ -307,15 +313,18 @@ async function viewInvoice(id: string, amtStr?: string, fromStr?: string) {
     .then((a) => { document.getElementById("pred")!.innerHTML = a.toLowerCase() === pigeonhole.toLowerCase() ? `<span class="ok">✓</span> on-chain <code>predict()</code> == offline formula` : `<span class="err">≠</span> on-chain predict() returned ${short(a)}`; })
     .catch(() => { const el = document.getElementById("pred"); if (el) el.innerHTML = `offline formula · on-chain check unavailable (RPC)`; });
   let verified = false;
+  let gone = false; // set when the route changes; declared here so refresh() can see it
   async function refresh() {
     let s: LiveInvoiceState;
     const stale = document.getElementById("stale");
     try { s = await invoiceState(pigeonhole, amount18, fromBlock); }
     catch (e: any) {
+      if (gone || !document.getElementById("moves")) return;
       document.getElementById("moves")!.innerHTML = `<p class="err">RPC error: ${esc(e.shortMessage || e.message || String(e))} — retrying…</p>`;
       if (stale && !verified) stale.textContent = "state not yet read from chain — RPC error, retrying…";
       return;
     }
+    if (gone || !document.getElementById("st")) return; // the route changed while the scan was in flight
     verified = true; if (stale) stale.textContent = "";
     document.getElementById("st")!.innerHTML = badge(s.status);
     (document.getElementById("sweep") as HTMLButtonElement).disabled = s.unswept === 0n; // nothing to sweep (spec: disabled at 0 unswept)
@@ -328,9 +337,12 @@ async function viewInvoice(id: string, amtStr?: string, fromStr?: string) {
       rows.map(([d, m]) => `<tr><td>${d === "in" ? "↓ pay" : "↑ sweep"}</td><td class="mono">${fmtUsdc18(m.value)}</td><td class="mono">${m.block}</td><td><a href="${txUrl(m.tx)}" target="_blank" rel="noopener">${short(m.tx)} ↗</a></td></tr>`).join("")
     }</tbody></table>` : `<p class="muted">No payments yet.</p>`;
   }
-  await refresh();
-  const iv = setInterval(refresh, 3000);
-  window.addEventListener("hashchange", () => clearInterval(iv), { once: true });
+  // Register the cleanup BEFORE the first (possibly slow) scan: leaving the route must never leave a poller behind.
+  let iv: ReturnType<typeof setInterval> | undefined;
+  window.addEventListener("hashchange", () => { gone = true; if (iv !== undefined) clearInterval(iv); }, { once: true });
+  const tick = async () => { if (gone) return; await refresh(); };
+  await tick();
+  if (!gone) iv = setInterval(tick, 3000);
 
   document.getElementById("pay")!.onclick = async () => {
     const msg = document.getElementById("msg")!;
@@ -364,7 +376,6 @@ async function viewTreasury() {
       <div class="stat"><div class="v" id="tr-count">—</div><div class="l">sweeps</div></div>
       <div class="stat"><div class="v ok" id="tr-total">—</div><div class="l">USDC swept to the treasury</div></div>
       <div class="stat"><div class="v" id="tr-last">—</div><div class="l">latest sweep · block</div></div>
-      <div class="stat"><div class="v">0</div><div class="l">keys held</div></div>
     </div>
     <div class="card"><h2>Sweeps</h2><div id="tbl"><p class="muted">Reading Swept events from block ${DEPLOY_BLOCK} in 9,000-block chunks…</p></div></div>
     <div class="card"><h2>Invoices this browser created</h2><div id="mine"></div></div>`;
@@ -398,7 +409,7 @@ function viewJudge() {
       <div class="stat"><div class="v">64,162</div><div class="l">gas per sweep · p50 · N=25</div></div>
       <div class="stat"><div class="v">≈ $0.0013</div><div class="l">per sweep · measured p50 gas price</div></div>
       <div class="stat"><div class="v">37 + 20,000</div><div class="l">tests + property cases</div></div>
-      <div class="stat"><div class="v">0</div><div class="l">keys held · backends</div></div>
+      <div class="stat"><div class="v">34</div><div class="l">E2E checks · read-only vs mainnet</div></div>
     </div>
     <div class="split">
       <div class="card">
@@ -412,10 +423,10 @@ function viewJudge() {
         </ol>
         <h2>No wallet? Read the receipts</h2>
         <ul class="steps">
-          <li>Pay a codeless address → ${tx("0xc80df1360ab2cd4851b998d323840f6bfee1317a61fd0bfea48856ff711bfbd3", "0xc80df136…")}</li>
-          <li>Sweep, 64,162 gas ≈ $0.0013 → ${tx("0xe639255a52b96c7f4733608776f6cd11eca3c615748350877d2ea384a6988ea6", "0xe639255a…")}</li>
+          <li>Pay <code>demo-paid</code> (0.02 USDC, native send) → ${tx("0x5fdef1b0d140e493152a26ed361d3c185b024987987cf79e0de79becc9dad59f", "0x5fdef1b0…")} · its sweep, 64,162 gas ≈ $0.0013 → ${tx("0xe639255a52b96c7f4733608776f6cd11eca3c615748350877d2ea384a6988ea6", "0xe639255a…")}</li>
+          <li>Pay a codeless address, day-0 probe factory → ${tx("0xc80df1360ab2cd4851b998d323840f6bfee1317a61fd0bfea48856ff711bfbd3", "0xc80df136…")}</li>
           <li>Pay via ERC-20 <code>transfer()</code> → ${tx("0x64ce87be84ef57938c0af91b7c6a89c9eb736ff3a8627dbf2c4f1a069a936a64", "0x64ce87be…")} · its sweep → ${tx("0xf5883aeae9a0c872241de57b348ebe688bf6f80b58542f7d5166bfc24b5f8111", "0xf5883aea…")}</li>
-          <li>Re-pay a swept address (later tx) → ${tx("0x531f09ffacdd006cb7c3f5c009e665ca62331c03cc867ebf5bdef2ef7cd6a76c", "0x531f09ff…")} · re-sweep → ${tx("0x631814adf42ce99763ac5ca53859e0b0f677538707a6246a23843bb4e83fef51", "0x631814ad…")}</li>
+          <li>Re-pay a swept address (later tx, probe factory) → ${tx("0x531f09ffacdd006cb7c3f5c009e665ca62331c03cc867ebf5bdef2ef7cd6a76c", "0x531f09ff…")} · re-sweep, 64,140 gas → ${tx("0x631814adf42ce99763ac5ca53859e0b0f677538707a6246a23843bb4e83fef51", "0x631814ad…")}</li>
         </ul>
       </div>
       <div class="card">
@@ -456,7 +467,7 @@ function route() {
     if (current) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
   });
   if (path === "/" || path === "") return viewNew();
-  if (path.startsWith("/i/")) return viewInvoice(decodeURIComponent(path.slice(3)), params.get("amt") || undefined, params.get("from") || undefined);
+  if (path.startsWith("/i/")) { const id = decodeURIComponent(path.slice(3)).trim(); if (!id) { location.hash = "#/"; return; } return viewInvoice(id, params.get("amt") || undefined, params.get("from") || undefined); }
   if (path === "/treasury") return viewTreasury();
   if (path === "/judge") return viewJudge();
   location.hash = "#/"; // unknown route: go home (hashchange re-routes)

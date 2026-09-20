@@ -79,8 +79,9 @@ main.landing { padding-top: 0; }
 
 /* ---------- cards & primitives ---------- */
 .card { background: linear-gradient(180deg, rgba(255, 255, 255, .025), transparent 40%), var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 22px; margin: 16px 0; box-shadow: var(--shadow); }
-.card > h2 { font-size: 17px; margin-bottom: 12px; }
+.card > h2, .card > h3 { font-size: 17px; margin-bottom: 12px; text-transform: none; letter-spacing: -.02em; color: var(--fg); font-weight: 700; }
 .card h2 + .kv, .card h2 + table { margin-top: 4px; }
+.card.create .head h2 { font-size: 16px; margin: 0; }
 .card h2:not(:first-child) { margin-top: 22px; }
 .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
 label { display: block; font-size: 12.5px; font-weight: 600; letter-spacing: .02em; color: var(--muted); margin: 0 0 6px; }
@@ -150,6 +151,7 @@ tr:last-child td { border-bottom: 0; }
 #moves, #tbl, #mine { overflow-x: auto; }
 .back { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; color: var(--muted); font-size: 13px; font-weight: 500; }
 .addr .xl { font-family: var(--sans); font-size: 12px; font-weight: 600; white-space: nowrap; margin-left: 6px; }
+.addr .xl, .rlist a, .steps a, .foot a, .proof .s a, .kv a { display: inline-block; padding: 4px 0; margin-top: -4px; margin-bottom: -4px; } /* ≥ 24 px tap height without changing line rhythm */
 .stale { font-family: var(--mono); font-size: 12px; color: var(--muted); }
 .stale:empty { display: none; }
 .live.off { border-color: var(--line2); background: rgba(255, 255, 255, .04); color: var(--muted); } .live.off i { background: var(--dim); animation: none; }
@@ -182,7 +184,7 @@ tr:last-child td { border-bottom: 0; }
 .hero .card.create { position: relative; margin: 0; padding: 26px; border-color: rgba(78, 161, 255, .28); box-shadow: 0 0 0 1px rgba(78, 161, 255, .08), 0 30px 80px -30px rgba(78, 161, 255, .35), var(--shadow); }
 .hero .card.create::before { content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; background: linear-gradient(140deg, rgba(78, 161, 255, .6), transparent 40%, transparent 60%, rgba(61, 220, 132, .45)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
 .card.create .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
-.card.create .head h2 { font-size: 16px; margin: 0; }
+
 .card.create .head .pill { font-family: var(--mono); font-size: 11px; color: var(--ok); border-color: rgba(61, 220, 132, .3); background: rgba(61, 220, 132, .06); }
 .card.create label + input { margin-bottom: 14px; }
 .card.create #go { width: 100%; padding: 14px 18px; font-size: 15px; margin-top: 4px; }
@@ -233,8 +235,8 @@ tr:last-child td { border-bottom: 0; }
 .mech .st-unpaid { animation-name: stunpaid; } @keyframes stunpaid { 0%, 19% { opacity: 1 } 21%, 96.5% { opacity: 0 } 98.5%, 100% { opacity: 1 } }
 .mech .st-paid { animation-name: stpaid; } @keyframes stpaid { 0%, 21.5% { opacity: 0 } 23.5%, 50% { opacity: 1 } 52%, 100% { opacity: 0 } }
 .mech .st-swept { animation-name: stswept; } @keyframes stswept { 0%, 52.5% { opacity: 0 } 54.5%, 94% { opacity: 1 } 96%, 100% { opacity: 0 } }
-.mech .st-code { animation-name: stcode; } @keyframes stcode { 0%, 33% { opacity: 1 } 35%, 58% { opacity: 0 } 60%, 100% { opacity: 1 } }
-.mech .st-born { animation-name: stborn; } @keyframes stborn { 0%, 32.5% { opacity: 0 } 34.5%, 56% { opacity: 1 } 58%, 100% { opacity: 0 } }
+.mech .st-code { animation-name: stcode; } @keyframes stcode { 0%, 32% { opacity: 1 } 34%, 58.5% { opacity: 0 } 60.5%, 100% { opacity: 1 } }
+.mech .st-born { animation-name: stborn; } @keyframes stborn { 0%, 34.5% { opacity: 0 } 36.5%, 56% { opacity: 1 } 58%, 100% { opacity: 0 } }
 /* the throwaway: green outline appears (born) 34 %, vanishes (SELFDESTRUCT) 58 % · the slot's bottom edge opens while the coin drops */
 .mech .born { animation-name: born; } @keyframes born { 0%, 33% { opacity: 0 } 35%, 55% { opacity: 1 } 58%, 100% { opacity: 0 } }
 .mech .floor { animation-name: floor; } @keyframes floor { 0%, 40% { opacity: 1 } 42%, 56% { opacity: 0 } 58%, 100% { opacity: 1 } }
@@ -247,6 +249,7 @@ tr:last-child td { border-bottom: 0; }
 /* the payment trail: a dash that runs wallet → slot with the coin */
 .mech .trail { stroke-dasharray: 6 8; animation-name: trail; } @keyframes trail { 0%, 10% { opacity: 0 } 12%, 20% { opacity: .9 } 24%, 100% { opacity: 0 } }
 /* progress bar under the frame */
+.mech .scrollhint { display: none; margin: 8px 0 0; text-align: center; font-family: var(--mono); font-size: 11.5px; color: var(--muted); letter-spacing: .04em; }
 .mech .prog { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(255, 255, 255, .05); z-index: 2; }
 .mech .prog i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, var(--acc), var(--ok)); transform-origin: left; animation: prog var(--loop) linear infinite; }
 @keyframes prog { from { transform: scaleX(0) } to { transform: scaleX(1) } }
@@ -316,8 +319,9 @@ tr:last-child td { border-bottom: 0; }
   .topbar { height: auto; padding-top: 10px; padding-bottom: 10px; flex-wrap: wrap; }
   .topbar nav { width: 100%; margin: 0 -6px; gap: 0; }
   .topbar nav a { font-size: 13px; padding: 10px 8px; }
-  .mech .frame { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
-  .mech svg { min-width: 820px; }
+  .mech .frame { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent); mask-image: linear-gradient(90deg, #000 88%, transparent); }
+  .mech svg { min-width: 1120px; }
+  .mech .scrollhint { display: block; }
   .split, .cmp, .limits, .mech .steps4 { grid-template-columns: 1fr; }
   .hero h1 { font-size: clamp(32px, 9vw, 44px); }
   .hero .card.create { padding: 20px; }
