@@ -1,6 +1,6 @@
 # DEMO — Pigeonhole
 
-**Live:** https://edycutjong.github.io/pigeonhole-arc/ · **Factory:** [`0x942b8c10…9A40`](https://explorer.arc.io/address/0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40) · **Arc mainnet (5042)**
+**Live:** https://pigeonhole.edycu.dev/ · **Factory:** [`0x942b8c10…9A40`](https://explorer.arc.io/address/0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40) · **Arc mainnet (5042)**
 
 ## 60-second reviewer path (≤ $0.10 of USDC on Arc, one wallet)
 1. Open the live URL → **New invoice** → type any id (e.g. `demo-1`) and `0.02` → **Create deposit address**.

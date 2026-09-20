@@ -14,8 +14,8 @@ with no key anywhere in the system.
 
 <br/>
 
-[![Live on Arc mainnet](https://img.shields.io/badge/▶_Live-Arc_mainnet-06b6d4?style=for-the-badge)](https://edycutjong.github.io/pigeonhole-arc/)
-[![For reviewers](https://img.shields.io/badge/⚖_For-reviewers-3ddc84?style=for-the-badge)](https://edycutjong.github.io/pigeonhole-arc/#/judge)
+[![Live on Arc mainnet](https://img.shields.io/badge/▶_Live-Arc_mainnet-06b6d4?style=for-the-badge)](https://pigeonhole.edycu.dev/)
+[![For reviewers](https://img.shields.io/badge/⚖_For-reviewers-3ddc84?style=for-the-badge)](https://pigeonhole.edycu.dev/#/judge)
 [![Factory on explorer](https://img.shields.io/badge/🏭_Factory-0x942b…9A40-4ea1ff?style=for-the-badge)](https://explorer.arc.io/address/0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40)
 [![Arc Microgrants](https://img.shields.io/badge/DoraHacks-Arc_Microgrants-8b5cf6?style=for-the-badge)](https://dorahacks.io/hackathon/arc-microgrants/detail)
 
@@ -30,8 +30,8 @@ with no key anywhere in the system.
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat&logo=vite&logoColor=white)
 ![tests](https://img.shields.io/badge/tests-37_passing-3ddc84?style=flat)
 ![property cases](https://img.shields.io/badge/fast--check-20%2C000_cases-3ddc84?style=flat)
-[![CI](https://github.com/edycutjong/pigeonhole-arc/actions/workflows/ci.yml/badge.svg)](https://github.com/edycutjong/pigeonhole-arc/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/edycutjong/pigeonhole-arc/actions/workflows/codeql.yml/badge.svg)](https://github.com/edycutjong/pigeonhole-arc/actions/workflows/codeql.yml)
+[![CI](https://github.com/edycutjong/pigeonhole/actions/workflows/ci.yml/badge.svg)](https://github.com/edycutjong/pigeonhole/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/edycutjong/pigeonhole/actions/workflows/codeql.yml/badge.svg)](https://github.com/edycutjong/pigeonhole/actions/workflows/codeql.yml)
 ![license](https://img.shields.io/badge/license-MIT-blue?style=flat)
 
 </div>
@@ -88,7 +88,7 @@ Take Arc out and you'd need: a key-management service (HD wallets + signing), an
 
 ## 🚀 Run it
 ```sh
-git clone --recurse-submodules https://github.com/edycutjong/pigeonhole-arc && cd pigeonhole-arc
+git clone --recurse-submodules https://github.com/edycutjong/pigeonhole && cd pigeonhole
 npm install
 npm run verify                 # read-only proof, no wallet
 npm test                       # 25 vitest incl. 20,000 fast-check cases
@@ -97,7 +97,7 @@ npm run dev                    # the page locally
 ```
 No `.env`, no keys: the page is static and reads Arc mainnet anonymously. Only the gas benchmark spends (`.env.example`).
 
-> **For reviewers:** open **[/#/judge](https://edycutjong.github.io/pigeonhole-arc/#/judge)** — the 60-second path, every
+> **For reviewers:** open **[/#/judge](https://pigeonhole.edycu.dev/#/judge)** — the 60-second path, every
 > mainnet receipt, and the honest limitations on one page. Mirror: [`JUDGE.md`](./JUDGE.md).
 
 ## 🧪 Testing & CI
@@ -147,7 +147,7 @@ key-optional payment primitives possible.
 
 ## 📁 Project structure
 ```
-pigeonhole-arc/
+pigeonhole/
 ├── contracts/            # PigeonholeFactory.sol (61 lines), Foundry tests, Deploy script
 ├── src/                  # the static page: lib/ (predict, ledger, chunked getLogs), chain.ts, main.ts
 ├── test/                 # vitest: formula vs mainnet addresses, reducer, regression + property tests

@@ -200,7 +200,7 @@ git submodule update --init &amp;&amp; forge test --root contracts</div>
           <li>The page needs an anonymous Arc RPC and scans logs in 9,000-block chunks — invoice URLs without <code>?from=</code> get slower every day.</li>
           <li>PAID latency is not benchmarked; <code>sweepMany</code> is on-chain and tested but the page calls <code>sweep</code> only.</li>
         </ul>
-        <p class="hint"><a href="https://github.com/edycutjong/pigeonhole-arc" target="_blank" rel="noopener">Repository ↗</a> · <a href="https://github.com/edycutjong/pigeonhole-arc/blob/main/DEMO.md" target="_blank" rel="noopener">DEMO.md ↗</a> · <a href="https://github.com/edycutjong/pigeonhole-arc/blob/main/ARCHITECTURE.md" target="_blank" rel="noopener">ARCHITECTURE.md ↗</a></p>
+        <p class="hint"><a href="https://github.com/edycutjong/pigeonhole" target="_blank" rel="noopener">Repository ↗</a> · <a href="https://github.com/edycutjong/pigeonhole/blob/main/DEMO.md" target="_blank" rel="noopener">DEMO.md ↗</a> · <a href="https://github.com/edycutjong/pigeonhole/blob/main/ARCHITECTURE.md" target="_blank" rel="noopener">ARCHITECTURE.md ↗</a></p>
       </div>
     </div>`;
 }

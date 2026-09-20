@@ -1,11 +1,11 @@
 # For reviewers — `JUDGE.md`
 
-Live mirror of this page: **https://edycutjong.github.io/pigeonhole-arc/#/judge** (no auth, no wallet needed to render).
+Live mirror of this page: **https://pigeonhole.edycu.dev/#/judge** (no auth, no wallet needed to render).
 
 > **A fresh USDC deposit address per invoice, no key to guard, swept in one transaction. Live on Arc mainnet.**
 
 ## The 60-second path (one Arc wallet holding ≥ 0.05 USDC; total cost ≤ $0.10)
-1. Open **https://edycutjong.github.io/pigeonhole-arc/** → type any invoice id and `0.02` → **Create deposit address**. No transaction: the address is `CREATE2(factory, keccak256(id), treasury)`, computed offline.
+1. Open **https://pigeonhole.edycu.dev/** → type any invoice id and `0.02` → **Create deposit address**. No transaction: the address is `CREATE2(factory, keccak256(id), treasury)`, computed offline.
 2. Open that address on https://explorer.arc.io — an empty account: no code, nonce 0.
 3. **Pay with wallet** (or send 0.02 USDC from any Arc wallet). The badge flips **PAID** on the next 3-second poll — one `eth_getLogs` on the system emitter `0xffff…fffE`. No backend, no database.
 4. **Sweep → treasury**. One transaction (≈ $0.0013): the 22-byte throwaway is born at that exact address, its constructor moves the whole balance to the immutable treasury and self-destructs — same tx. The address is back to no code, nonce 0, and can be paid again.
@@ -38,7 +38,7 @@ Full edge-case table with the empty-sweep and never-seen-beneficiary cases: [`DE
 
 ## Reproduce (read-only, no wallet)
 ```sh
-git clone --recurse-submodules https://github.com/edycutjong/pigeonhole-arc && cd pigeonhole-arc
+git clone --recurse-submodules https://github.com/edycutjong/pigeonhole && cd pigeonhole
 npm install
 npm run verify              # offline predict() == on-chain predict() for 50 random ids; invariant I2 for both seeded cycles
 npm test                    # 25 vitest incl. 20,000 property cases
@@ -54,4 +54,4 @@ The gas benchmark is the only thing that spends: `KS=… PW=… N=25 R=8 zsh scr
 - The `?amt=` is the merchant's claim — the chain proves what was *paid*.
 
 ## Links
-Repo: https://github.com/edycutjong/pigeonhole-arc · Live: https://edycutjong.github.io/pigeonhole-arc/ · [DEMO.md](./DEMO.md) · [ARCHITECTURE.md](./ARCHITECTURE.md) · [Arc Microgrants](https://dorahacks.io/hackathon/arc-microgrants/detail)
+Repo: https://github.com/edycutjong/pigeonhole · Live: https://pigeonhole.edycu.dev/ · [DEMO.md](./DEMO.md) · [ARCHITECTURE.md](./ARCHITECTURE.md) · [Arc Microgrants](https://dorahacks.io/hackathon/arc-microgrants/detail)

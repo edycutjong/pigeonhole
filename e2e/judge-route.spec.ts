@@ -19,7 +19,7 @@ test.describe("/judge — the reviewer page", () => {
     await page.goto("/#/judge");
     const hrefs = await page.locator("#app a[target=_blank]").evaluateAll((as) => as.map((a) => (a as HTMLAnchorElement).href));
     expect(hrefs.length).toBeGreaterThan(8);
-    for (const h of hrefs) expect(h).toMatch(/^https:\/\/(explorer\.arc\.io|github\.com\/edycutjong\/pigeonhole-arc)/);
+    for (const h of hrefs) expect(h).toMatch(/^https:\/\/(explorer\.arc\.io|github\.com\/edycutjong\/pigeonhole)/);
   });
 
   test("is reachable from the top bar", async ({ page }) => {

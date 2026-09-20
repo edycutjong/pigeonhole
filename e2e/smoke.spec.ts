@@ -9,7 +9,7 @@ test.describe("smoke — the page loads on its own", () => {
     await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", /og-image\.png/);
     await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute("content", "summary_large_image");
     const og = await page.locator('meta[property="og:image"]').getAttribute("content");
-    const r = await page.request.get(new URL(og!).pathname.replace(/^\/pigeonhole-arc/, ""));
+    const r = await page.request.get(new URL(og!).pathname);
     expect(r.status()).toBe(200);
     expect(r.headers()["content-type"]).toContain("image/png");
   });
