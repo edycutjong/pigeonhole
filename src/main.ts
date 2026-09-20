@@ -352,7 +352,7 @@ async function viewInvoice(id: string, amtStr?: string, fromStr?: string) {
   window.addEventListener("hashchange", () => { gone = true; offProgress(); if (iv !== undefined) clearInterval(iv); }, { once: true });
   const tick = async () => { if (gone) return; await refresh(); };
   await tick();
-  if (!gone) iv = setInterval(tick, 3000);
+  if (!gone) iv = setInterval(tick, 5000); // 2 getLogs per poll; ≈0.4 calls/s stays under the public RPC's ≈0.5/s
 
   document.getElementById("pay")!.onclick = async () => {
     const msg = document.getElementById("msg")!;
@@ -457,7 +457,7 @@ git submodule update --init &amp;&amp; forge test --root contracts</div>
         <h2>Honest limitations</h2>
         <ul class="steps">
           <li>The immutable treasury is a single point of failure: if it were blocklisted, unswept invoices freeze until a new factory.</li>
-          <li>The page needs an anonymous Arc RPC and scans logs in 9,000-block chunks, paced to that RPC's ≈3 calls/s — the first read of a months-old invoice takes minutes (progress is shown; the walk is checkpointed in the browser, so it is never repeated).</li>
+          <li>The page needs an anonymous Arc RPC and scans logs in 9,000-block chunks, paced to that RPC's ≈0.5 calls/s — the first read of an old invoice takes minutes (progress is shown; the walk is checkpointed in the browser and never repeated). The seeded <code>demo-paid</code> / <code>demo-erc20</code> ship a committed history checkpoint (<code>deployments/history-checkpoints.json</code>, every movement re-checked by <code>npm run verify</code>) so they open fast.</li>
           <li>PAID latency is not benchmarked; <code>sweepMany</code> is on-chain and tested but the page calls <code>sweep</code> only.</li>
           <li>The <code>?amt=</code> is the merchant's claim — the chain proves what was <em>paid</em>.</li>
         </ul>

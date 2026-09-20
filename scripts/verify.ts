@@ -4,14 +4,20 @@
 //         (3) factory.treasury() == the fact-sheet treasury.
 import { createPublicClient, http, parseAbi, getAddress } from "viem";
 import { predict, saltOf, reduceLogs } from "../src/lib/pigeonhole";
-import { fetchMovements } from "../src/lib/logs";
+import { MovementCache, type LogClient } from "../src/lib/logs";
 import deployment from "../deployments/arc-mainnet.json" with { type: "json" };
+import checkpoints from "../deployments/history-checkpoints.json" with { type: "json" };
 
 const FACTORY = getAddress(deployment.factory as string);
 const TREASURY = getAddress(deployment.treasury as string);
 const N = Number(process.env.N ?? 50);
 
-const client = createPublicClient({ transport: http("https://rpc.mainnet.arc.io") });
+const client = createPublicClient({ transport: http("https://rpc.mainnet.arc.io", { retryCount: 0 }) });
+// (4) the committed history checkpoints are chain data: every movement must be a real system-emitter log in its receipt,
+//     and the cache is seeded from them so (2) walks only the tail (the RPC sustains ≈0.5 getLogs/s — src/lib/logs.ts).
+const cache = new MovementCache(client as unknown as LogClient);
+const cps = Object.entries((checkpoints as any).pigeonholes ?? {}) as [string, any][];
+for (const [addr, cp] of cps) cache.seed(getAddress(addr), BigInt(cp.from), BigInt(cp.to), cp.moves.map((m: any) => ({ block: BigInt(m.block), logIndex: Number(m.logIndex), tx: m.tx, from: getAddress(m.from), to: getAddress(m.to), value: BigInt(m.value) })));
 const factoryAbi = parseAbi(["function predict(bytes32) view returns (address)", "function treasury() view returns (address)"]);
 
 let fails = 0;
@@ -41,11 +47,26 @@ async function main() {
     const p = predict(FACTORY, TREASURY, saltOf(id));
     // Chunked (≤9,000 blocks per call): the RPC rejects 10k+ spans with -32012. See src/lib/logs.ts.
     const from0 = BigInt((deployment as any).deployBlock ?? 0);
-    const movements = await fetchMovements(client, p, from0, await client.getBlockNumber());
+    const movements = await cache.movements(p, from0);
     const state = reduceLogs(p, movements);
     const balance = await client.getBalance({ address: p });
     if (state.unswept !== balance) fail(`I2 ${id} @ ${p}: unswept ${state.unswept} != balance ${balance}`);
     else console.log(`  ok: I2 ${id} @ ${p} unswept==balance (${state.unswept})  status=${state.status}`);
+  }
+
+  // (4) checkpoint movements vs receipts
+  const EMITTER = "0xfffffffffffffffffffffffffffffffffffffffe";
+  const TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+  for (const [addr, cp] of cps) {
+    for (const m of cp.moves as any[]) {
+      const r = await client.getTransactionReceipt({ hash: m.tx });
+      const log = r.logs.find((l) => Number(l.logIndex) === Number(m.logIndex));
+      const okLog = !!log && log.address.toLowerCase() === EMITTER && log.topics[0] === TRANSFER
+        && getAddress(`0x${log.topics[1]!.slice(26)}`) === getAddress(m.from) && getAddress(`0x${log.topics[2]!.slice(26)}`) === getAddress(m.to)
+        && BigInt(log.data) === BigInt(m.value) && r.blockNumber === BigInt(m.block);
+      if (!okLog) fail(`checkpoint ${cp.id} @ ${addr}: ${m.tx}#${m.logIndex} does not match its receipt`);
+      else console.log(`  ok: checkpoint ${cp.id} ${m.tx.slice(0, 10)}…#${m.logIndex} == receipt (block ${m.block}, ${m.value} wei)`);
+    }
   }
 
   if (fails) { console.error(`\nVERIFY FAILED: ${fails} check(s)`); process.exit(1); }

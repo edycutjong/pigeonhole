@@ -19,6 +19,8 @@ export const transferEvent = {
 
 /** The minimal slice of a viem PublicClient this module needs (keeps the test client tiny). */
 export type LogClient = {
+  /** ms between eth_getLogs calls; undefined = CALL_PACE_MS, 0 = no pacing (tests). */
+  pace?: number;
   getBlockNumber(): Promise<bigint>;
   getLogs(args: {
     address: Address; event: typeof transferEvent; args: { to?: Address; from?: Address };
@@ -66,10 +68,11 @@ export async function withRetry<T>(fn: () => Promise<T>, attempts = RETRY_ATTEMP
   }
 }
 
-/** Pause between eth_getLogs calls: ≈2 calls/s stays inside the RPC's ≈60-per-30 s window (measured 2026-09-20:
- *  200 calls at 320 ms apart → windows of ≈50 ok / ≈25 refused; at 0 ms → refused after the first). Browser only. */
-export const CALL_PACE_MS = 520;
-const paced = () => (typeof window === "undefined" || CALL_PACE_MS <= 0) ? Promise.resolve() : new Promise<void>((r) => setTimeout(r, CALL_PACE_MS));
+/** Pause between eth_getLogs calls. Measured 2026-09-20 on rpc.mainnet.arc.io: after any burst, 1 call/s is refused
+ *  indefinitely (40/40 -32005) while 1 call per 2 s always succeeds (40/40) — the sustainable rate is ≈0.5 getLogs/s.
+ *  Applies to the page and to the scripts; the unit tests inject `pace` = 0 through the fake client. */
+export const CALL_PACE_MS = 2_100;
+const paced = (client: LogClient) => (client.pace ?? CALL_PACE_MS) <= 0 ? Promise.resolve() : new Promise<void>((r) => setTimeout(r, client.pace ?? CALL_PACE_MS));
 
 export type Progress = { done: number; total: number; toBlock: bigint };
 
@@ -84,9 +87,9 @@ export async function fetchMovements(client: LogClient, pigeonhole: Address, fro
   const all = [...spans(fromBlock, toBlock)];
   for (let i = 0; i < all.length; i++) {
     const [a, b] = all[i];
-    if (i > 0) await paced();
+    if (i > 0) await paced(client);
     const ins = await withRetry(() => client.getLogs({ address: ARC.systemEmitter, event: transferEvent, args: { to: pigeonhole }, fromBlock: a, toBlock: b }));
-    await paced();
+    await paced(client);
     const outs = await withRetry(() => client.getLogs({ address: ARC.systemEmitter, event: transferEvent, args: { from: pigeonhole }, fromBlock: a, toBlock: b }));
     out.push(...ins, ...outs);
     onChunk?.(toMovements([...ins, ...outs]), b, { done: i + 1, total: all.length, toBlock: b });
@@ -124,16 +127,32 @@ export class MovementCache {
   onProgress?: (pigeonhole: Address, p: Progress) => void;
   constructor(private client: LogClient, private store?: MoveStore) {}
 
+  /** Committed checkpoints (deployments/history-checkpoints.json) for the seeded invoices: the first read walks only
+   *  the tail after `to`. Chain data, verifiable receipt by receipt (`npm run verify`); refreshed by `npm run checkpoints`. */
+  private seeds = new Map<string, { from: bigint; to: bigint; moves: Movement[] }>();
+  seed(pigeonhole: Address, from: bigint, to: bigint, moves: Movement[]) {
+    this.seeds.set(getAddress(pigeonhole), { from, to, moves });
+  }
+
+  private load(key: Address, from: bigint, to: bigint, moves: Movement[]) {
+    const prevTo = this.scannedTo.get(key);
+    if (prevTo !== undefined && prevTo >= to) return;                  // what we hold already reaches further
+    const bucket = new Map<string, Movement>();
+    for (const m of moves) bucket.set(keyOf(m), m);
+    this.moves.set(key, bucket); this.scannedFrom.set(key, from); this.scannedTo.set(key, to);
+  }
+
   private hydrate(key: Address) {
-    if (!this.store || this.hydrated.has(key)) return;
+    if (this.hydrated.has(key)) return;
     this.hydrated.add(key);
+    const seed = this.seeds.get(key);
+    if (seed) this.load(key, seed.from, seed.to, seed.moves);
+    if (!this.store) return;
     try {
       const raw = this.store.getItem(STORE_PREFIX + key.toLowerCase());
       if (!raw) return;
       const j = JSON.parse(raw);
-      const bucket = new Map<string, Movement>();
-      for (const m of j.moves.map(strToBig)) bucket.set(keyOf(m), m);
-      this.moves.set(key, bucket); this.scannedFrom.set(key, BigInt(j.from)); this.scannedTo.set(key, BigInt(j.to));
+      this.load(key, BigInt(j.from), BigInt(j.to), j.moves.map(strToBig));   // wins only if it reaches further
     } catch { try { this.store.removeItem(STORE_PREFIX + key.toLowerCase()); } catch { /* ignore */ } }
   }
   private persist(key: Address) {
