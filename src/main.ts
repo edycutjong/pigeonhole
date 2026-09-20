@@ -42,27 +42,27 @@ function mechanismSvg() {
     <!-- wallet -->
     <g class="sans">
       <rect x="60" y="110" width="210" height="110" rx="14" fill="rgba(255,255,255,.03)" stroke="#323b46" stroke-width="1.5"/>
-      <text x="80" y="146" font-size="15" font-weight="600" fill="#e8edf2">any Arc wallet</text>
-      <text x="80" y="170" font-size="11.5" fill="#8b97a6" class="mo">native send or ERC-20</text>
-      <text x="80" y="190" font-size="11.5" fill="#8b97a6" class="mo">transfer() — both count</text>
+      <text x="80" y="146" font-size="16" font-weight="600" fill="#e8edf2">any Arc wallet</text>
+      <text x="80" y="170" font-size="12.5" fill="#8b97a6" class="mo">native send or ERC-20</text>
+      <text x="80" y="190" font-size="12.5" fill="#8b97a6" class="mo">transfer() — both count</text>
     </g>
     <path class="an trail" d="M280 165 H408" stroke="#4ea1ff" stroke-width="2" fill="none" marker-end="url(#arr)" opacity="0"/>
-    <text class="an cap-send mo" x="282" y="150" font-size="11.5" fill="#7cc0ff" opacity="0">sends USDC to the address →</text>
+    <text class="an cap-send mo" x="282" y="150" font-size="12.5" fill="#7cc0ff" opacity="0">sends USDC to the address →</text>
     <!-- the pigeonhole slot: an outline with a separate floor that opens during the sweep -->
-    <text class="mo" x="420" y="72" font-size="11.5" fill="#8b97a6">the pigeonhole — invoice ${DEMO_ID} · no lock, no key</text>
+    <text class="mo" x="420" y="72" font-size="12.5" fill="#8b97a6">the pigeonhole — invoice ${DEMO_ID} · no lock, no key</text>
     <path d="M420 230 V106 a16 16 0 0 1 16 -16 h338 a16 16 0 0 1 16 16 V230" fill="rgba(78,161,255,.04)" stroke="#4ea1ff" stroke-width="3" stroke-linejoin="round"/>
     <path class="an floor" d="M420 230 H790" stroke="#4ea1ff" stroke-width="3" stroke-linecap="round"/>
     <!-- the throwaway contract: born (green outline) at 34 %, SELFDESTRUCT at 58 % -->
     <rect class="an born" x="420" y="90" width="370" height="140" rx="16" fill="none" stroke="#3ddc84" stroke-width="10" opacity="0" stroke-opacity=".18"/>
     <rect class="an born" x="420" y="90" width="370" height="140" rx="16" fill="none" stroke="#3ddc84" stroke-width="3" opacity="0"/>
     <g class="mo">
-      <text x="500" y="128" font-size="15" fill="#e8edf2">${short(demo)}</text>
-      <text class="an st-unpaid" x="500" y="158" font-size="13" font-weight="700" fill="#8b97a6">UNPAID</text>
-      <text class="an st-paid" x="500" y="158" font-size="13" font-weight="700" fill="#7cc0ff" opacity="0">PAID · 0.02 USDC</text>
-      <text class="an st-swept" x="500" y="158" font-size="13" font-weight="700" fill="#3ddc84" opacity="0">SWEPT · empty · reusable</text>
-      <text class="an st-code" x="500" y="186" font-size="11.5" fill="#8b97a6">code 0x · nonce 0 · no key</text>
-      <text class="an st-born" x="500" y="186" font-size="11.5" fill="#3ddc84" opacity="0">22 bytes · PUSH20 treasury; SELFDESTRUCT</text>
-      <text x="500" y="212" font-size="11" fill="#8b97a6">CREATE2(factory, keccak256(id), treasury)</text>
+      <text x="500" y="128" font-size="16" fill="#e8edf2">${short(demo)}</text>
+      <text class="an st-unpaid" x="500" y="158" font-size="14" font-weight="700" fill="#8b97a6">UNPAID</text>
+      <text class="an st-paid" x="500" y="158" font-size="14" font-weight="700" fill="#7cc0ff" opacity="0">PAID · 0.02 USDC</text>
+      <text class="an st-swept" x="500" y="158" font-size="14" font-weight="700" fill="#3ddc84" opacity="0">SWEPT · empty · reusable</text>
+      <text class="an st-code" x="500" y="186" font-size="12.5" fill="#8b97a6">code 0x · nonce 0 · no key</text>
+      <text class="an st-born" x="500" y="186" font-size="12.5" fill="#3ddc84" opacity="0">22 bytes · PUSH20 treasury; SELFDESTRUCT</text>
+      <text x="500" y="212" font-size="12" fill="#8b97a6">CREATE2(factory, keccak256(id), treasury)</text>
     </g>
     <!-- the coin: at the wallet → into the slot → down into the treasury, turning green as it lands -->
     <g class="an coin" transform="translate(0,0)">
@@ -75,29 +75,29 @@ function mechanismSvg() {
     </g>
     <!-- right captions, one per beat -->
     <g class="an cap-pay" opacity="0">
-      <text class="sans" x="820" y="124" font-size="16" font-weight="700" fill="#7cc0ff">PAID — read from one log</text>
-      <text class="mo" x="820" y="150" font-size="12" fill="#c3ccd6">eth_getLogs · Transfer(from, to, value)</text>
-      <text class="mo" x="820" y="170" font-size="12" fill="#c3ccd6">on the system emitter 0xffff…fffE</text>
-      <text class="mo" x="820" y="190" font-size="12" fill="#8b97a6">no backend, no database, no indexer</text>
+      <text class="sans" x="820" y="124" font-size="17" font-weight="700" fill="#7cc0ff">PAID — read from one log</text>
+      <text class="mo" x="820" y="150" font-size="13" fill="#c3ccd6">eth_getLogs · Transfer(from, to, value)</text>
+      <text class="mo" x="820" y="170" font-size="13" fill="#c3ccd6">on the system emitter 0xffff…fffE</text>
+      <text class="mo" x="820" y="190" font-size="13" fill="#8b97a6">no backend, no database, no indexer</text>
     </g>
     <g class="an cap-sweep" opacity="0">
-      <text class="sans" x="820" y="124" font-size="16" font-weight="700" fill="#3ddc84">sweep(salt) — one transaction</text>
-      <text class="mo" x="820" y="150" font-size="12" fill="#c3ccd6">a 22-byte contract is born at the address,</text>
-      <text class="mo" x="820" y="170" font-size="12" fill="#c3ccd6">moves the balance, SELFDESTRUCTs to the treasury</text>
-      <text class="mo" x="820" y="190" font-size="12" fill="#8b97a6">64,162 gas ≈ $0.0013 · anyone may call it</text>
+      <text class="sans" x="820" y="124" font-size="17" font-weight="700" fill="#3ddc84">sweep(salt) — one transaction</text>
+      <text class="mo" x="820" y="150" font-size="13" fill="#c3ccd6">a 22-byte contract is born at the address,</text>
+      <text class="mo" x="820" y="170" font-size="13" fill="#c3ccd6">moves the balance, SELFDESTRUCTs to the treasury</text>
+      <text class="mo" x="820" y="190" font-size="13" fill="#8b97a6">64,162 gas ≈ $0.0013 · anyone may call it</text>
     </g>
     <g class="an cap-gone" opacity="0">
-      <text class="sans" x="820" y="124" font-size="16" font-weight="700" fill="#e8edf2">Gone. Empty. Reusable.</text>
-      <text class="mo" x="820" y="150" font-size="12" fill="#c3ccd6">EIP-6780 deleted the contract in the same tx</text>
-      <text class="mo" x="820" y="170" font-size="12" fill="#c3ccd6">code 0x · nonce 0 — nothing was ever held</text>
-      <text class="mo" x="820" y="190" font-size="12" fill="#8b97a6">pay and sweep the same address again, forever</text>
+      <text class="sans" x="820" y="124" font-size="17" font-weight="700" fill="#e8edf2">Gone. Empty. Reusable.</text>
+      <text class="mo" x="820" y="150" font-size="13" fill="#c3ccd6">EIP-6780 deleted the contract in the same tx</text>
+      <text class="mo" x="820" y="170" font-size="13" fill="#c3ccd6">code 0x · nonce 0 — nothing was ever held</text>
+      <text class="mo" x="820" y="190" font-size="13" fill="#8b97a6">pay and sweep the same address again, forever</text>
     </g>
     <!-- treasury bar -->
     <rect x="420" y="305" width="720" height="40" rx="12" fill="#3ddc84"/>
     <rect class="an bar-glow" x="420" y="305" width="720" height="40" rx="12" fill="#ffffff" opacity="0" fill-opacity=".35"/>
     <rect class="an bar-glow" x="414" y="299" width="732" height="52" rx="16" fill="none" stroke="#3ddc84" stroke-width="8" stroke-opacity=".25" opacity="0"/>
-    <text class="mo" x="500" y="330" font-size="13" font-weight="700" fill="#04121f">treasury ${short(TREASURY)} — immutable · the only place funds can ever go</text>
-    <text class="mo" x="420" y="372" font-size="11.5" fill="#8b97a6">only on Arc: USDC is the native balance — SELFDESTRUCT can move it, and every send is a system-emitter log</text>
+    <text class="mo" x="500" y="330" font-size="14" font-weight="700" fill="#04121f">treasury ${short(TREASURY)} — immutable · the only place funds can ever go</text>
+    <text class="mo" x="420" y="372" font-size="12.5" fill="#8b97a6">only on Arc: USDC is the native balance — SELFDESTRUCT can move it, and every send is a system-emitter log</text>
   </svg>`;
 }
 
@@ -126,6 +126,7 @@ function viewNew() {
         <label for="amt">Amount asked (USDC, optional)</label>
         <input id="amt" placeholder="e.g. 0.02" inputmode="decimal" autocomplete="off" />
         <button id="go">Create deposit address →</button>
+        <p id="iderr" class="err hint" role="alert" hidden>Type an invoice id first — any string works; it becomes the CREATE2 salt.</p>
         <p class="hint">The address is <code>CREATE2(factory, keccak256(id), treasury)</code> — computed offline in your browser, verified on-chain. Nothing is deployed until it's swept.</p>
       </div>
     </section>
@@ -150,7 +151,7 @@ function viewNew() {
       <p class="lede">The seeded <code>${DEMO_ID}</code> cycle was paid and swept on the production factory. Its address is codeless again —
       you can check each read against the explorer.</p>
       <div class="proof">
-        <a class="stat" href="${DEMO_URL}"><span class="tag">seeded invoice</span><div><div class="v ok">SWEPT<small>0.02 USDC</small></div><div class="s">${DEMO_ID} → ${short(demo)} · balance <span id="lp-bal">—</span> · open ↗</div></div></a>
+        <a class="stat" href="${DEMO_URL}"><span class="tag live"><i class="dot"></i>eth_getBalance</span><div><div class="v" id="lp-bal">—</div><div class="s">${DEMO_ID} → ${short(demo)} · paid 0.02 USDC, swept in tx 0xe639…8ea6 (receipts below) · open the invoice →</div></div></a>
         <div class="stat"><span class="tag">eth_getCode · nonce</span><div><div class="v" id="lp-code">—</div><div class="s">the address after its sweep: nothing to steal, nothing to guard</div></div></div>
         <a class="stat" href="${addrUrl(FACTORY)}" target="_blank" rel="noopener"><span class="tag">eth_call predict()</span><div><div class="v" id="lp-pred">—</div><div class="s">factory ${short(FACTORY)} · offline formula vs on-chain ↗</div></div></a>
         <div class="stat"><span class="tag live"><i class="dot"></i>eth_blockNumber</span><div><div class="v acc" id="lp-head">—</div><div class="s">Arc mainnet · chain 5042 · deterministic finality</div></div></div>
@@ -191,12 +192,12 @@ function viewNew() {
           <li><span>Re-sweep it</span>${tx("0x631814adf42ce99763ac5ca53859e0b0f677538707a6246a23843bb4e83fef51", "0x631814ad…")}</li>
         </ul></div>
         <div class="card"><h2>Numbers</h2><div class="numbers">
-          <div class="stat"><div class="v ok">64,162</div><div class="l">gas per sweep · p50, N=25</div></div>
-          <div class="stat"><div class="v ok">≈ $0.0013</div><div class="l">per sweep at the 20 Gwei floor</div></div>
+          <div class="stat"><div class="v">64,162</div><div class="l">gas per sweep · p50, N=25</div></div>
+          <div class="stat"><div class="v">≈ $0.0013</div><div class="l">per sweep · at the measured p50 gas price</div></div>
           <div class="stat"><div class="v">37</div><div class="l">tests · 12 Foundry + 25 vitest</div></div>
           <div class="stat"><div class="v">20,000</div><div class="l">property cases · fast-check</div></div>
           <div class="stat"><div class="v">34</div><div class="l">E2E checks · desktop + mobile</div></div>
-          <div class="stat"><div class="v acc">0</div><div class="l">keys held · 0 backends</div></div>
+          <div class="stat"><div class="v">0</div><div class="l">keys held · 0 backends</div></div>
         </div><p class="hint" style="margin-top:14px">${ext(`${REPO}/blob/main/bench/results.json`, "bench/results.json ↗")} · ${ext(`${REPO}/blob/main/DEMO.md`, "DEMO.md ↗")} · <a href="#/judge">Reviewer page →</a></p></div>
       </div>
     </section>
@@ -218,9 +219,10 @@ function viewNew() {
       <div class="row"><a class="btn primary" href="#/judge">Reviewer page →</a><a class="btn ghost" href="${REPO}" target="_blank" rel="noopener">Repository ↗</a></div>
     </div>`;
   const go = async () => {
-    const id = (document.getElementById("id") as HTMLInputElement).value.trim();
+    const idEl = document.getElementById("id") as HTMLInputElement;
+    const id = idEl.value.trim();
     const amt = (document.getElementById("amt") as HTMLInputElement).value.trim();
-    if (!id) return;
+    if (!id) { (document.getElementById("iderr") as HTMLElement).hidden = false; idEl.setAttribute("aria-invalid", "true"); idEl.focus(); return; }
     // Record the creation block in the URL so the invoice view scans from here, not from the factory's deploy block
     // (the RPC caps eth_getLogs at 10k blocks per call; the chain adds ~170k blocks a day).
     const from = await pub.getBlockNumber().catch(() => DEPLOY_BLOCK);
@@ -230,7 +232,8 @@ function viewNew() {
     location.hash = `#/i/${encodeURIComponent(id)}?${q}`;
   };
   document.getElementById("go")!.onclick = go;
-  (document.getElementById("id") as HTMLInputElement).addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+  for (const f of ["id", "amt"]) (document.getElementById(f) as HTMLInputElement).addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+  (document.getElementById("id") as HTMLInputElement).addEventListener("input", (e) => { (document.getElementById("iderr") as HTMLElement).hidden = true; (e.target as HTMLInputElement).removeAttribute("aria-invalid"); });
   liveProof(demo);
 }
 
@@ -245,7 +248,7 @@ function liveProof(demo: `0x${string}`) {
     pub.readContract({ address: FACTORY, abi: factoryAbi, functionName: "predict", args: [salt] }),
   ]).then(([code, nonce, bal, pred]) => {
     if (code.status === "fulfilled" && nonce.status === "fulfilled") set("lp-code", `${code.value ?? "0x"} · nonce ${nonce.value}`);
-    if (bal.status === "fulfilled") set("lp-bal", `${fmtUsdc18(bal.value)} USDC`);
+    if (bal.status === "fulfilled") set("lp-bal", `${fmtUsdc18(bal.value)}<small>USDC now</small>`);
     if (pred.status === "fulfilled") set("lp-pred", pred.value.toLowerCase() === demo.toLowerCase() ? `<span class="ok">✓</span> ${short(pred.value)}` : `<span class="err">≠</span> ${short(pred.value)}`);
   });
   const head = () => pub.getBlockNumber().then((n) => set("lp-head", `#${n.toLocaleString("en-US")}`)).catch(() => {});
@@ -265,15 +268,15 @@ async function viewInvoice(id: string, amtStr?: string, fromStr?: string) {
   app().className = "";
   app().innerHTML = `
     <a class="back" href="#/">← New invoice</a>
-    <div class="titlebar"><h1>Invoice <code>${esc(id)}</code></h1><span id="st">${badge("UNPAID")}</span></div>
+    <div class="titlebar"><h1>Invoice <code>${esc(id)}</code></h1><span id="st">${badge("UNPAID")}</span><span id="stale" class="stale">not yet read from chain…</span></div>
     <div class="split inv">
       <div class="card">
         <div class="head"><span class="k">Deposit address</span><span class="muted mono" style="font-size:12px">Arc mainnet · 5042</span></div>
-        <div class="addr">${pigeonhole} ${copyBtn(pigeonhole)}</div>
+        <div class="addr">${pigeonhole} ${copyBtn(pigeonhole)} <a class="xl" href="${addrUrl(pigeonhole)}" target="_blank" rel="noopener">explorer ↗</a></div>
         <div class="qrrow">
           <div id="qr" class="qr" style="width:188px;height:188px"></div>
           <div class="actions">
-            <button id="pay">Pay with wallet${amtStr ? ` (${esc(amtStr)} USDC)` : ""}</button>
+            <button id="pay">Pay with wallet (${amtStr ? esc(amtStr) : "0.01"} USDC)</button>
             <button id="sweep" class="ghost" disabled>Sweep → treasury</button>
             <p class="hint">Or send USDC to the address from any wallet on Arc — native send or ERC-20 <code>transfer()</code>. ${amtStr ? `Asked: <b>${esc(amtStr)} USDC</b>.` : ""}</p>
             <div id="msg" class="hint"></div>
@@ -285,7 +288,7 @@ async function viewInvoice(id: string, amtStr?: string, fromStr?: string) {
         <h2>Ledger · from <code>eth_getLogs</code> only</h2>
         <div class="kv">
           <span class="k">Salt</span><span class="mono">${short(salt)}</span>
-          <span class="k">Predicted</span><span class="mono">offline == on-chain</span>
+          <span class="k">Predicted</span><span class="mono" id="pred">offline formula · checking on-chain <code>predict()</code>…</span>
           <span class="k">Treasury</span><span class="mono"><a href="${addrUrl(TREASURY)}" target="_blank" rel="noopener">${short(TREASURY)} ↗</a></span>
           <span class="k">Paid in</span><span class="mono" id="paidin">—</span>
           <span class="k">Unswept</span><span class="mono" id="unswept">—</span>
@@ -299,10 +302,21 @@ async function viewInvoice(id: string, amtStr?: string, fromStr?: string) {
     </div>`;
   QRCode.toCanvas(pigeonhole, { width: 168, margin: 1 }).then((c: HTMLCanvasElement) => document.getElementById("qr")!.appendChild(c)).catch(() => {});
 
+  // One read-only call: the factory's own predict(salt) must equal the offline formula (the address above). Fails soft.
+  pub.readContract({ address: FACTORY, abi: factoryAbi, functionName: "predict", args: [salt] })
+    .then((a) => { document.getElementById("pred")!.innerHTML = a.toLowerCase() === pigeonhole.toLowerCase() ? `<span class="ok">✓</span> on-chain <code>predict()</code> == offline formula` : `<span class="err">≠</span> on-chain predict() returned ${short(a)}`; })
+    .catch(() => { const el = document.getElementById("pred"); if (el) el.innerHTML = `offline formula · on-chain check unavailable (RPC)`; });
+  let verified = false;
   async function refresh() {
     let s: LiveInvoiceState;
+    const stale = document.getElementById("stale");
     try { s = await invoiceState(pigeonhole, amount18, fromBlock); }
-    catch (e: any) { document.getElementById("moves")!.innerHTML = `<p class="err">RPC error: ${esc(e.shortMessage || e.message || String(e))} — retrying…</p>`; return; }
+    catch (e: any) {
+      document.getElementById("moves")!.innerHTML = `<p class="err">RPC error: ${esc(e.shortMessage || e.message || String(e))} — retrying…</p>`;
+      if (stale && !verified) stale.textContent = "state not yet read from chain — RPC error, retrying…";
+      return;
+    }
+    verified = true; if (stale) stale.textContent = "";
     document.getElementById("st")!.innerHTML = badge(s.status);
     (document.getElementById("sweep") as HTMLButtonElement).disabled = s.unswept === 0n; // nothing to sweep (spec: disabled at 0 unswept)
     document.getElementById("paidin")!.textContent = `${fmtUsdc18(s.paidIn)} USDC`;
@@ -344,13 +358,13 @@ async function viewInvoice(id: string, amtStr?: string, fromStr?: string) {
 async function viewTreasury() {
   app().className = "";
   app().innerHTML = `
-    <div class="titlebar"><h1>Treasury</h1><span class="live"><i></i>read live from <b>Swept</b> events</span></div>
+    <div class="titlebar"><h1>Treasury</h1><span class="live" id="tr-live"><i></i>read live from <b>Swept</b> events</span></div>
     <p class="muted" style="margin-bottom:18px;max-width:64ch">Every sweep to <code><a href="${addrUrl(TREASURY)}" target="_blank" rel="noopener">${short(TREASURY)} ↗</a></code>, read from the factory's <code>Swept</code> events on Arc mainnet. No database — the chain is the ledger.</p>
     <div class="stat-row">
       <div class="stat"><div class="v" id="tr-count">—</div><div class="l">sweeps</div></div>
       <div class="stat"><div class="v ok" id="tr-total">—</div><div class="l">USDC swept to the treasury</div></div>
       <div class="stat"><div class="v" id="tr-last">—</div><div class="l">latest sweep · block</div></div>
-      <div class="stat"><div class="v acc">0</div><div class="l">keys held</div></div>
+      <div class="stat"><div class="v">0</div><div class="l">keys held</div></div>
     </div>
     <div class="card"><h2>Sweeps</h2><div id="tbl"><p class="muted">Reading Swept events from block ${DEPLOY_BLOCK} in 9,000-block chunks…</p></div></div>
     <div class="card"><h2>Invoices this browser created</h2><div id="mine"></div></div>`;
@@ -366,7 +380,11 @@ async function viewTreasury() {
     document.getElementById("tbl")!.innerHTML = evs.length ? `<table><thead><tr><th>pigeonhole</th><th>amount</th><th>block</th><th>tx</th></tr></thead><tbody>${
       evs.slice().reverse().map((e: any) => `<tr><td class="mono">${short(e.args.pigeonhole)}</td><td class="mono">${fmtUsdc18(e.args.amount)} USDC</td><td class="mono">${e.blockNumber}</td><td><a href="${txUrl(e.transactionHash)}" target="_blank" rel="noopener">${short(e.transactionHash)} ↗</a></td></tr>`).join("")
     }</tbody></table>` : `<p class="muted">No sweeps yet.</p>`;
-  } catch (e: any) { document.getElementById("tbl")!.innerHTML = `<p class="err">RPC error: ${esc(e.shortMessage || e.message || String(e))} — reload to retry.</p>`; }
+  } catch (e: any) {
+    document.getElementById("tbl")!.innerHTML = `<p class="err">RPC error: ${esc(e.shortMessage || e.message || String(e))}</p><p class="row" style="margin-top:12px"><button id="tr-retry" class="ghost">Retry the scan</button></p>`;
+    const live = document.getElementById("tr-live"); if (live) { live.className = "live off"; live.innerHTML = "<i></i>RPC unavailable — not live"; }
+    document.getElementById("tr-retry")!.onclick = () => viewTreasury();
+  }
 }
 
 // ---------- Judge / reviewer page (no auth, no wallet, no RPC needed to render) ----------
@@ -377,17 +395,17 @@ function viewJudge() {
   app().innerHTML = `
     <section class="hero"><div><span class="eyebrow"><b>Reviewer page</b> · no auth, no wallet, no RPC needed to render</span><h1>For reviewers</h1><p id="claim">${CLAIM}</p></div></section>
     <div class="stat-row">
-      <div class="stat"><div class="v ok">64,162</div><div class="l">gas per sweep · p50 · N=25</div></div>
-      <div class="stat"><div class="v ok">≈ $0.0013</div><div class="l">per sweep</div></div>
+      <div class="stat"><div class="v">64,162</div><div class="l">gas per sweep · p50 · N=25</div></div>
+      <div class="stat"><div class="v">≈ $0.0013</div><div class="l">per sweep · measured p50 gas price</div></div>
       <div class="stat"><div class="v">37 + 20,000</div><div class="l">tests + property cases</div></div>
-      <div class="stat"><div class="v acc">0</div><div class="l">keys held · backends</div></div>
+      <div class="stat"><div class="v">0</div><div class="l">keys held · backends</div></div>
     </div>
     <div class="split">
       <div class="card">
         <h2>The 60-second path (one Arc wallet, ≤ $0.10)</h2>
         <ol class="steps">
           <li><a href="#/">New invoice</a> → type any id and <code>0.02</code> → <b>Create deposit address</b>. No transaction; the address is CREATE2 arithmetic.</li>
-          <li>Open the address on the <a href="${addrUrl(TREASURY)}" target="_blank" rel="noopener">explorer ↗</a>: an empty account, no code, nonce 0.</li>
+          <li>Open that address on <a href="${ARC.explorer}" target="_blank" rel="noopener">explorer.arc.io ↗</a> (the invoice page links it): an empty account, no code, nonce 0.</li>
           <li><b>Pay with wallet</b> (or send 0.02 USDC from any Arc wallet). The badge flips <b>PAID</b> on the next 3-second poll — one <code>eth_getLogs</code> on the system emitter, no backend.</li>
           <li><b>Sweep → treasury</b>. One transaction (~$0.0013): the throwaway is born at that address, moves the balance, and is deleted in the same tx.</li>
           <li><a href="#/treasury">Treasury</a> lists the sweep from the factory's <code>Swept</code> events.</li>
@@ -420,6 +438,7 @@ git submodule update --init &amp;&amp; forge test --root contracts</div>
           <li>The immutable treasury is a single point of failure: if it were blocklisted, unswept invoices freeze until a new factory.</li>
           <li>The page needs an anonymous Arc RPC and scans logs in 9,000-block chunks — invoice URLs without <code>?from=</code> get slower every day.</li>
           <li>PAID latency is not benchmarked; <code>sweepMany</code> is on-chain and tested but the page calls <code>sweep</code> only.</li>
+          <li>The <code>?amt=</code> is the merchant's claim — the chain proves what was <em>paid</em>.</li>
         </ul>
         <p class="hint"><a href="https://github.com/edycutjong/pigeonhole" target="_blank" rel="noopener">Repository ↗</a> · <a href="https://github.com/edycutjong/pigeonhole/blob/main/DEMO.md" target="_blank" rel="noopener">DEMO.md ↗</a> · <a href="https://github.com/edycutjong/pigeonhole/blob/main/ARCHITECTURE.md" target="_blank" rel="noopener">ARCHITECTURE.md ↗</a></p>
       </div>
@@ -440,9 +459,13 @@ function route() {
   if (path.startsWith("/i/")) return viewInvoice(decodeURIComponent(path.slice(3)), params.get("amt") || undefined, params.get("from") || undefined);
   if (path === "/treasury") return viewTreasury();
   if (path === "/judge") return viewJudge();
-  return viewNew();
+  location.hash = "#/"; // unknown route: go home (hashchange re-routes)
 }
-const doCopy = (t: HTMLElement) => { navigator.clipboard?.writeText(t.dataset.copy!); t.textContent = "copied"; setTimeout(() => (t.textContent = "copy"), 1200); };
+const doCopy = async (t: HTMLElement) => {
+  try { await navigator.clipboard.writeText(t.dataset.copy!); t.textContent = "copied"; }
+  catch { t.textContent = "copy failed — select it"; }
+  setTimeout(() => (t.textContent = "copy"), 1600);
+};
 document.addEventListener("click", (e) => { const t = e.target as HTMLElement; if (t.dataset.copy) doCopy(t); });
 document.addEventListener("keydown", (e) => { const t = e.target as HTMLElement; if (t.dataset.copy && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); doCopy(t); } });
 window.addEventListener("hashchange", route);
