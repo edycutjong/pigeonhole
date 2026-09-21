@@ -27,6 +27,9 @@ function copyBtn(text: string) { return `<span class="copy" role="button" tabind
 const DEMO_ID = "demo-paid"; // seeded first cycle on the production factory (deployments/arc-mainnet.json) — SWEPT forever
 const DEMO_URL = `#/i/${DEMO_ID}?amt=0.02&from=${DEPLOY_BLOCK}`;
 const REPO = "https://github.com/edycutjong/pigeonhole";
+// Footer release stamp: the git tag this build was made from (vite.config.ts `define`), linking to that GitHub release.
+{ const el = document.getElementById("release") as HTMLAnchorElement | null;
+  if (el) { el.textContent = __APP_VERSION__; el.href = __APP_VERSION__.endsWith("-dev") ? `${REPO}/releases` : `${REPO}/releases/tag/${__APP_VERSION__}`; el.title = "GitHub release this page was built from"; } }
 const VIDEO = "https://youtu.be/BGuzotTXQEA"; // 2:30 — a real pay → sweep on mainnet (invoice acme-2026-0922), recorded from this page
 const ext = (href: string, label: string) => `<a href="${href}" target="_blank" rel="noopener">${label}</a>`;
 

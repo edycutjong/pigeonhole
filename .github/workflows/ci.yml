@@ -195,6 +195,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0   # tags: the footer's release stamp is `git describe --tags` at build time
       - uses: actions/setup-node@v7
         with:
           node-version: 22
