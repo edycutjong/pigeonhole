@@ -17,6 +17,7 @@ with no key anywhere in the system.
 [![Live on Arc mainnet](https://img.shields.io/badge/▶_Live-Arc_mainnet-06b6d4?style=for-the-badge)](https://pigeonhole.edycu.dev/)
 [![For reviewers](https://img.shields.io/badge/⚖_For-reviewers-3ddc84?style=for-the-badge)](https://pigeonhole.edycu.dev/#/judge)
 [![Demo video](https://img.shields.io/badge/▶_Demo-2:30_on_YouTube-FF0000?style=for-the-badge)](https://youtu.be/BGuzotTXQEA)
+[![Pitch deck](https://img.shields.io/badge/📽️_Pitch-Deck_12_slides-06b6d4?style=for-the-badge)](https://pigeonhole.edycu.dev/deck.html)
 [![Factory on explorer](https://img.shields.io/badge/🏭_Factory-0x942b…9A40-4ea1ff?style=for-the-badge)](https://explorer.arc.io/address/0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40)
 [![Arc Microgrants](https://img.shields.io/badge/DoraHacks-Arc_Microgrants-8b5cf6?style=for-the-badge)](https://dorahacks.io/hackathon/arc-microgrants/detail)
 [![BUIDL](https://img.shields.io/badge/BUIDL-49026-8b5cf6?style=for-the-badge)](https://dorahacks.io/buidl/49026)
@@ -35,6 +36,7 @@ with no key anywhere in the system.
 [![CI](https://github.com/edycutjong/pigeonhole/actions/workflows/ci.yml/badge.svg)](https://github.com/edycutjong/pigeonhole/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/edycutjong/pigeonhole/actions/workflows/codeql.yml/badge.svg)](https://github.com/edycutjong/pigeonhole/actions/workflows/codeql.yml)
 ![license](https://img.shields.io/badge/license-MIT-blue?style=flat)
+[![Release](https://img.shields.io/github/v/release/edycutjong/pigeonhole?sort=semver)](https://github.com/edycutjong/pigeonhole/releases/latest)
 
 </div>
 
