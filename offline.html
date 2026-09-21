@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0b0d10" />
+  <title>Offline · Pigeonhole</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #0b0d10; color: #e8edf2; font: 16px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding: 24px; box-sizing: border-box; }
+    main { max-width: 520px; background: #14181d; border: 1px solid #262d36; border-radius: 18px; padding: 28px; }
+    .eyebrow { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .06em; text-transform: uppercase; color: #8b97a6; }
+    h1 { font-size: 22px; margin: 8px 0 12px; }
+    p { margin: 0 0 12px; color: #c3ccd6; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92em; color: #7cc0ff; overflow-wrap: anywhere; }
+    button { margin-top: 8px; min-height: 44px; padding: 10px 20px; border-radius: 12px; border: 1px solid #4ea1ff; background: #4ea1ff; color: #0b0d10; font: inherit; font-weight: 600; cursor: pointer; }
+    button:hover { background: #7cc0ff; border-color: #7cc0ff; }
+    button:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(78, 161, 255, .35); }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">Pigeonhole · offline</div>
+    <h1>You're offline, and nothing here is cached on purpose.</h1>
+    <p>Pigeonhole has no backend and stores nothing: every invoice status, balance and sweep on the page is read live from Arc mainnet (chain 5042) through <code>https://rpc.mainnet.arc.io</code>. A cached copy would show you stale chain state, so this page is shown instead.</p>
+    <p>The factory is <code>0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40</code>; deposit addresses are <code>CREATE2(factory, keccak256(id), treasury)</code> and hold their funds until swept, whether or not this page can reach the chain.</p>
+    <button type="button" onclick="location.reload()">Reconnect and reload</button>
+  </main>
+</body>
+</html>
