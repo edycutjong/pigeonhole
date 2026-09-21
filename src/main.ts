@@ -499,3 +499,7 @@ document.addEventListener("click", (e) => { const t = e.target as HTMLElement; i
 document.addEventListener("keydown", (e) => { const t = e.target as HTMLElement; if (t.dataset.copy && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); doCopy(t); } });
 window.addEventListener("hashchange", route);
 route();
+
+// Offline fallback only (public/sw.js): navigations still go to the network every time; the worker answers with
+// public/offline.html only when that fetch throws, so an online visitor never sees a cached shell or stale chain state.
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});
