@@ -171,6 +171,8 @@ load, and that is what the next 6–8 weeks would buy — with Arc office hours 
 
 Not on the list, on purpose: a backend, a token, a dashboard. The value of the project is that a merchant needs none of them.
 
+The DX report behind milestone 4 is filed with Arc as [circlefin/arc-node#455](https://github.com/circlefin/arc-node/issues/455).
+
 ## 🩹 What we got wrong (dated, kept here rather than edited away)
 - **2026-09-17 — the `eth_getLogs` cap.** Day-2 code assumed the RPC allowed 100k-block spans; it allows 9,999 (10,000 → `-32012`). At ~2 blocks/s the live page would have frozen at "UNPAID" a few hours after deploy. Found by a pre-submission audit, fixed the same evening: every scan is chunked at 9,000 blocks, polled incrementally, and invoice URLs carry their creation block (`?from=`). Three regression tests pin it.
 - **2026-09-17 — "first-sweep cost 91,740".** The probe notes read the v1 sweep's 91,740 gas as the cost of sweeping a never-seen *address*. The bench refuted that: all 25 first sweeps cost 64,150–64,162. The extra 27,600 was the never-seen *beneficiary* (v1's wrong treasury). `DEMO.md` now says so.
