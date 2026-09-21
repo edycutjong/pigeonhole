@@ -7,6 +7,10 @@
   <meta name="description" content="A fresh USDC deposit address per invoice, no private key to guard, swept to your treasury in one transaction. Live on Arc mainnet." />
   <meta name="author" content="Edy Cu" />
   <meta name="theme-color" content="#0b0d10" />
+  <link rel="preconnect" href="https://rpc.mainnet.arc.io" crossorigin />
+  <!-- A deep link (#/judge, #/i/…, #/treasury) must not flash the landing hero while the bundle loads. -->
+  <script>if (location.hash && location.hash !== '#/') document.documentElement.setAttribute('data-route', 'deep');</script>
+  <style>[data-route="deep"] [data-static] { display: none; }</style>
   <link rel="icon" href="./icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="./icon-512.png" />
   <meta property="og:type" content="website" />
@@ -36,7 +40,25 @@
       <a class="ext" href="./deck.html" target="_blank" rel="noopener" title="Pitch deck — 12 slides, arrow keys to navigate">Pitch deck ↗</a>
     </nav>
   </header>
-  <main id="app"><p class="muted">Loading…</p></main>
+  <!-- The landing hero, verbatim from viewNew() in src/main.ts (the smoke test checks the two stay identical), so the largest
+       text on the page paints with the shell instead of after the bundle. viewNew() replaces it with the live view; a deep
+       link hides it (inline script in <head>) instead of flashing the wrong route. -->
+  <main id="app" class="landing">
+    <section class="hero" data-static>
+      <div>
+        <span class="live"><i></i>Live on <b>Arc mainnet</b> · chain 5042</span>
+        <h1>A USDC address per invoice — <span class="hl">with no key to guard.</span></h1>
+        <p class="sub">Type an invoice id and get a fresh Arc deposit address that exists <b>before any contract does</b>.
+        When it's paid, one permissionless transaction sweeps it to the treasury and the address vanishes —
+        reusable forever, with no private key anywhere.</p>
+        <div class="chips">
+          <span class="chip"><span class="ok">0</span> keys held</span>
+          <span class="chip"><b>$0.0013</b> per sweep · 64,162 gas</span>
+          <span class="chip">no backend · state is <b>eth_getLogs</b></span>
+        </div>
+      </div>
+    </section>
+  </main>
   <footer class="foot">
     <span>Arc mainnet · chain 5042 · no backend, no database — state is <code>eth_getLogs</code></span>
     <span>Factory <a href="https://explorer.arc.io/address/0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40" target="_blank" rel="noopener"><code>0x942b…9A40</code> ↗</a> · <a href="https://github.com/edycutjong/pigeonhole/blob/main/LICENSE" target="_blank" rel="noopener">MIT</a> · <a id="release" href="https://github.com/edycutjong/pigeonhole/releases" target="_blank" rel="noopener"><code>release</code> ↗</a></span>

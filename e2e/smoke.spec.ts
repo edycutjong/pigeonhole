@@ -2,6 +2,17 @@ import { test, expect } from "@playwright/test";
 
 // Zero-config smoke: the static bundle loads with no keys, no wallet, no backend.
 test.describe("smoke — the page loads on its own", () => {
+  test("the static hero in index.html is what viewNew paints (first paint must not lie)", async ({ page, request }) => {
+    const raw = await (await request.get("/")).text();
+    await page.goto("/");
+    await expect(page.locator("#id")).toBeVisible(); // viewNew has replaced the shell content
+    const rendered = await page.locator("main .hero h1").innerText();
+    const staticHtml = /<section class="hero" data-static>[\s\S]*?<h1>([\s\S]*?)<\/h1>/.exec(raw)?.[1] ?? "";
+    const staticText = await page.evaluate((html) => { const d = document.createElement("div"); d.innerHTML = html; return d.innerText; }, staticHtml);
+    expect(staticText).toBe(rendered);
+    expect(await page.locator("main [data-static]").count()).toBe(0);
+  });
+
   test("title, description, OG card and favicon are set", async ({ page }) => {
     await page.goto("/");
     await expect(page).toHaveTitle("Pigeonhole — keyless USDC deposit addresses on Arc");
