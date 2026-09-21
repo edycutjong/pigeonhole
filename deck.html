@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pigeonhole — pitch deck · Arc Microgrants</title>
+<!--
+  PIGEONHOLE · PITCH DECK · single self-contained file (assets/pitch-deck.html)
+  ─────────────────────────────────────────────────────────────────────────────
+  NAVIGATION   →  /  space  /  PageDown  next slide      ←  /  PageUp  previous
+               Home / End first / last · number keys 1-9 jump · click a tile in overview
+  ESC          overview grid of all 12 slides (click a tile to jump)
+  P            presenter mode: speaker notes panel (bottom 20%), chrome dimmed,
+               cursor hidden after 2 s idle. One key, one mode.
+  C            contrast debug: thin outline around every text element
+               (check projector legibility before presenting)
+  PRINT        Cmd/Ctrl+P → Save as PDF → landscape → 12 pages, one slide each.
+               @page is 16in × 9in; every slide prints at 0.8 zoom onto that page.
+  IMAGES       real captures live in ./deck/ (relative — the deck opens as a file):
+               deck/invoice-swept.png · deck/judge.png · deck/explorer-resweep.png · deck/landing.png
+               a "SWAP:" comment sits above each img tag. Every image is a real capture.
+  REBRAND      the :root variables block below (colors + fonts) restyles everything.
+  VERSION      the stamp is `git -C build describe --tags --abbrev=0` at generation time
+               (release.yml tags every releasable push; restamped 2026-09-21 → v1.1.1).
+  NOTES        one aside.speaker-notes[data-slide=N] per slide in #notes;
+               presenter mode renders the active slide's aside. Hidden by default.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+/* ── CSS VARIABLES — full rebrand in 30 s ─────────────────────────────────── */
+:root {
+  --color-bg: #0b0d10;          /* the live page's own background (assets/_tokens.css) */
+  --color-plate: #14181d;       /* opaque plate behind every card / frame */
+  --color-primary: #4ea1ff;     /* HELD — USDC waits at a codeless address */
+  --color-accent: #3ddc84;      /* SWEPT — fires only on the sweep beat (≤ 5% of pixels) */
+  --color-warn: #ffb020;
+  --color-error: #ff5d5d;
+  --text-hi: #e8edf2;
+  --text-mid: #9aa7b5;
+  --text-low: #7b8794;
+  --line: rgba(255,255,255,0.10);
+  --line-strong: rgba(255,255,255,0.18);
+  --font-display: "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+/* ── Stage + scaling (fixed 1920×1080, letterbox the browser, never stack) ── */
+html, body { margin: 0; padding: 0; background: var(--color-bg); color: var(--text-hi); height: 100%; overflow: hidden; }
+body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+#stage > section { position: absolute; inset: 0; opacity: 0; visibility: hidden; }
+#stage { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; transform-origin: center center; }
+.s { position: absolute; inset: 0; width: 1920px; height: 1080px; overflow: hidden; background: var(--color-bg);
+     opacity: 0; visibility: hidden; transition: opacity .28s ease; }
+#stage > section.active, .s.active { opacity: 1; visibility: visible; }
+.s::before { /* faint 48px grid — the product's own backdrop */
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(255,255,255,0.028) 0 1px, transparent 1px 48px),
+              repeating-linear-gradient(90deg, rgba(255,255,255,0.028) 0 1px, transparent 1px 48px);
+  mask-image: radial-gradient(80% 70% at 50% 40%, #000 30%, transparent 100%);
+  -webkit-mask-image: radial-gradient(80% 70% at 50% 40%, #000 30%, transparent 100%);
+}
+.wrap { position: absolute; left: 96px; top: 84px; right: 96px; bottom: 96px; }
+
+/* ── Type scale ───────────────────────────────────────────────────────────── */
+h1, h2 { font-family: var(--font-display); margin: 0; letter-spacing: -0.025em; }
+h1 { font-size: 84px; line-height: 1.02; font-weight: 700; max-width: 1400px; }
+.lead { font-size: 30px; line-height: 1.35; color: var(--text-mid); max-width: 1120px; margin: 28px 0 0; font-weight: 400; }
+.lead b { color: var(--text-hi); font-weight: 600; }
+.eyebrow { font-family: var(--font-mono); font-size: 18px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-low); margin: 0 0 22px; }
+.eyebrow .n { color: var(--color-primary); margin-right: 14px; }
+.mono { font-family: var(--font-mono); }
+.hi { color: var(--text-hi); }
+.pri { color: var(--color-primary); }
+.acc { color: var(--color-accent); }
+
+/* ── Footer (stamped into every slide by JS) ─────────────────────────────── */
+.foot { position: absolute; left: 96px; right: 96px; bottom: 40px; display: flex; justify-content: space-between; align-items: center;
+        font-family: var(--font-mono); font-size: 16px; color: var(--text-low); letter-spacing: 0.02em; }
+.foot .ver { color: var(--text-mid); }
+.foot .mark { display: inline-block; width: 14px; height: 14px; border-radius: 3px; background: var(--color-primary); vertical-align: -1px; margin-right: 10px; }
+
+/* ── Chrome: counter, hints ──────────────────────────────────────────────── */
+#hint { position: fixed; right: 24px; top: 16px; font: 13px var(--font-mono); color: var(--text-low); opacity: .7; z-index: 20; transition: opacity .6s; }
+body.quiet #hint { opacity: 0; }
+body.presenter #hint { display: none; }
+
+/* ── Overview (ESC) ─────────────────────────────────────────────────────── */
+body.overview #stage { display: none; }
+#grid { display: none; position: fixed; inset: 0; overflow: auto; padding: 40px; box-sizing: border-box;
+        grid-template-columns: repeat(4, 1fr); gap: 28px; align-content: start; background: var(--color-bg); z-index: 30; }
+body.overview #grid { display: grid; }
+#grid .tile { position: relative; aspect-ratio: 16/9; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; cursor: pointer; background: var(--color-plate); }
+#grid .tile:hover { border-color: var(--color-primary); }
+#grid .tile > section { transform: scale(var(--k)); transform-origin: top left; opacity: 1; visibility: visible; pointer-events: none; }
+#grid .tile .cap { position: absolute; left: 10px; bottom: 8px; font: 13px var(--font-mono); color: var(--text-mid); background: rgba(11,13,16,.8); padding: 3px 8px; border-radius: 6px; }
+
+/* ── Presenter (P) ──────────────────────────────────────────────────────── */
+#notes-panel { display: none; position: fixed; left: 0; right: 0; bottom: 0; height: 20vh; box-sizing: border-box; padding: 18px 32px;
+               background: #05060a; border-top: 1px solid var(--line-strong); color: var(--text-hi); z-index: 40;
+               font: 500 clamp(15px, 1.5vw, 22px)/1.45 var(--font-body); overflow: auto; }
+#notes-panel .k { font: 13px var(--font-mono); color: var(--text-low); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px; }
+#notes-panel .next { color: var(--text-low); font-size: .8em; margin-top: 10px; }
+body.presenter #notes-panel { display: block; }
+body.presenter #stage { top: 40vh; } /* stage re-centred in the upper 80% by JS */
+body.presenter.idle { cursor: none; }
+#notes { display: none; }
+.speaker-notes { display: none; }
+
+/* ── Contrast debug (C) ─────────────────────────────────────────────────── */
+/* Press C to toggle contrast debug mode */
+body.debug-contrast h1, body.debug-contrast h2, body.debug-contrast p, body.debug-contrast li, body.debug-contrast span,
+body.debug-contrast text, body.debug-contrast td, body.debug-contrast th, body.debug-contrast .contrast-check, body.debug-contrast code, body.debug-contrast pre
+{ outline: 1px solid rgba(255,93,93,.85); outline-offset: 1px; }
+
+/* ── Shared components ──────────────────────────────────────────────────── */
+.card { background: var(--color-plate); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 12px 40px rgba(0,0,0,.45); }
+.badge { display: inline-flex; align-items: center; gap: 10px; font: 500 17px var(--font-mono); color: var(--text-mid);
+         border: 1px solid var(--line-strong); border-radius: 999px; padding: 8px 16px; }
+.badge .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--color-accent); box-shadow: 0 0 10px var(--color-accent); }
+.browser-frame { background: var(--color-plate); border: 1px solid var(--line-strong); border-radius: 14px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.55); }
+.browser-frame .bar { height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: #1a1f26; border-bottom: 1px solid var(--line); }
+.browser-frame .bar i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; background: #3a4048; }
+.browser-frame .bar i:nth-child(1){ background:#ff5f57 } .browser-frame .bar i:nth-child(2){ background:#febc2e } .browser-frame .bar i:nth-child(3){ background:#28c840 }
+.browser-frame .bar .url { margin-left: 12px; flex: 1; height: 24px; line-height: 24px; border-radius: 6px; background: #0f1318; color: var(--text-mid); font: 14px var(--font-mono); padding: 0 12px; overflow: hidden; white-space: nowrap; }
+.browser-frame img { display: block; width: 100%; height: auto; }
+.callout { position: absolute; width: 44px; height: 44px; border-radius: 50%; background: var(--color-accent); color: #062b16; font: 700 22px var(--font-display);
+           display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 5px rgba(61,220,132,.22), 0 6px 18px rgba(0,0,0,.5); }
+.callout-label.l { transform: translateX(-100%); }
+.callout-label { position: absolute; font: 500 18px var(--font-body); color: var(--text-hi); background: rgba(11,13,16,.9); border: 1px solid var(--line-strong); border-radius: 8px; padding: 6px 12px; white-space: nowrap; }
+.terminal-frame { background: #0a0c10; border: 1px solid var(--line-strong); border-radius: 14px; box-shadow: 0 24px 60px rgba(0,0,0,.55); overflow: hidden; }
+.terminal-frame .bar { height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: #14181d; border-bottom: 1px solid var(--line); font: 14px var(--font-mono); color: var(--text-low); }
+.terminal-frame .bar i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; background: #3a4048; }
+.terminal-frame pre { margin: 0; padding: 34px 40px; font: 500 27px/1.75 var(--font-mono); color: var(--text-hi); white-space: pre; }
+pre .c { color: var(--text-low); } pre .k { color: var(--color-primary); } pre .g { color: var(--color-accent); } pre .d { color: var(--text-mid); }
+svg text { font-family: var(--font-mono); }
+.diagram { display: block; }
+
+/* ── 01 COVER ────────────────────────────────────────────────────────────── */
+.s1 .brand { position: absolute; left: 96px; top: 262px; width: 820px; }
+.s1 .wordmark { font: 800 168px/1 var(--font-display); letter-spacing: -0.045em; color: var(--text-hi); margin: 26px 0 0; }
+.s1 .wordmark span { color: var(--color-primary); }
+.s1 .tag { font: 400 38px/1.3 var(--font-body); color: var(--text-mid); margin: 34px 0 0; max-width: 760px; }
+.s1 .tag b { color: var(--text-hi); font-weight: 600; }
+.s1 .row { display: flex; gap: 16px; align-items: center; margin-top: 44px; }
+.s1 .ver { font: 500 17px var(--font-mono); color: var(--text-low); border: 1px dashed var(--line-strong); border-radius: 999px; padding: 8px 14px; }
+.s1 .hero { position: absolute; right: 96px; top: 196px; width: 860px; height: 700px; }
+.s1 .hero svg { width: 100%; height: 100%; }
+/* the born → sweep → vanish beat: runs ONCE (≈4.4 s) then rests on the SWEPT state */
+@keyframes coinFly   { 0%{opacity:0; transform:translate(360px,-140px) scale(.6)} 8%{opacity:1} 26%{transform:translate(0,0) scale(1)} 50%{transform:translate(0,0) scale(1); opacity:1}
+                       64%{transform:translate(0,326px) scale(.92); opacity:1} 68%{opacity:0; transform:translate(0,340px) scale(.6)} 100%{opacity:0; transform:translate(0,340px) scale(.6)} }
+@keyframes bornFlash { 0%,38%{stroke:var(--color-primary)} 44%{stroke:var(--color-accent)} 58%{stroke:var(--color-accent)} 70%,100%{stroke:var(--color-primary)} }
+@keyframes bottomOut { 0%,48%{opacity:1} 52%,100%{opacity:0} }
+@keyframes lblUnpaid { 0%,24%{opacity:1} 28%,100%{opacity:0} }
+@keyframes lblPaid   { 0%,26%{opacity:0} 30%,64%{opacity:1} 68%,100%{opacity:0} }
+@keyframes lblSwept  { 0%,68%{opacity:0} 72%,100%{opacity:1} }
+@keyframes capBorn   { 0%,40%{opacity:0} 44%,66%{opacity:1} 72%,100%{opacity:0} }
+@keyframes barGlow   { 0%,60%{filter:drop-shadow(0 0 0 rgba(61,220,132,0))} 70%{filter:drop-shadow(0 0 28px rgba(61,220,132,.75))} 100%{filter:drop-shadow(0 0 10px rgba(61,220,132,.35))} }
+@keyframes bornWord  { 0%,40%{opacity:0} 44%,54%{opacity:1} 60%,100%{opacity:0} }
+.s1 .coin { animation: coinFly 4.4s cubic-bezier(.4,0,.2,1) forwards; transform-box: fill-box; transform-origin: center; }
+.s1 .slot3 { animation: bornFlash 4.4s linear forwards; }
+.s1 .slot3-bottom { animation: bottomOut 4.4s linear forwards; }
+.s1 .l-unpaid { animation: lblUnpaid 4.4s linear forwards; }
+.s1 .l-paid { animation: lblPaid 4.4s linear forwards; }
+.s1 .l-swept { animation: lblSwept 4.4s linear forwards; }
+.s1 .cap-born { animation: capBorn 4.4s linear forwards; }
+.s1 .bar { animation: barGlow 4.4s linear forwards; }
+.s1 .born-ring { animation: bornWord 4.4s linear forwards; transform-box: fill-box; transform-origin: center; }
+@media (prefers-reduced-motion: reduce) {
+  .s1 .coin, .s1 .slot3, .s1 .slot3-bottom, .s1 .l-unpaid, .s1 .l-paid, .s1 .l-swept, .s1 .cap-born, .s1 .bar, .s1 .born-ring { animation-duration: 0.001s; }
+}
+
+/* ── 02 HOOK ─────────────────────────────────────────────────────────────── */
+.s2 h1 { font-size: 124px; max-width: 1500px; margin-top: 70px; }
+.s2 h1 em { font-style: normal; color: var(--color-primary); }
+.s2 .code { margin-top: 120px; width: 1500px; }
+.s2 .code pre { font-size: 36px; padding: 48px 52px; }
+.s2 .lead { margin-top: 48px; font-size: 30px; max-width: 1500px; }
+
+/* ── 03 PROBLEM / 04 SOLUTION — same canvas, same box style, fewer boxes ─── */
+.s3 .lead, .s4 .lead { max-width: 1300px; }
+.s3 .diagram, .s4 .diagram { margin-top: 90px; width: 1728px; height: 520px; }
+.box { fill: var(--color-plate); stroke: var(--line-strong); stroke-width: 1.5; }
+.box.dashed { stroke-dasharray: 8 8; }
+.lbl { fill: var(--text-hi); font-size: 24px; font-weight: 500; }
+.sub { fill: var(--text-low); font-size: 18px; }
+.arrow { stroke: var(--text-low); stroke-width: 2; fill: none; }
+.key { stroke: var(--color-warn); stroke-width: 2.4; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.s4 .strip { display: flex; gap: 20px; margin-top: 30px; }
+.s4 .strip .item { flex: 1; border-top: 2px solid var(--line-strong); padding-top: 18px; font: 500 24px var(--font-mono); color: var(--text-mid); }
+.s4 .strip .item b { color: var(--text-hi); font-weight: 600; }
+.s4 .strip .item.on { border-top-color: var(--color-accent); }
+
+/* ── 05 HOW IT WORKS (frozen) ────────────────────────────────────────────── */
+.s5 .diagram { margin-top: 56px; width: 1728px; height: 640px; }
+.stage-n { fill: var(--color-primary); font-size: 17px; font-weight: 600; letter-spacing: .1em; }
+.sweep-box { fill: rgba(61,220,132,.07); stroke: var(--color-accent); stroke-width: 2; }
+.inner { fill: var(--color-plate); stroke: var(--line-strong); stroke-width: 1.5; }
+.loop { stroke: var(--text-low); stroke-width: 2; fill: none; stroke-dasharray: 10 8; }
+
+/* ── 06 WHY ONLY ARC ─────────────────────────────────────────────────────── */
+.s6 table { margin-top: 64px; width: 1728px; border-collapse: collapse; font-size: 34px; }
+.s6 th { text-align: left; font: 500 18px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-low); padding: 0 0 18px; border-bottom: 1px solid var(--line-strong); }
+.s6 th.c { text-align: center; width: 260px; }
+.s6 td { padding: 42px 0; border-bottom: 1px solid var(--line); color: var(--text-hi); }
+.s6 td.c { text-align: center; }
+.s6 td code { font: 500 28px var(--font-mono); color: var(--color-primary); }
+.s6 .yes, .s6 .no { display: inline-flex; width: 48px; height: 48px; border-radius: 50%; align-items: center; justify-content: center; }
+.s6 .yes { background: rgba(61,220,132,.14); } .s6 .no { background: rgba(255,93,93,.10); }
+.s6 .lead { margin-top: 44px; }
+
+/* ── 07 LIVE DEMO ────────────────────────────────────────────────────────── */
+.s7 .f1 { position: absolute; left: 0; top: 150px; width: 1040px; }
+.s7 .f2 { position: absolute; right: 0; top: 150px; width: 620px; }
+.s7 .f3 { position: absolute; right: 0; top: 560px; width: 620px; }
+.s7 .f2 img, .s7 .f3 img { height: 330px; object-fit: cover; object-position: top; }
+.s7 .f2 img { object-position: 0 -63px; }
+.s7 .f1 img { height: 650px; object-fit: cover; object-position: top; border-radius: 0 0 14px 14px; }
+.s7 .f1 { overflow: visible; }
+.s7 .f1 .bar { border-radius: 14px 14px 0 0; }
+
+/* ── 08 LIVE FEEL ────────────────────────────────────────────────────────── */
+.s8 .terminal-frame { margin-top: 64px; width: 1728px; }
+.s8 .terminal-frame pre { font-size: 34px; line-height: 1.9; padding: 44px 48px; }
+
+/* ── 09 PROOF ────────────────────────────────────────────────────────────── */
+.s9 .nums { display: grid; grid-template-columns: 1.3fr 1.5fr 1fr 1.2fr .8fr; gap: 28px; margin-top: 64px; }
+.s9 .num { border-left: 2px solid var(--line-strong); padding-left: 26px; }
+.s9 .num.on { border-left-color: var(--color-accent); }
+.s9 .num .v { font: 700 124px/1 var(--font-display); letter-spacing: -0.04em; color: var(--text-hi); }
+.s9 .num .k { font: 500 20px var(--font-mono); color: var(--text-mid); margin-top: 16px; }
+.s9 .terminal-frame { margin-top: 80px; width: 1728px; }
+.s9 .terminal-frame pre { font-size: 30px; padding: 36px 44px; line-height: 1.85; }
+
+/* ── 10 WHAT WE DON'T CLAIM ─────────────────────────────────────────────── */
+.s10 .ledger { margin-top: 56px; width: 1728px; }
+.s10 .ledger .row { display: grid; grid-template-columns: 40px 1fr; gap: 24px; padding: 38px 0; border-bottom: 1px solid var(--line); font-size: 38px; color: var(--text-hi); align-items: baseline; }
+.s10 .ledger .row .n { display: inline-block; width: 14px; height: 14px; border-radius: 3px; background: var(--color-primary); }
+.s10 .ledger .row .t { color: var(--text-mid); }
+.s10 .ledger .row .t b { color: var(--text-hi); font-weight: 600; }
+.s10 .ledger .row .t code { font: 500 30px var(--font-mono); color: var(--color-primary); }
+
+/* ── 11 WORTH TAKING FURTHER ─────────────────────────────────────────────── */
+.s11 .fam { display: grid; grid-template-columns: 720px 1fr; gap: 40px; margin-top: 64px; align-items: stretch; }
+.s11 .rows { display: flex; flex-direction: column; }
+.s11 .rows .r { flex: 1; display: flex; align-items: baseline; gap: 28px; border-top: 1px solid var(--line); padding: 30px 0; }
+.s11 .rows .r:last-child { border-bottom: 1px solid var(--line); }
+.s11 .rows .name { font: 700 44px/1 var(--font-display); letter-spacing: -0.03em; width: 260px; }
+.s11 .rows .what { font: 400 26px/1.3 var(--font-body); color: var(--text-mid); }
+.s11 .fam .card { padding: 44px 48px; min-height: 440px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-start; position: relative; overflow: hidden; }
+.s11 .fam .card .mark { position: absolute; right: -30px; bottom: -40px; width: 300px; height: 300px; opacity: .22; }
+.s11 .fam .card.first { border-color: var(--color-accent); background: rgba(61,220,132,.06); }
+.s11 .fam .card .name { font: 700 72px/1 var(--font-display); letter-spacing: -0.04em; }
+.s11 .fam .card .what { font: 400 30px/1.4 var(--font-body); color: var(--text-mid); margin-top: 18px; }
+.s11 .fam .card.first .what { color: var(--text-hi); }
+.s11 .fam .tag { width: 18px; height: 18px; border-radius: 4px; background: var(--line-strong); margin-bottom: 36px; }
+.s11 .fam .card.first .tag { background: var(--color-accent); }
+
+/* ── 12 THE ASK ──────────────────────────────────────────────────────────── */
+.s12 .asks { margin-top: 64px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; width: 1140px; }
+.s12 .asks .card { padding: 30px 32px; }
+.s12 .asks .k { font: 500 16px var(--font-mono); color: var(--text-low); letter-spacing: .08em; text-transform: uppercase; }
+.s12 .asks .v { font: 600 34px/1.15 var(--font-display); letter-spacing: -0.02em; }
+.s12 .links { margin-top: 64px; font: 500 26px/1.9 var(--font-mono); color: var(--text-mid); }
+.s12 .links a { color: var(--text-hi); text-decoration: none; border-bottom: 1px solid var(--line-strong); }
+.s12 .links .k { display: inline-block; width: 150px; color: var(--text-low); }
+.s12 .qr { position: absolute; right: 0; top: 40px; width: 440px; text-align: center; }
+.s12 .qr .card { padding: 26px; background: #fff; border-radius: 22px; }
+.s12 .qr svg { width: 388px; height: 388px; display: block; }
+.s12 .qr .cap { font: 500 18px var(--font-mono); color: var(--text-mid); margin-top: 18px; }
+.s12 .closer { position: absolute; left: 0; bottom: 20px; font: 700 54px/1.1 var(--font-display); letter-spacing: -0.03em; }
+.s12 .closer span { color: var(--color-accent); }
+
+/* ── PRINT: one slide per 16in × 9in page ───────────────────────────────── */
+@page { size: 16in 9in landscape; margin: 0; }
+@page { size: 16in 9in; margin: 0; }   /* Chromium does not accept lengths + a keyword; this one wins there and is the same page */
+@media print {
+  html, body { height: auto; overflow: visible; background: var(--color-bg); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #stage { position: static; transform: none !important; width: auto; height: auto; }
+  #stage > section { position: relative !important; inset: auto !important; display: block; opacity: 1 !important; visibility: visible !important; transition: none;
+       width: 1920px; height: 1080px; zoom: 0.8; page-break-after: always; break-after: page; page-break-inside: avoid; break-inside: avoid;
+       -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #stage > section:last-of-type { page-break-after: auto; break-after: auto; }
+  #hint, #notes-panel, #grid, #notes, .speaker-notes { display: none !important; }
+  .s1 .coin, .s1 .slot3, .s1 .slot3-bottom, .s1 .l-unpaid, .s1 .l-paid, .s1 .l-swept, .s1 .cap-born, .s1 .bar, .s1 .born-ring { animation: none !important; }
+  /* the printed cover rests on the SWEPT state */
+  .s1 .coin, .s1 .l-unpaid, .s1 .l-paid, .s1 .cap-born, .s1 .born-ring, .s1 .slot3-bottom { opacity: 0 !important; }
+  .s1 .l-swept { opacity: 1 !important; }
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const VERSION = 'v1.1.1';                 // = git -C build describe --tags --abbrev=0 (2026-09-21)
+  const slides = Array.from(document.querySelectorAll('#stage > section'));
+  slides.forEach((s, k) => { s.classList.add('s', 's' + (k + 1)); });
+  const N = slides.length;
+  const stage = document.getElementById('stage');
+  const body = document.body;
+  let i = 0;
+
+  // footer stamp on every slide: brand · chain · version · counter
+  slides.forEach((s, k) => {
+    const f = document.createElement('div');
+    f.className = 'foot';
+    f.innerHTML = '<span><span class="mark"></span>Pigeonhole · Arc mainnet 5042 · <span class="ver">' + VERSION + '</span></span>' +
+                  '<span>' + String(k + 1).padStart(2, '0') + ' / ' + String(N).padStart(2, '0') + '</span>';
+    s.appendChild(f);
+  });
+
+  // notes lookup
+  const notes = {};
+  document.querySelectorAll('#notes .speaker-notes').forEach(a => { notes[a.dataset.slide] = a.textContent.trim(); });
+
+  function fit() {
+    const presenter = body.classList.contains('presenter');
+    const H = presenter ? window.innerHeight * 0.8 : window.innerHeight;
+    const k = Math.min(window.innerWidth / 1920, H / 1080);
+    stage.style.transform = 'translate(-50%, -50%) scale(' + k + ')';
+    stage.style.top = presenter ? (H / 2) + 'px' : '50%';
+  }
+
+  function restartCover() {
+    // re-run the once-only animation each time the cover is shown
+    const hero = slides[0].querySelector('.hero');
+    if (!hero) return;
+    const clone = hero.cloneNode(true);
+    hero.replaceWith(clone);
+  }
+
+  function show(n) {
+    n = Math.max(0, Math.min(N - 1, n));
+    slides[i].classList.remove('active');
+    i = n;
+    slides[i].classList.add('active');
+    if (i === 0) restartCover();
+    location.hash = String(i + 1);
+    document.getElementById('np-text').textContent = notes[i + 1] || '';
+    document.getElementById('np-next').textContent = i + 1 < N ? 'next → ' + (slides[i + 1].querySelector('h1') || {}).textContent : 'last slide';
+  }
+
+  function buildGrid() {
+    const g = document.getElementById('grid');
+    if (g.childElementCount) return;
+    const tileW = (window.innerWidth - 80 - 28 * 3) / 4;
+    slides.forEach((s, k) => {
+      const t = document.createElement('div');
+      t.className = 'tile'; t.style.setProperty('--k', tileW / 1920);
+      const c = s.cloneNode(true); c.classList.add('active'); c.querySelector('.foot') && c.querySelector('.foot').remove();
+      t.appendChild(c);
+      const cap = document.createElement('div'); cap.className = 'cap';
+      cap.textContent = String(k + 1).padStart(2, '0') + ' · ' + ((s.querySelector('h1') || {}).textContent || '').trim().slice(0, 40);
+      t.appendChild(cap);
+      t.addEventListener('click', () => { body.classList.remove('overview'); show(k); });
+      g.appendChild(t);
+    });
+  }
+
+  window.addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey) return;
+    switch (e.key) {
+      case 'ArrowRight': case ' ': case 'PageDown': case 'Enter': e.preventDefault(); show(i + 1); break;
+      case 'ArrowLeft': case 'PageUp': case 'Backspace': e.preventDefault(); show(i - 1); break;
+      case 'Home': show(0); break;
+      case 'End': show(N - 1); break;
+      case 'Escape': if (!body.classList.contains('overview')) buildGrid(); body.classList.toggle('overview'); break;
+      case 'p': case 'P': body.classList.toggle('presenter'); fit(); break;
+      case 'c': case 'C': body.classList.toggle('debug-contrast'); break;
+      default:
+        if (/^[1-9]$/.test(e.key)) show(parseInt(e.key, 10) - 1);
+    }
+  });
+
+  // presenter mode: hide the cursor after 2 s idle
+  let idleT;
+  window.addEventListener('mousemove', () => { body.classList.remove('idle'); clearTimeout(idleT); idleT = setTimeout(() => body.classList.add('idle'), 2000); });
+
+  window.addEventListener('resize', fit);
+  window.addEventListener('beforeprint', () => { slides.forEach(s => s.classList.add('active')); });
+  window.addEventListener('afterprint', () => { slides.forEach((s, k) => s.classList.toggle('active', k === i)); });
+
+  setTimeout(() => body.classList.add('quiet'), 6000);
+  fit();
+  const h = parseInt(location.hash.replace('#', ''), 10);
+  slides[0].classList.add('active');
+  show(isNaN(h) ? 0 : h - 1);
+});
+</script>
+</head>
+<body>
+
+<!-- ═══ SPEAKER NOTES STORE — one aside per slide; presenter mode (P) renders the active one ═══ -->
+<div id="notes" hidden>
+  <aside class="speaker-notes" data-slide="1">Open on the animation, don't talk over it for the first three seconds. Then: "This is Pigeonhole. Every invoice gets an address that is pure arithmetic — nothing is deployed until it is paid, and when it is swept, the contract that did the sweeping is already gone. It is live on Arc mainnet today."</aside>
+  <aside class="speaker-notes" data-slide="2">Read the code line out loud; it is Circle's, not ours. Point out that this is the reference every exchange copies onto Arc: HD wallet in Step 1, a signer with the deposit key in Step 6. The question we asked was simply: why does a deposit address need a key at all?</aside>
+  <aside class="speaker-notes" data-slide="3">Walk the boxes left to right. Each one is operational surface: the seed, the derivation, the key store, the online signer, the fee arithmetic — and the worker that has to leave gas behind, so it can never sweep the whole balance. This is a composite role, not a named customer; the pain is from Circle's own guide.</aside>
+  <aside class="speaker-notes" data-slide="4">Same canvas, two boxes. The address is a hash of the factory, the invoice id and the treasury — it exists before any contract does, and anyone can hand it out with no transaction. When it's paid, anyone may call sweep. Funds can only reach the immutable treasury: there is no admin path, no parameter, no owner.</aside>
+  <aside class="speaker-notes" data-slide="5">This is the slide to remember. The sweep transaction deploys 22 bytes at the address, its constructor moves the whole native balance and self-destructs, and EIP-6780 deletes the account in the same transaction. Code goes back to 0x, nonce to zero, and the address can be paid and swept again — we proved that on mainnet.</aside>
+  <aside class="speaker-notes" data-slide="6">Four properties, and the mechanism needs all four. The load-bearing one is the first: on Arc, USDC is the account balance itself, which is what SELFDESTRUCT moves. On Ethereum or Base the USDC lives inside a token contract, so the same 22 bytes would move nothing and the emitter would log nothing.</aside>
+  <aside class="speaker-notes" data-slide="7">Everything on this slide is read live from chain 5042. The invoice page derives SWEPT from logs and cross-checks the balance on every poll. The reviewer page is the 60-second path with the receipts. The explorer capture is the re-sweep: a contract created and destroyed in one transaction, rendered logged-out.</aside>
+  <aside class="speaker-notes" data-slide="8">This is the page's own readout, monospace and unedited. One filter on the system emitter gives both movements. The invariant line is the part to stress: the sum of logs equals the balance the RPC reports, checked every three seconds — if an indexer ever disagreed with the chain, this page would show it.</aside>
+  <aside class="speaker-notes" data-slide="9">Every number here has a file behind it in the repo — bench rows, test names, the bytecode recipe. The explorer would not accept source verification through its Cloudflare wall, so we compared the on-chain runtime code byte for byte with the build instead. "npm run verify" reproduces the prediction and the invariant with no wallet.</aside>
+  <aside class="speaker-notes" data-slide="10">We would rather you hear these from us. The treasury is immutable on purpose — that is what makes "funds can only go one place" true — and it is also the single thing that could freeze every unswept invoice. Latency was not measured, so it is not claimed.</aside>
+  <aside class="speaker-notes" data-slide="11">Pigeonhole is the first proof that Arc's native-USDC model supports payment primitives that need no keys and no keepers. The same foundations give standing orders, exactly-once payments and card-style holds. The near-term product is a hosted deposit-address API for exchanges and PSPs — that is the Circle Grant Program conversation.</aside>
+  <aside class="speaker-notes" data-slide="12">Scan the code — that page needs no wallet and no login. The ask is small and specific: one microgrant, an office-hours session with the Arc team on the emitter and finality semantics, and the route into the grant program. Everything shown today is on mainnet and reproducible from the repo.</aside>
+</div>
+
+<div id="grid" aria-label="slide overview"></div>
+<div id="notes-panel"><div class="k">speaker notes</div><div id="np-text"></div><div class="next" id="np-next"></div></div>
+<div id="hint">← → navigate · ESC overview · P presenter · C contrast · ⌘P print</div>
+
+<div id="stage">
+
+<!-- ═══════════════════════════════ 01 · COVER ═══════════════════════════════ -->
+<section>
+  <div class="brand">
+    <p class="eyebrow">Built for Arc Microgrants · Circle</p>
+    <h1 class="wordmark">Pigeon<span>hole</span></h1>
+    <p class="tag">A fresh USDC deposit address per invoice — <b>with no private key to guard.</b></p>
+    <div class="row">
+      <span class="badge"><span class="dot"></span>Live on Arc mainnet</span>
+      <span class="ver">v1.1.1</span>
+    </div>
+  </div>
+  <div class="hero" aria-hidden="true">
+    <!-- the mechanism, once: a payment lands in slot 3 → a throwaway is born there (green flash) → the slot's floor opens,
+         the coin drops into the treasury bar → the slot reads SWEPT · empty. Then it rests. -->
+    <svg viewBox="0 0 860 700" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="coinG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4ea1ff"/><stop offset="1" stop-color="#3ddc84"/></linearGradient>
+        <filter id="soft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="8"/></filter>
+      </defs>
+      <!-- rack of four pigeonholes -->
+      <g fill="none" stroke="#4ea1ff" stroke-width="5" stroke-linejoin="round">
+        <rect x="20"  y="90" width="190" height="180" rx="20"/>
+        <rect x="230" y="90" width="190" height="180" rx="20"/>
+        <path class="slot3" d="M440 270 V110 a20 20 0 0 1 20 -20 h150 a20 20 0 0 1 20 20 V270"/>
+        <path class="slot3-bottom" d="M440 270 H630" stroke-linecap="round"/>
+        <rect x="650" y="90" width="190" height="180" rx="20"/>
+      </g>
+      <!-- born ring: a brief outline pulse around slot 3 -->
+      <rect class="born-ring" x="426" y="76" width="218" height="208" rx="28" fill="none" stroke="#3ddc84" stroke-width="2" opacity="0"/>
+      <!-- slot labels -->
+      <g font-size="21" font-weight="500">
+        <text class="l-unpaid" x="535" y="150" text-anchor="middle" fill="#9aa7b5">UNPAID</text>
+        <text class="l-paid"   x="535" y="150" text-anchor="middle" fill="#4ea1ff" opacity="0">PAID 0.02</text>
+        <text class="l-swept"  x="535" y="150" text-anchor="middle" fill="#3ddc84" opacity="0">SWEPT · empty</text>
+      </g>
+      <!-- the coin: flies in from the right, waits, drops through the open floor -->
+      <g class="coin" opacity="0">
+        <circle cx="535" cy="212" r="30" fill="#3ddc84" opacity=".45" filter="url(#soft)"/>
+        <circle cx="535" cy="212" r="25" fill="url(#coinG)"/>
+      </g>
+      <!-- caption during the sweep beat -->
+      <text class="cap-born" x="535" y="340" text-anchor="middle" font-size="19" fill="#3ddc84" opacity="0">born · SELFDESTRUCT · gone</text>
+      <!-- sweep channel from slot 3 down to the bar -->
+      <path d="M535 300 V520" stroke="rgba(255,255,255,.10)" stroke-width="2" stroke-dasharray="6 8" fill="none"/>
+      <!-- the treasury bar: immutable, the only destination -->
+      <g class="bar">
+        <rect x="20" y="540" width="820" height="58" rx="14" fill="#3ddc84"/>
+        <text x="430" y="577" text-anchor="middle" font-size="22" font-weight="600" fill="#062b16">treasury</text>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ 02 · HOOK ════════════════════════════════ -->
+<section>
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">02</span>Today</p>
+    <h1>One address, <em>one key</em> to guard.</h1>
+    <div class="terminal-frame code">
+      <div class="bar"><i></i><i></i><i></i>&nbsp; Circle · integrate/exchanges/deposits · Step 6</div>
+<pre><span class="k">const</span> wallet = <span class="k">new</span> Wallet(<span class="g">depositPrivateKey</span>, provider);</pre>
+    </div>
+    <p class="lead">Circle's own exchange-deposit guide: every address derives a key, and every sweep signs with it.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ 03 · PROBLEM (BEFORE) ════════════════════ -->
+<section>
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">03</span>Before</p>
+    <h1>The 3 a.m. pipeline</h1>
+    <p class="lead">A deposit-ops lead at an exchange guards <b>one key per customer address</b>, forever.</p>
+    <!-- the BEFORE picture: six boxes, every one an operational surface -->
+    <svg class="diagram" viewBox="0 0 1728 520" xmlns="http://www.w3.org/2000/svg">
+      <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#7b8794"/></marker></defs>
+      <g>
+        <rect class="box dashed" x="0" y="120" width="240" height="170" rx="18"/>
+        <text class="lbl" x="120" y="213" text-anchor="middle">mnemonic</text>
+        <rect class="box dashed" x="296" y="120" width="240" height="170" rx="18"/>
+        <text class="lbl" x="416" y="213" text-anchor="middle">HDNodeWallet</text>
+        <rect class="box" x="592" y="120" width="240" height="170" rx="18"/>
+        <text class="lbl" x="712" y="198" text-anchor="middle">key per</text><text class="lbl" x="712" y="232" text-anchor="middle">address</text>
+        <rect class="box" x="888" y="120" width="240" height="170" rx="18"/>
+        <text class="lbl" x="1008" y="213" text-anchor="middle">key store</text>
+        <rect class="box" x="1184" y="120" width="240" height="170" rx="18"/>
+        <text class="lbl" x="1304" y="198" text-anchor="middle">online</text><text class="lbl" x="1304" y="232" text-anchor="middle">signer</text>
+        <rect class="box" x="1480" y="120" width="248" height="170" rx="18"/>
+        <text class="lbl" x="1604" y="213" text-anchor="middle">amount − fee</text>
+      </g>
+      <g class="arrow" marker-end="url(#ah)">
+        <path d="M240 205H292"/><path d="M536 205H588"/><path d="M832 205H884"/><path d="M1128 205H1180"/><path d="M1424 205H1476"/>
+      </g>
+      <!-- keys: one per box from derivation onwards -->
+      <g class="key">
+        <g transform="translate(694,62)"><circle cx="8" cy="8" r="6"/><path d="M13 12l18 18M24 23l-4 4M29 28l-4 4"/></g>
+        <g transform="translate(990,62)"><circle cx="8" cy="8" r="6"/><path d="M13 12l18 18M24 23l-4 4M29 28l-4 4"/></g>
+        <g transform="translate(1286,62)"><circle cx="8" cy="8" r="6"/><path d="M13 12l18 18M24 23l-4 4M29 28l-4 4"/></g>
+        <g transform="translate(1586,62)"><circle cx="8" cy="8" r="6"/><path d="M13 12l18 18M24 23l-4 4M29 28l-4 4"/></g>
+      </g>
+      <!-- the pager under the signer -->
+      <path class="arrow" d="M1304 290V340" marker-end="url(#ah)"/>
+      <rect x="1204" y="346" width="200" height="56" rx="12" fill="rgba(255,176,32,.10)" stroke="#ffb020" stroke-width="1.5"/>
+      <text x="1304" y="381" text-anchor="middle" font-size="20" fill="#ffb020">pages at 3 a.m.</text>
+      <!-- the destination -->
+      <path class="arrow" d="M1604 290V350" marker-end="url(#ah)"/>
+      <rect class="box" x="1480" y="356" width="248" height="90" rx="18"/>
+      <text class="lbl" x="1604" y="409" text-anchor="middle">hot wallet</text>
+    </svg>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ 04 · SOLUTION (AFTER) ════════════════════ -->
+<section>
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">04</span>After</p>
+    <h1>Replace the key with arithmetic.</h1>
+    <p class="lead">The address exists before any contract does. One transaction later it is empty again.</p>
+    <!-- the AFTER picture: the same canvas, two boxes and one arrow -->
+    <svg class="diagram" viewBox="0 0 1728 520" xmlns="http://www.w3.org/2000/svg">
+      <defs><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#3ddc84"/></marker></defs>
+      <rect class="box" x="0" y="100" width="1200" height="240" rx="20" stroke="#4ea1ff"/>
+      <text x="52" y="164" font-size="20" fill="#7b8794">no code · no key</text>
+      <text x="52" y="256" font-size="44" font-weight="600" fill="#e8edf2">CREATE2(<tspan fill="#4ea1ff">factory</tspan>, keccak256(<tspan fill="#4ea1ff">id</tspan>), <tspan fill="#4ea1ff">treasury</tspan>)</text>
+      <path d="M1200 220H1470" stroke="#3ddc84" stroke-width="3" fill="none" marker-end="url(#ah2)"/>
+      <text x="1335" y="196" text-anchor="middle" font-size="19" fill="#3ddc84">sweep(salt) · anyone</text>
+      <rect class="box" x="1480" y="120" width="248" height="200" rx="20" stroke="#3ddc84"/>
+      <text class="lbl" x="1604" y="212" text-anchor="middle">treasury</text>
+      <text class="sub" x="1604" y="248" text-anchor="middle">immutable</text>
+    </svg>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ 05 · HOW IT WORKS (the frozen slide) ═════ -->
+<section>
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">05</span>Lifecycle</p>
+    <h1>Born, sweeps, gone — one transaction.</h1>
+    <svg class="diagram" viewBox="0 0 1728 640" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#7b8794"/></marker>
+        <marker id="ah4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#3ddc84"/></marker>
+      </defs>
+      <!-- 1 · offline -->
+      <text class="stage-n" x="0" y="60">1 · OFFLINE</text>
+      <rect class="box" x="0" y="80" width="330" height="200" rx="16" stroke="#4ea1ff"/>
+      <text class="lbl" x="24" y="150">CREATE2 address</text>
+      <text class="sub" x="24" y="190">no code · nonce 0</text>
+      <!-- 2 · pay -->
+      <text class="stage-n" x="400" y="60">2 · PAY</text>
+      <rect class="box" x="400" y="80" width="330" height="200" rx="16"/>
+      <text class="lbl" x="424" y="150" fill="#4ea1ff">PAID</text>
+      <text class="sub" x="424" y="190">Transfer log · 0xffff…fffE</text>
+      <!-- 3 · sweep tx -->
+      <text class="stage-n" x="800" y="60" fill="#3ddc84">3 · SWEEP(SALT)</text>
+      <rect class="sweep-box" x="800" y="80" width="928" height="200" rx="16"/>
+      <rect class="inner" x="824" y="116" width="260" height="128" rx="12"/>
+      <text class="lbl" x="954" y="172" text-anchor="middle">create</text>
+      <text class="sub" x="954" y="204" text-anchor="middle">22 bytes</text>
+      <rect class="inner" x="1120" y="116" width="260" height="128" rx="12"/>
+      <text class="lbl" x="1250" y="188" text-anchor="middle">SELFDESTRUCT</text>
+      <rect class="inner" x="1416" y="116" width="288" height="128" rx="12" stroke="#3ddc84"/>
+      <text class="lbl" x="1560" y="188" text-anchor="middle" fill="#3ddc84">treasury</text>
+      <path d="M1084 180H1114" stroke="#3ddc84" stroke-width="2" fill="none" marker-end="url(#ah4)"/>
+      <path d="M1380 180H1410" stroke="#3ddc84" stroke-width="2" fill="none" marker-end="url(#ah4)"/>
+      <!-- arrows between stages -->
+      <path class="arrow" d="M330 180H394" marker-end="url(#ah3)"/>
+      <path class="arrow" d="M730 180H794" marker-end="url(#ah3)"/>
+      <!-- 4 · after, loops back to the same address -->
+      <text class="stage-n" x="800" y="380">4 · AFTER</text>
+      <rect class="box" x="800" y="400" width="928" height="130" rx="16"/>
+      <text class="lbl" x="824" y="475">code 0x · nonce 0</text>
+      <path class="arrow" d="M1264 280V394" marker-end="url(#ah3)"/>
+      <path class="loop" d="M800 465H165V286" marker-end="url(#ah3)"/>
+      <text class="sub" x="380" y="452" fill="#7b8794">pay again</text>
+    </svg>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ 06 · WHY ONLY ARC ════════════════════════ -->
+<section>
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">06</span>Arc</p>
+    <h1>Why this only works on Arc</h1>
+    <table>
+      <thead><tr><th>Needed</th><th class="c">Arc</th><th class="c">Other EVM</th></tr></thead>
+      <tbody>
+        <tr><td>USDC is the native balance — <code>SELFDESTRUCT</code> moves it</td><td class="c"><span class="yes"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3ddc84" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 7"/></svg></span></td><td class="c"><span class="no"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff5d5d" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span></td></tr>
+        <tr><td>Native send emits a <code>Transfer</code> log (EIP-7708)</td><td class="c"><span class="yes"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3ddc84" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 7"/></svg></span></td><td class="c"><span class="no"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff5d5d" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span></td></tr>
+        <tr><td><code>SELFDESTRUCT</code> allowed during deployment</td><td class="c"><span class="yes"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3ddc84" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 7"/></svg></span></td><td class="c"><span class="no"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff5d5d" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span></td></tr>
+        <tr><td>Final after one block</td><td class="c"><span class="yes"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3ddc84" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 7"/></svg></span></td><td class="c"><span class="no"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff5d5d" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ 07 · LIVE DEMO ═══════════════════════════ -->
+<section>
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">07</span>Live</p>
+    <h1>The seeded cycle, read from mainnet</h1>
+    <div class="browser-frame f1">
+      <div class="bar"><i></i><i></i><i></i><span class="url">pigeonhole.edycu.dev/#/i/demo-paid</span></div>
+      <!-- SWAP: deck/invoice-swept.png — the seeded demo-paid invoice, captured from the live site at 1920×1080 -->
+      <img src="deck/invoice-swept.png" alt="Invoice demo-paid: SWEPT badge, paid in 0.020000 USDC, unswept 0, I2 holds, two movements with explorer links">
+      <div class="callout" style="left:740px;top:150px">1</div><div class="callout-label" style="left:792px;top:156px">SWEPT</div>
+      <div class="callout" style="left:762px;top:292px">2</div><div class="callout-label" style="left:814px;top:298px">I2 holds</div>
+      <div class="callout" style="left:560px;top:646px">3</div><div class="callout-label" style="left:612px;top:652px">movements, tx links</div>
+    </div>
+    <div class="browser-frame f2">
+      <div class="bar"><i></i><i></i><i></i><span class="url">explorer.arc.io/tx/0x631814ad…</span></div>
+      <!-- SWAP: deck/explorer-resweep.png — logged-out explorer render of the re-sweep tx, 2026-09-17 -->
+      <img src="deck/explorer-resweep.png" alt="Arc explorer: re-sweep transaction 0x631814ad…, Success, fee 0.00129925587763626 USDC">
+      <div class="callout" style="left:20px;top:266px">4</div><div class="callout-label" style="left:72px;top:272px">re-sweep on the explorer</div>
+    </div>
+    <div class="browser-frame f3">
+      <div class="bar"><i></i><i></i><i></i><span class="url">pigeonhole.edycu.dev/#/judge</span></div>
+      <!-- SWAP: deck/judge.png — the reviewer page, captured from the live site at 1920×1080 -->
+      <img src="deck/judge.png" alt="Reviewer page: the 60-second path, receipts, reproduce commands, honest limitations">
+      <div class="callout" style="left:20px;top:266px">5</div><div class="callout-label" style="left:72px;top:272px">reviewers</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ 08 · LIVE FEEL ═══════════════════════════ -->
+<section>
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">08</span>No backend</p>
+    <h1>PAID is one <span class="pri">eth_getLogs</span></h1>
+    <div class="terminal-frame">
+      <div class="bar"><i></i><i></i><i></i>&nbsp; demo-paid · live readout</div>
+<pre><span class="k">eth_getLogs</span>({ address: <span class="d">0xffff…fffe</span>, topics: [<span class="d">Transfer</span>, <span class="c">*</span>, <span class="d">0xb356…F26b</span>] })
+
+<span class="c">Paid in</span>                  0.020000 USDC
+<span class="c">I2 · Σlogs == balance</span>    <span class="g">holds</span>
+
+<span class="k">↓ pay</span>      21337228     <span class="d">0x5fde…d59f</span>
+<span class="g">↑ sweep</span>    21337236     <span class="d">0xe639…8ea6</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ 09 · PROOF ═══════════════════════════════ -->
+<section>
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">09</span>Proof</p>
+    <h1>Everything a reviewer can re-run</h1>
+    <div class="nums">
+      <div class="num"><div class="v">37</div><div class="k">tests</div></div>
+      <div class="num"><div class="v">20,000</div><div class="k">property cases</div></div>
+      <div class="num"><div class="v">34</div><div class="k">E2E checks</div></div>
+      <div class="num"><div class="v">N=25</div><div class="k">sweeps</div></div>
+      <div class="num on"><div class="v">0</div><div class="k">keys</div></div>
+    </div>
+    <div class="terminal-frame">
+      <div class="bar"><i></i><i></i><i></i>&nbsp; repo</div>
+<pre><span class="c">sweep</span>     <span class="g">64,162</span> gas p50  ≈ <span class="g">$0.0013</span>
+<span class="c">bytecode</span>  == forge build · <span class="g">0</span> mismatching bytes
+<span class="c">$</span> npm run verify</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ 10 · WHAT WE DON'T CLAIM ═════════════════ -->
+<section>
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">10</span>Limits</p>
+    <h1>What we don't claim</h1>
+    <div class="ledger">
+      <div class="row"><span class="n"></span><span class="t"><b>PAID latency</b> — not benchmarked.</span></div>
+      <div class="row"><span class="n"></span><span class="t"><b>Immutable treasury</b> — single point of failure, by design.</span></div>
+      <div class="row"><span class="n"></span><span class="t">The URL asks; <b>the chain proves.</b></span></div>
+      <div class="row"><span class="n"></span><span class="t">Explorer verification blocked; <b>bytecode matched</b> instead.</span></div>
+      <div class="row"><span class="n"></span><span class="t"><code>sweepMany</code> tested, not wired.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ 11 · WORTH TAKING FURTHER ════════════════ -->
+<section>
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">11</span>Next</p>
+    <h1>One proof, a primitive family</h1>
+    <p class="lead">A hosted deposit-address API for exchanges and PSPs — the Circle Grant Program route.</p>
+    <div class="fam">
+      <div class="card first"><div class="tag"></div><div class="name">Pigeonhole</div><div class="what">keyless deposit addresses</div>
+        <svg class="mark" viewBox="0 0 512 512" aria-hidden="true"><g fill="none" stroke="#3ddc84" stroke-width="14" stroke-linejoin="round"><rect x="112" y="100" width="128" height="100" rx="14"/><rect x="272" y="100" width="128" height="100" rx="14"/><rect x="112" y="220" width="128" height="100" rx="14"/><path d="M272 320 V234 a14 14 0 0 1 14 -14 h100 a14 14 0 0 1 14 14 V320"/></g><path d="M336 300 V372" stroke="#3ddc84" stroke-width="14" stroke-linecap="round" fill="none"/><path d="M312 352 L336 380 L360 352" stroke="#3ddc84" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="112" y="392" width="288" height="36" rx="12" fill="#3ddc84"/></svg></div>
+      <div class="rows">
+        <div class="r"><div class="name">Legwork</div><div class="what">keeper-less standing orders</div></div>
+        <div class="r"><div class="name">Idem</div><div class="what">exactly-once payment keys</div></div>
+        <div class="r"><div class="name">Holdfast</div><div class="what">authorize / capture holds</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ 12 · THE ASK ═════════════════════════════ -->
+<section>
+  <div class="wrap">
+    <p class="eyebrow"><span class="n">12</span>Ask</p>
+    <h1>Fund the primitive.</h1>
+    <div class="asks">
+      <div class="card"><div class="v">500 USDC microgrant</div></div>
+      <div class="card"><div class="v">Arc office hours</div></div>
+      <div class="card"><div class="v">Grant Program route</div></div>
+    </div>
+    <div class="links">
+      <div><span class="k">live</span><a href="https://pigeonhole.edycu.dev/">pigeonhole.edycu.dev</a></div>
+      <div><span class="k">repo</span><a href="https://github.com/edycutjong/pigeonhole">github.com/edycutjong/pigeonhole</a></div>
+      <div><span class="k">reviewers</span><a href="https://pigeonhole.edycu.dev/#/judge">pigeonhole.edycu.dev/#/judge</a></div>
+      <div><span class="k">video</span>see BUIDL</div>
+    </div>
+    <div class="qr">
+      <div class="card">
+        <!-- QR: https://pigeonhole.edycu.dev/#/judge — 29×29 modules, generated offline (python qrcode, EC level M), inline path -->
+        <svg viewBox="0 0 29 29" shape-rendering="crispEdges" role="img" aria-label="QR code: https://pigeonhole.edycu.dev/#/judge"><path fill="#0b0d10" d="M0 0h1v1h-1zM1 0h1v1h-1zM2 0h1v1h-1zM3 0h1v1h-1zM4 0h1v1h-1zM5 0h1v1h-1zM6 0h1v1h-1zM8 0h1v1h-1zM10 0h1v1h-1zM11 0h1v1h-1zM12 0h1v1h-1zM13 0h1v1h-1zM15 0h1v1h-1zM18 0h1v1h-1zM19 0h1v1h-1zM20 0h1v1h-1zM22 0h1v1h-1zM23 0h1v1h-1zM24 0h1v1h-1zM25 0h1v1h-1zM26 0h1v1h-1zM27 0h1v1h-1zM28 0h1v1h-1zM0 1h1v1h-1zM6 1h1v1h-1zM8 1h1v1h-1zM10 1h1v1h-1zM11 1h1v1h-1zM12 1h1v1h-1zM13 1h1v1h-1zM16 1h1v1h-1zM22 1h1v1h-1zM28 1h1v1h-1zM0 2h1v1h-1zM2 2h1v1h-1zM3 2h1v1h-1zM4 2h1v1h-1zM6 2h1v1h-1zM18 2h1v1h-1zM19 2h1v1h-1zM22 2h1v1h-1zM24 2h1v1h-1zM25 2h1v1h-1zM26 2h1v1h-1zM28 2h1v1h-1zM0 3h1v1h-1zM2 3h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM6 3h1v1h-1zM8 3h1v1h-1zM9 3h1v1h-1zM12 3h1v1h-1zM14 3h1v1h-1zM15 3h1v1h-1zM17 3h1v1h-1zM19 3h1v1h-1zM20 3h1v1h-1zM22 3h1v1h-1zM24 3h1v1h-1zM25 3h1v1h-1zM26 3h1v1h-1zM28 3h1v1h-1zM0 4h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM6 4h1v1h-1zM9 4h1v1h-1zM14 4h1v1h-1zM15 4h1v1h-1zM16 4h1v1h-1zM17 4h1v1h-1zM18 4h1v1h-1zM19 4h1v1h-1zM22 4h1v1h-1zM24 4h1v1h-1zM25 4h1v1h-1zM26 4h1v1h-1zM28 4h1v1h-1zM0 5h1v1h-1zM6 5h1v1h-1zM11 5h1v1h-1zM13 5h1v1h-1zM18 5h1v1h-1zM19 5h1v1h-1zM22 5h1v1h-1zM28 5h1v1h-1zM0 6h1v1h-1zM1 6h1v1h-1zM2 6h1v1h-1zM3 6h1v1h-1zM4 6h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM14 6h1v1h-1zM16 6h1v1h-1zM18 6h1v1h-1zM20 6h1v1h-1zM22 6h1v1h-1zM23 6h1v1h-1zM24 6h1v1h-1zM25 6h1v1h-1zM26 6h1v1h-1zM27 6h1v1h-1zM28 6h1v1h-1zM8 7h1v1h-1zM10 7h1v1h-1zM11 7h1v1h-1zM12 7h1v1h-1zM15 7h1v1h-1zM16 7h1v1h-1zM17 7h1v1h-1zM18 7h1v1h-1zM0 8h1v1h-1zM2 8h1v1h-1zM3 8h1v1h-1zM5 8h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM10 8h1v1h-1zM12 8h1v1h-1zM13 8h1v1h-1zM16 8h1v1h-1zM17 8h1v1h-1zM19 8h1v1h-1zM22 8h1v1h-1zM25 8h1v1h-1zM27 8h1v1h-1zM28 8h1v1h-1zM0 9h1v1h-1zM2 9h1v1h-1zM3 9h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM8 9h1v1h-1zM9 9h1v1h-1zM10 9h1v1h-1zM11 9h1v1h-1zM12 9h1v1h-1zM13 9h1v1h-1zM14 9h1v1h-1zM16 9h1v1h-1zM17 9h1v1h-1zM18 9h1v1h-1zM19 9h1v1h-1zM20 9h1v1h-1zM21 9h1v1h-1zM22 9h1v1h-1zM23 9h1v1h-1zM24 9h1v1h-1zM28 9h1v1h-1zM0 10h1v1h-1zM2 10h1v1h-1zM3 10h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1zM13 10h1v1h-1zM18 10h1v1h-1zM21 10h1v1h-1zM22 10h1v1h-1zM26 10h1v1h-1zM27 10h1v1h-1zM1 11h1v1h-1zM2 11h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM7 11h1v1h-1zM8 11h1v1h-1zM9 11h1v1h-1zM12 11h1v1h-1zM19 11h1v1h-1zM20 11h1v1h-1zM21 11h1v1h-1zM23 11h1v1h-1zM28 11h1v1h-1zM4 12h1v1h-1zM5 12h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1zM9 12h1v1h-1zM10 12h1v1h-1zM12 12h1v1h-1zM14 12h1v1h-1zM15 12h1v1h-1zM17 12h1v1h-1zM25 12h1v1h-1zM26 12h1v1h-1zM2 13h1v1h-1zM3 13h1v1h-1zM4 13h1v1h-1zM7 13h1v1h-1zM10 13h1v1h-1zM14 13h1v1h-1zM15 13h1v1h-1zM16 13h1v1h-1zM17 13h1v1h-1zM19 13h1v1h-1zM22 13h1v1h-1zM26 13h1v1h-1zM27 13h1v1h-1zM28 13h1v1h-1zM1 14h1v1h-1zM2 14h1v1h-1zM5 14h1v1h-1zM6 14h1v1h-1zM9 14h1v1h-1zM11 14h1v1h-1zM12 14h1v1h-1zM13 14h1v1h-1zM18 14h1v1h-1zM19 14h1v1h-1zM21 14h1v1h-1zM23 14h1v1h-1zM24 14h1v1h-1zM26 14h1v1h-1zM27 14h1v1h-1zM28 14h1v1h-1zM4 15h1v1h-1zM7 15h1v1h-1zM8 15h1v1h-1zM10 15h1v1h-1zM14 15h1v1h-1zM15 15h1v1h-1zM16 15h1v1h-1zM18 15h1v1h-1zM19 15h1v1h-1zM20 15h1v1h-1zM21 15h1v1h-1zM22 15h1v1h-1zM23 15h1v1h-1zM24 15h1v1h-1zM27 15h1v1h-1zM0 16h1v1h-1zM1 16h1v1h-1zM6 16h1v1h-1zM9 16h1v1h-1zM10 16h1v1h-1zM12 16h1v1h-1zM14 16h1v1h-1zM16 16h1v1h-1zM18 16h1v1h-1zM19 16h1v1h-1zM20 16h1v1h-1zM21 16h1v1h-1zM23 16h1v1h-1zM24 16h1v1h-1zM25 16h1v1h-1zM27 16h1v1h-1zM1 17h1v1h-1zM3 17h1v1h-1zM5 17h1v1h-1zM8 17h1v1h-1zM9 17h1v1h-1zM10 17h1v1h-1zM14 17h1v1h-1zM15 17h1v1h-1zM23 17h1v1h-1zM25 17h1v1h-1zM26 17h1v1h-1zM27 17h1v1h-1zM0 18h1v1h-1zM4 18h1v1h-1zM5 18h1v1h-1zM6 18h1v1h-1zM9 18h1v1h-1zM11 18h1v1h-1zM12 18h1v1h-1zM13 18h1v1h-1zM14 18h1v1h-1zM15 18h1v1h-1zM20 18h1v1h-1zM21 18h1v1h-1zM22 18h1v1h-1zM23 18h1v1h-1zM24 18h1v1h-1zM26 18h1v1h-1zM3 19h1v1h-1zM4 19h1v1h-1zM5 19h1v1h-1zM7 19h1v1h-1zM9 19h1v1h-1zM10 19h1v1h-1zM13 19h1v1h-1zM14 19h1v1h-1zM15 19h1v1h-1zM17 19h1v1h-1zM18 19h1v1h-1zM23 19h1v1h-1zM24 19h1v1h-1zM26 19h1v1h-1zM1 20h1v1h-1zM2 20h1v1h-1zM3 20h1v1h-1zM4 20h1v1h-1zM6 20h1v1h-1zM7 20h1v1h-1zM11 20h1v1h-1zM12 20h1v1h-1zM13 20h1v1h-1zM14 20h1v1h-1zM15 20h1v1h-1zM16 20h1v1h-1zM17 20h1v1h-1zM18 20h1v1h-1zM19 20h1v1h-1zM20 20h1v1h-1zM21 20h1v1h-1zM22 20h1v1h-1zM23 20h1v1h-1zM24 20h1v1h-1zM25 20h1v1h-1zM26 20h1v1h-1zM8 21h1v1h-1zM10 21h1v1h-1zM12 21h1v1h-1zM16 21h1v1h-1zM20 21h1v1h-1zM24 21h1v1h-1zM25 21h1v1h-1zM26 21h1v1h-1zM27 21h1v1h-1zM28 21h1v1h-1zM0 22h1v1h-1zM1 22h1v1h-1zM2 22h1v1h-1zM3 22h1v1h-1zM4 22h1v1h-1zM5 22h1v1h-1zM6 22h1v1h-1zM8 22h1v1h-1zM12 22h1v1h-1zM14 22h1v1h-1zM16 22h1v1h-1zM18 22h1v1h-1zM19 22h1v1h-1zM20 22h1v1h-1zM22 22h1v1h-1zM24 22h1v1h-1zM25 22h1v1h-1zM27 22h1v1h-1zM0 23h1v1h-1zM6 23h1v1h-1zM8 23h1v1h-1zM12 23h1v1h-1zM13 23h1v1h-1zM14 23h1v1h-1zM15 23h1v1h-1zM20 23h1v1h-1zM24 23h1v1h-1zM25 23h1v1h-1zM28 23h1v1h-1zM0 24h1v1h-1zM2 24h1v1h-1zM3 24h1v1h-1zM4 24h1v1h-1zM6 24h1v1h-1zM9 24h1v1h-1zM10 24h1v1h-1zM11 24h1v1h-1zM12 24h1v1h-1zM17 24h1v1h-1zM18 24h1v1h-1zM20 24h1v1h-1zM21 24h1v1h-1zM22 24h1v1h-1zM23 24h1v1h-1zM24 24h1v1h-1zM26 24h1v1h-1zM0 25h1v1h-1zM2 25h1v1h-1zM3 25h1v1h-1zM4 25h1v1h-1zM6 25h1v1h-1zM8 25h1v1h-1zM9 25h1v1h-1zM12 25h1v1h-1zM15 25h1v1h-1zM20 25h1v1h-1zM21 25h1v1h-1zM23 25h1v1h-1zM24 25h1v1h-1zM25 25h1v1h-1zM28 25h1v1h-1zM0 26h1v1h-1zM2 26h1v1h-1zM3 26h1v1h-1zM4 26h1v1h-1zM6 26h1v1h-1zM8 26h1v1h-1zM9 26h1v1h-1zM12 26h1v1h-1zM13 26h1v1h-1zM14 26h1v1h-1zM17 26h1v1h-1zM18 26h1v1h-1zM20 26h1v1h-1zM23 26h1v1h-1zM26 26h1v1h-1zM28 26h1v1h-1zM0 27h1v1h-1zM6 27h1v1h-1zM9 27h1v1h-1zM11 27h1v1h-1zM12 27h1v1h-1zM13 27h1v1h-1zM20 27h1v1h-1zM22 27h1v1h-1zM24 27h1v1h-1zM25 27h1v1h-1zM27 27h1v1h-1zM0 28h1v1h-1zM1 28h1v1h-1zM2 28h1v1h-1zM3 28h1v1h-1zM4 28h1v1h-1zM5 28h1v1h-1zM6 28h1v1h-1zM8 28h1v1h-1zM12 28h1v1h-1zM14 28h1v1h-1zM19 28h1v1h-1zM20 28h1v1h-1zM21 28h1v1h-1zM22 28h1v1h-1zM23 28h1v1h-1zM25 28h1v1h-1zM27 28h1v1h-1z"/></svg>
+      </div>
+      <div class="cap">reviewer page</div>
+    </div>
+    <div class="closer">Zero keys. <span>One transaction.</span></div>
+  </div>
+</section>
+
+</div><!-- /stage -->
+
+
+</body>
+</html>
