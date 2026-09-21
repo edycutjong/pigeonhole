@@ -30,7 +30,7 @@ with no key anywhere in the system.
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)
 ![viem](https://img.shields.io/badge/viem-1e1e1e?style=flat)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat&logo=vite&logoColor=white)
-![tests](https://img.shields.io/badge/tests-37_passing-3ddc84?style=flat)
+![tests](https://img.shields.io/badge/tests-38_passing-3ddc84?style=flat)
 ![property cases](https://img.shields.io/badge/fast--check-20%2C000_cases-3ddc84?style=flat)
 [![CI](https://github.com/edycutjong/pigeonhole/actions/workflows/ci.yml/badge.svg)](https://github.com/edycutjong/pigeonhole/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/edycutjong/pigeonhole/actions/workflows/codeql.yml/badge.svg)](https://github.com/edycutjong/pigeonhole/actions/workflows/codeql.yml)
@@ -43,6 +43,11 @@ with no key anywhere in the system.
 ## 📸 See it in action
 
 **Demo video (2:30):** [youtu.be/BGuzotTXQEA](https://youtu.be/BGuzotTXQEA) — a real cycle on Arc mainnet recorded from the live page (invoice `acme-2026-0922`: pay 0.02 USDC → PAID → sweep → SWEPT), captions included.
+
+<div align="center">
+  <img src="docs/assets/broll.gif" alt="The live page, real time: the invoice flips from UNPAID to PAID as the payment log lands, then from PAID to SWEPT as the sweep log lands and a second movement row appears" width="100%">
+  <sub>Real cycle on the production factory, recorded from the live page at 1× speed — two 4.5-second windows from the demo video: the moment the pay log lands (UNPAID → PAID) and the moment the sweep log lands (PAID → SWEPT).</sub>
+</div>
 
 <div align="center">
   <img src="docs/assets/screenshot-invoice-swept.png" alt="The seeded demo-paid invoice: SWEPT, paid in 0.02 USDC, unswept 0, invariant I2 holds, two movements with explorer links" width="100%">
@@ -69,6 +74,17 @@ whole balance to an **immutable treasury** and self-destructs in the same transa
 deletes it, so the address returns to *no code, nonce 0* and can be paid and swept again forever.
 
 **There is no private key for any deposit address, and funds can only ever reach the treasury.**
+
+## 🏗️ Architecture
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/architecture-dark.png">
+  <img src="docs/assets/architecture-light.png" alt="Architecture: the browser page (no backend) predicts a CREATE2 address per invoice and reads PAID/SWEPT from one eth_getLogs filter on Arc's system emitter; on Arc mainnet the factory holds an immutable treasury, the payer sends native USDC to the codeless address, and anyone's sweep(salt) CREATE2-deploys a 22-byte throwaway there that SELFDESTRUCTs the whole balance to the treasury in the same transaction" width="100%">
+</picture>
+
+Three lanes, one transaction. The page never talks to anything but Arc's public RPC; the chain never needs a key for the address; the treasury is the only place funds can go. Line-by-line: [`ARCHITECTURE.md`](./ARCHITECTURE.md).
+
+---
 
 ## 🔵 Why this needs Arc — and only Arc
 
