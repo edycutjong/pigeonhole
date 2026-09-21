@@ -6,6 +6,9 @@ import { type Address, type Hex, keccak256, encodePacked, getAddress, concatHex,
 export const ARC = {
   chainId: 5042,
   rpcUrl: "https://rpc.mainnet.arc.io",
+  /** Every public mainnet endpoint on docs.arc.io/arc/references/rpc-endpoints, primary first — all four answer chain 5042 with
+   *  CORS for this origin (probed 2026-09-21). The page reads through them in order, moving on when one refuses. */
+  rpcUrls: ["https://rpc.mainnet.arc.io", "https://rpc.drpc.mainnet.arc.io", "https://rpc.quicknode.mainnet.arc.io", "https://rpc.blockdaemon.mainnet.arc.io"],
   explorer: "https://explorer.arc.io",
   /** EIP-7708 native-value Transfer logs come from this system emitter (18 decimals). */
   systemEmitter: "0xfffffffffffffffffffffffffffffffffffffffe" as Address,

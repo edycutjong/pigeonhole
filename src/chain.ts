@@ -1,5 +1,5 @@
 // viem clients + Arc chain def + the RPC-capped log fetch the page depends on.
-import { createPublicClient, http, defineChain, getAddress, parseAbi,
+import { createPublicClient, fallback, http, defineChain, getAddress, parseAbi,
   type Address, type EIP1193Provider } from "viem";
 import { ARC, reduceLogs, type InvoiceState } from "./lib/pigeonhole";
 import { MovementCache, MAX_LOG_SPAN, CALL_PACE_MS, spans, withRetry } from "./lib/logs";
@@ -18,7 +18,9 @@ export const arc = defineChain({
   blockExplorers: { default: { name: "Arc Explorer", url: ARC.explorer } },
 });
 
-export const pub = createPublicClient({ chain: arc, transport: http(ARC.rpcUrl, { retryCount: 0 }) }); // retries are paced in src/lib/logs.ts, not burst by viem
+// retries are paced in src/lib/logs.ts, not burst by viem; fallback: a request one endpoint refuses (429, a blocked host, an
+// outage) is re-sent to the next documented public endpoint, and viem gives up only when all four have failed.
+export const pub = createPublicClient({ chain: arc, transport: fallback(ARC.rpcUrls.map((u) => http(u, { retryCount: 0 }))) });
 export const factoryAbi = parseAbi([
   "function predict(bytes32) view returns (address)",
   "function sweep(bytes32) returns (address)",
