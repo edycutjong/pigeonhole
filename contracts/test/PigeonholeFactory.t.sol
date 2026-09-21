@@ -120,6 +120,23 @@ contract PigeonholeFactoryTest is Test {
         assertEq(p.code.length, 0);
     }
 
+    // --- the one revert sweep() can produce: a CREATE2 collision ---
+
+    /// CREATE2 fails (returns address(0)) when the target already has code or a nonce, so the deployed address
+    /// cannot equal predict(salt) and the factory refuses to emit a Swept it did not perform. Only reachable if
+    /// something else already lives at the predicted address; on chain a pigeonhole never keeps code (EIP-6780).
+    function test_sweep_reverts_Create2Mismatch_when_predicted_address_has_code() public {
+        bytes32 salt = keccak256("collision");
+        address expected = factory.predict(salt);
+        vm.etch(expected, hex"00");
+        vm.deal(expected, 1 ether);
+        uint256 t0 = TREASURY.balance;
+        vm.expectRevert(abi.encodeWithSelector(PigeonholeFactory.Create2Mismatch.selector, expected, address(0)));
+        factory.sweep(salt);
+        assertEq(TREASURY.balance, t0, "nothing moved");
+        assertEq(expected.balance, 1 ether, "the balance stayed where it was");
+    }
+
     // NB: re-pay + re-sweep of the SAME address is a cross-tx property (EIP-6780 deletes at tx end).
     // A Foundry test runs in one tx, so the re-pay-after-delete path is proven on mainnet only (DEMO.md re-pay/re-sweep rows).
 }

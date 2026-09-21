@@ -11,7 +11,7 @@ test.describe("/judge — the reviewer page", () => {
     await expect(page.locator("#claim")).toHaveText(CLAIM);
     await expect(page.getByRole("heading", { name: "The 60-second path (one Arc wallet, ≤ $0.10)" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Honest limitations" })).toBeVisible();
-    await expect(page.getByText("37 (12 Foundry + 25 vitest)")).toBeVisible();
+    await expect(page.getByText("38 (13 Foundry + 25 vitest)")).toBeVisible();
     await ctx.close();
   });
 

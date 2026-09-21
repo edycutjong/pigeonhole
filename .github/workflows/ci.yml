@@ -58,8 +58,12 @@ jobs:
           version: stable
       - name: Build (with sizes)
         run: forge build --sizes
-      - name: Test (12 tests incl. fuzz + invariants I1/I3)
+      - name: Test (13 tests incl. fuzz + invariants I1/I3)
         run: forge test -vv
+      - name: forge coverage (lines must stay at 100% on src/PigeonholeFactory.sol)
+        run: |
+          forge coverage --report summary | tee coverage.txt
+          grep -E '^\| src/PigeonholeFactory\.sol +\| 100\.00%' coverage.txt || { echo '::error::line coverage below 100% on src/PigeonholeFactory.sol'; exit 1; }
       - name: Gas snapshot (advisory)
         run: forge snapshot --check || forge snapshot
         continue-on-error: true

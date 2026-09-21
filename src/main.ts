@@ -203,7 +203,7 @@ function viewNew() {
         <div class="card"><h3>Numbers</h3><div class="numbers">
           <div class="stat"><div class="v">64,162</div><div class="l">gas per sweep · p50, N=25</div></div>
           <div class="stat"><div class="v">≈ $0.0013</div><div class="l">per sweep · at the measured p50 gas price</div></div>
-          <div class="stat"><div class="v">37</div><div class="l">tests · 12 Foundry + 25 vitest</div></div>
+          <div class="stat"><div class="v">38</div><div class="l">tests · 13 Foundry + 25 vitest</div></div>
           <div class="stat"><div class="v">20,000</div><div class="l">property cases · fast-check</div></div>
           <div class="stat"><div class="v">34</div><div class="l">E2E checks · desktop + mobile</div></div>
           <div class="stat"><div class="v">0</div><div class="l">keys held · 0 backends</div></div>
@@ -425,7 +425,7 @@ function viewJudge() {
     <div class="stat-row">
       <div class="stat"><div class="v">64,162</div><div class="l">gas per sweep · p50 · N=25</div></div>
       <div class="stat"><div class="v">≈ $0.0013</div><div class="l">per sweep · measured p50 gas price</div></div>
-      <div class="stat"><div class="v">37 + 20,000</div><div class="l">tests + property cases</div></div>
+      <div class="stat"><div class="v">38 + 20,000</div><div class="l">tests + property cases</div></div>
       <div class="stat"><div class="v">34</div><div class="l">E2E checks · read-only vs mainnet</div></div>
     </div>
     <div class="split">
@@ -453,7 +453,7 @@ function viewJudge() {
           <span class="k">Factory</span><span class="mono"><a href="${addrUrl(FACTORY)}" target="_blank" rel="noopener">${short(FACTORY)} ↗</a></span>
           <span class="k">Treasury</span><span class="mono"><a href="${addrUrl(TREASURY)}" target="_blank" rel="noopener">${short(TREASURY)} ↗</a></span>
           <span class="k">Sweep gas</span><span class="mono">64,162 p50 · N=25 · ≈ $0.0013</span>
-          <span class="k">Tests</span><span class="mono">37 (12 Foundry + 25 vitest)</span>
+          <span class="k">Tests</span><span class="mono">38 (13 Foundry + 25 vitest)</span>
           <span class="k">Property cases</span><span class="mono">20,000 (fast-check, 4 properties)</span>
           <span class="k">Backend</span><span class="mono">none — eth_getLogs only</span>
           <span class="k">Keys held</span><span class="mono">0</span>

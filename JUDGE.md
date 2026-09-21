@@ -31,7 +31,7 @@ Full edge-case table with the empty-sweep and never-seen-beneficiary cases: [`DE
 | Source | unverified on the explorer (its API is behind a Cloudflare challenge) — but the on-chain runtime code is byte-identical to `forge build` output, keccak `0x8806de8d…`, see [`DEMO.md`](./DEMO.md#source-verification-honest-status) |
 | Treasury | [`0xA8965A47c9b6ed34F47B374f36cF6c752D24852a`](https://explorer.arc.io/address/0xA8965A47c9b6ed34F47B374f36cF6c752D24852a) |
 | Sweep gas | **64,162 p50** (N=25 in [`bench/results.json`](./bench/results.json); min 64,150 — salts with a zero byte) ≈ **$0.0013** |
-| Tests | **37** — 12 Foundry (fuzz + invariants I1/I3) + 25 vitest (8 regression tests named for the `eth_getLogs` defects they pin) |
+| Tests | **38** — 13 Foundry (fuzz + invariants I1/I3) + 25 vitest (8 regression tests named for the `eth_getLogs` defects they pin) |
 | Property cases | **20,000** fast-check cases per `npm test`: ledger identity Σin−Σout, order-independence, `predict` vs viem's independent CREATE2, chunker never ≥ 10,000 blocks |
 | E2E | 34 Playwright checks across desktop + mobile, read-only against mainnet (`/judge` with no session, the seeded `demo-paid` cycle reading SWEPT, the treasury view) |
 | Backend | none — PAID/SWEPT are `eth_getLogs` on the system emitter; the page checks invariant I2 (Σlogs == `eth_getBalance`) live on every poll |

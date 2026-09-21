@@ -4,6 +4,7 @@ out = "out"
 libs = ["lib"]
 test = "test"
 script = "script"
+no_match_coverage = "(script|test)/"   # coverage is measured on src/ — the deploy script and the tests are not the product
 solc = "0.8.30"
 evm_version = "osaka"
 optimizer = true
