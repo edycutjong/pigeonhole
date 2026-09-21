@@ -19,6 +19,7 @@ with no key anywhere in the system.
 [![Demo video](https://img.shields.io/badge/▶_Demo-2:30_on_YouTube-FF0000?style=for-the-badge)](https://youtu.be/BGuzotTXQEA)
 [![Factory on explorer](https://img.shields.io/badge/🏭_Factory-0x942b…9A40-4ea1ff?style=for-the-badge)](https://explorer.arc.io/address/0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40)
 [![Arc Microgrants](https://img.shields.io/badge/DoraHacks-Arc_Microgrants-8b5cf6?style=for-the-badge)](https://dorahacks.io/hackathon/arc-microgrants/detail)
+[![BUIDL](https://img.shields.io/badge/BUIDL-49026-8b5cf6?style=for-the-badge)](https://dorahacks.io/buidl/49026)
 
 <br/>
 
