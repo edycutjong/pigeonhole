@@ -30,7 +30,8 @@ Full edge-case table with the empty-sweep and never-seen-beneficiary cases: [`DE
 | Factory | [`0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40`](https://explorer.arc.io/address/0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40) (deployed via the deterministic CREATE2 factory, 266,797 gas) |
 | Source | unverified on the explorer (its API is behind a Cloudflare challenge) — but the on-chain runtime code is byte-identical to `forge build` output, keccak `0x8806de8d…`, see [`DEMO.md`](./DEMO.md#source-verification-honest-status) |
 | Treasury | [`0xA8965A47c9b6ed34F47B374f36cF6c752D24852a`](https://explorer.arc.io/address/0xA8965A47c9b6ed34F47B374f36cF6c752D24852a) |
-| Sweep gas | **64,162 p50** (N=25 in [`bench/results.json`](./bench/results.json); min 64,150 — salts with a zero byte) ≈ **$0.0013** |
+| Sweep gas | **64,162 p50 / p95** (N=25 in [`bench/results.json`](./bench/results.json); min 64,150 — salts with a zero byte) ≈ **$0.0013** |
+| Invoice → PAID latency | inclusion **452 ms p50 / 850 ms p95**, visible to the page's log filter **579 / 1,010 ms** (N=10 mainnet sends, [`bench/latency.json`](./bench/latency.json)); + up to one 5 s page poll |
 | Tests | **38** — 13 Foundry (fuzz + invariants I1/I3) + 25 vitest (8 regression tests named for the `eth_getLogs` defects they pin) |
 | Property cases | **20,000** fast-check cases per `npm test`: ledger identity Σin−Σout, order-independence, `predict` vs viem's independent CREATE2, chunker never ≥ 10,000 blocks |
 | E2E | 34 Playwright checks across desktop + mobile, read-only against mainnet (`/judge` with no session, the seeded `demo-paid` cycle reading SWEPT, the treasury view) |

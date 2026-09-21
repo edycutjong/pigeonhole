@@ -1,0 +1,23 @@
+{
+  "network": "arc-mainnet",
+  "chainId": 5042,
+  "factory": "0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40",
+  "measured": "2026-09-21T23:04:37Z",
+  "n": 10,
+  "valueUsdcEach": "0.001",
+  "rpc": "https://rpc.mainnet.arc.io",
+  "inclusionMs": {
+    "min": 423,
+    "p50": 452,
+    "p95": 850,
+    "max": 850
+  },
+  "visibleMs": {
+    "min": 548,
+    "p50": 579,
+    "p95": 1010,
+    "max": 1010
+  },
+  "pagePollS": 5,
+  "note": "inclusion = cast send --async → receipt (300 ms poll); visible = → the page's own eth_getLogs filter returns the Transfer. What a payer sees on the invoice page is `visible` + up to one 5 s poll interval."
+}

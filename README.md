@@ -95,7 +95,7 @@ It uses **Arc for the one property no other EVM chain has: USDC *is* the native 
 - On Arc, a codeless address holds native USDC and `SELFDESTRUCT` moves it (docs: *"SELFDESTRUCT is allowed on Arc, including during contract deployment"* and moves the native balance). On every other EVM chain USDC is an ERC-20 in the token contract — a self-destruct can't touch it, so the whole mechanism is impossible.
 - **USDC-as-gas** → deposit addresses, sweeps, and the merchant all live in one asset; no ETH, ever.
 - **EIP-7708 native `Transfer` logs** from the system emitter → "PAID" is a single `eth_getLogs`; **no backend, no database, no indexer.**
-- **Deterministic finality** → a payment is final in the block that includes it; the page polls the log every 3 s and never shows a confirmation counter. (Latency was not benchmarked — see `DEMO.md`.)
+- **Deterministic finality** → a payment is final in the block that includes it; the page polls the log every 5 s and never shows a confirmation counter. (Latency benchmarked on mainnet: inclusion 452 ms p50 / 850 ms p95 — see `DEMO.md`.)
 
 Take Arc out and you'd need: a key-management service (HD wallets + signing), an ERC-20 sweep contract per address or a hot wallet, an indexer to detect payments, and a separate gas token. Pigeonhole replaces all four with one 61-line contract and a static page.
 
@@ -106,7 +106,8 @@ Take Arc out and you'd need: a key-management service (HD wallets + signing), an
 - **Solidity coverage 100 % / 100 % / 100 % / 100 %** (lines · statements · branches · functions) on `src/PigeonholeFactory.sol` — `forge coverage`, gated in CI at 100 % lines; the one revert the mechanism can produce (`Create2Mismatch`, a CREATE2 collision) is exercised by planting code at the predicted address.
 - **20,000 property-based cases** (fast-check, `test/properties.test.ts`) per `npm test`: the ledger's Σin − Σout identity and status rules over random log sets, order-independence under any permutation, `predict()` against viem's *independent* CREATE2 implementation for random factory/treasury/salt triples, and the chunker never asking the RPC for ≥ 10,000 blocks.
 - **34 E2E checks** (Playwright, desktop + mobile) against the production bundle, read-only on mainnet: `/judge` renders with no session, the seeded `demo-paid` invoice reads SWEPT from the system emitter with I2 holding, the treasury view lists real `Swept` events.
-- **Benchmark (invariant I4):** a balance-moving sweep on the production factory costs **64,162 gas (p50) ≈ $0.0013** — N=25 in `bench/results.json`, min 64,150 when the salt happens to contain a zero byte (calldata pricing, not execution); the probe factory, a different contract, measures 64,140.
+- **Benchmark (invariant I4):** a balance-moving sweep on the production factory costs **64,162 gas (p50 and p95) ≈ $0.0013** — N=25 in `bench/results.json`, min 64,150 when the salt happens to contain a zero byte (calldata pricing, not execution); the probe factory, a different contract, measures 64,140.
+- **Latency, measured:** a deposit is in a block **452 ms p50 / 850 ms p95** after broadcast and visible to the page's `eth_getLogs` filter at **579 / 1,010 ms** — N=10 mainnet sends, every row a tx hash in `bench/latency.csv` (`npm run latency`); the page's 5 s poll adds up to one interval on top.
 - **Edge cases with tx links** (re-pay after sweep, empty sweep, native send **and** ERC-20 `transfer()` payment — both flip PAID from the same system-emitter log): [`DEMO.md`](./DEMO.md).
 
 ## 🚀 Run it
@@ -157,6 +158,19 @@ key-optional payment primitives possible.
 - **Batch reconciliation** across thousands of invoices from `Swept` events alone.
 - A **primitive family** on the same Arc foundations: keeper-less standing orders (exact gas reimbursed in USDC), exactly-once payment keys, and card-style authorize/capture holds.
 
+## 🎯 What a microgrant would fund
+The first proof exists: the mechanism, the invariants, the measurements. What is missing is the part that only shows up under
+load, and that is what the next 6–8 weeks would buy — with Arc office hours used for the two questions only Arc can answer.
+
+| # | milestone | what it proves | how it's measured |
+|---|---|---|---|
+| 1 | **`sweepMany` on the page** — per-invoice unswept totals and a *Sweep all* action in the treasury view (the contract call already exists and is tested) | a merchant with hundreds of open invoices settles in one transaction | gas per swept address at N = 1, 10, 50; a `bench/` row per size |
+| 2 | **Batch reconciliation** from `Swept` events alone — thousands of invoices, no per-invoice scan | the ledger stays correct when the invoice count outgrows the `eth_getLogs` budget (≈0.5 calls/s on the public RPC) | time-to-reconcile for 1,000 synthetic invoices; must stay under the 9,000-block chunk cap without a backend |
+| 3 | **Blocklist recovery drill** — a documented, tested path when the immutable treasury is blocklisted (today's single point of failure, see Limitations): new factory, same salts, re-predicted addresses | the failure mode has a rehearsed exit, not a paragraph | Foundry test that migrates every open invoice; a written runbook |
+| 4 | **Two questions for Arc office hours**: (a) is anonymous RPC access a commitment for early mainnet, or should a merchant run a node — the page's design hinges on it; (b) `SELFDESTRUCT`-in-creation-tx (EIP-6780) is what lets the address be reused — is that behaviour stable across Arc upgrades? | the two assumptions the whole design rests on are confirmed or the design changes early | written answers linked from this README |
+
+Not on the list, on purpose: a backend, a token, a dashboard. The value of the project is that a merchant needs none of them.
+
 ## 🩹 What we got wrong (dated, kept here rather than edited away)
 - **2026-09-17 — the `eth_getLogs` cap.** Day-2 code assumed the RPC allowed 100k-block spans; it allows 9,999 (10,000 → `-32012`). At ~2 blocks/s the live page would have frozen at "UNPAID" a few hours after deploy. Found by a pre-submission audit, fixed the same evening: every scan is chunked at 9,000 blocks, polled incrementally, and invoice URLs carry their creation block (`?from=`). Three regression tests pin it.
 - **2026-09-17 — "first-sweep cost 91,740".** The probe notes read the v1 sweep's 91,740 gas as the cost of sweeping a never-seen *address*. The bench refuted that: all 25 first sweeps cost 64,150–64,162. The extra 27,600 was the never-seen *beneficiary* (v1's wrong treasury). `DEMO.md` now says so.
@@ -165,7 +179,7 @@ key-optional payment primitives possible.
 ## ⚠️ Limitations (honest)
 - The treasury's immutability is also a **single point of failure**: if it were ever blocklisted, unswept invoices freeze until it's unblocked; recovery means a new factory.
 - The static page needs an **anonymous Arc RPC** (the docs call early-mainnet RPC "permissioned"), and it scans logs in 9,000-block chunks, one call at a time, paced to what `rpc.mainnet.arc.io` sustains (measured 2026-09-20: ≈0.5 `eth_getLogs`/s; bursts are refused with `-32005`). An invoice URL without `?from=` scans from the factory's deploy block — ≈38 calls per day of chain, so a first read of an old invoice takes minutes (progress is shown; each completed chunk is checkpointed in the browser, so it is never repeated). The seeded `demo-paid` / `demo-erc20` ship a committed history checkpoint (`deployments/history-checkpoints.json` — refresh with `npm run checkpoints`; `npm run verify` re-checks every movement against its receipt) so they open in seconds; the treasury view always scans from the deploy block. When the live I2 check mismatches twice in a row, the page rescans that invoice from the deploy block.
-- **Not built:** per-invoice unswept totals and a *Sweep all* button in the treasury view (`sweepMany` exists on-chain and is tested; the page calls `sweep` only). PAID latency is not benchmarked.
+- **Not built:** per-invoice unswept totals and a *Sweep all* button in the treasury view (`sweepMany` exists on-chain and is tested; the page calls `sweep` only).
 - The `?amt=` amount is the merchant's claim — the chain proves what was *paid*.
 
 ## 📁 Project structure

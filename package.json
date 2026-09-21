@@ -20,7 +20,8 @@
     "lighthouse": "npx @lhci/cli autorun",
     "security-scan": "npm audit --audit-level=high; gitleaks detect --no-banner --redact",
     "readiness": "python3 scripts/check_submission_readiness.py",
-    "checkpoints": "tsx scripts/checkpoints.ts"
+    "checkpoints": "tsx scripts/checkpoints.ts",
+    "latency": "tsx scripts/latency.ts"
   },
   "dependencies": {
     "qrcode": "^1.5.4",

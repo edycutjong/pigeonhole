@@ -50,5 +50,18 @@ calldata pricing, not execution — plus the two seeded cycles above at 64,162).
 figure was 64,140, measured on the day-0 *probe* factory — a different contract (no `Create2Mismatch` check, no
 zero-treasury guard), not a mis-measurement of this one.
 
-**Not measured:** invoice→PAID latency. The page polls every 3 s and Arc finality is deterministic (one block), but no
-p50/p95 number is claimed because none was recorded.
+(N=25 rows: p50 **64,162** / p95 **64,162** / max 64,162 — the distribution is flat because the sweep's work is fixed; only the
+salt's zero bytes move it.)
+
+## Latency (invoice → PAID)
+Measured 2026-09-22 on mainnet, N=10 native sends of 0.001 USDC to fresh pigeonholes (`npm run latency`, `bench/latency.json`,
+`bench/latency.csv` — every row is a tx hash). Two clocks from the sender's machine:
+
+| clock | p50 | p95 | max |
+|---|---|---|---|
+| broadcast → receipt (inclusion) | **452 ms** | **850 ms** | 850 ms |
+| broadcast → the page's own `eth_getLogs` filter returns the Transfer | **579 ms** | **1,010 ms** | 1,010 ms |
+
+Every sample landed in the next block (block timestamp − send time = 1–2 s at 1 s granularity). The invoice page polls every
+5 s (`src/main.ts`), so what a payer sees is the second row plus up to one poll interval: **≤ ~6 s worst case, ~3 s typical**.
+That bound is the page's choice (0.4 getLogs/s stays under the public RPC's sustainable rate), not the chain's.
