@@ -55,4 +55,4 @@ The gas benchmark is the only thing that spends: `KS=… PW=… N=25 R=8 zsh scr
 - The `?amt=` is the merchant's claim — the chain proves what was *paid*.
 
 ## Links
-Repo: https://github.com/edycutjong/pigeonhole · Live: https://pigeonhole.edycu.dev/ · [DEMO.md](./DEMO.md) · [ARCHITECTURE.md](./ARCHITECTURE.md) · [Arc Microgrants](https://dorahacks.io/hackathon/arc-microgrants/detail)
+Repo: https://github.com/edycutjong/pigeonhole · Live: https://pigeonhole.edycu.dev/ · Demo video (2:30, a real pay → sweep on mainnet): https://youtu.be/BGuzotTXQEA · [DEMO.md](./DEMO.md) · [ARCHITECTURE.md](./ARCHITECTURE.md) · [Arc Microgrants](https://dorahacks.io/hackathon/arc-microgrants/detail)

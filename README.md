@@ -16,6 +16,7 @@ with no key anywhere in the system.
 
 [![Live on Arc mainnet](https://img.shields.io/badge/▶_Live-Arc_mainnet-06b6d4?style=for-the-badge)](https://pigeonhole.edycu.dev/)
 [![For reviewers](https://img.shields.io/badge/⚖_For-reviewers-3ddc84?style=for-the-badge)](https://pigeonhole.edycu.dev/#/judge)
+[![Demo video](https://img.shields.io/badge/▶_Demo-2:30_on_YouTube-FF0000?style=for-the-badge)](https://youtu.be/BGuzotTXQEA)
 [![Factory on explorer](https://img.shields.io/badge/🏭_Factory-0x942b…9A40-4ea1ff?style=for-the-badge)](https://explorer.arc.io/address/0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40)
 [![Arc Microgrants](https://img.shields.io/badge/DoraHacks-Arc_Microgrants-8b5cf6?style=for-the-badge)](https://dorahacks.io/hackathon/arc-microgrants/detail)
 
@@ -39,6 +40,8 @@ with no key anywhere in the system.
 ---
 
 ## 📸 See it in action
+
+**Demo video (2:30):** [youtu.be/BGuzotTXQEA](https://youtu.be/BGuzotTXQEA) — a real cycle on Arc mainnet recorded from the live page (invoice `acme-2026-0922`: pay 0.02 USDC → PAID → sweep → SWEPT), captions included.
 
 <div align="center">
   <img src="docs/assets/screenshot-invoice-swept.png" alt="The seeded demo-paid invoice: SWEPT, paid in 0.02 USDC, unswept 0, invariant I2 holds, two movements with explorer links" width="100%">

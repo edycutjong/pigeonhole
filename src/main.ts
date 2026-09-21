@@ -27,6 +27,7 @@ function copyBtn(text: string) { return `<span class="copy" role="button" tabind
 const DEMO_ID = "demo-paid"; // seeded first cycle on the production factory (deployments/arc-mainnet.json) — SWEPT forever
 const DEMO_URL = `#/i/${DEMO_ID}?amt=0.02&from=${DEPLOY_BLOCK}`;
 const REPO = "https://github.com/edycutjong/pigeonhole";
+const VIDEO = "https://youtu.be/BGuzotTXQEA"; // 2:30 — a real pay → sweep on mainnet (invoice acme-2026-0922), recorded from this page
 const ext = (href: string, label: string) => `<a href="${href}" target="_blank" rel="noopener">${label}</a>`;
 
 /** The living diagram: one 12 s CSS clock (styles.css `.mech`) drives the coin, the slot labels, the throwaway's birth and
@@ -467,7 +468,7 @@ git submodule update --init &amp;&amp; forge test --root contracts</div>
           <li>PAID latency is not benchmarked; <code>sweepMany</code> is on-chain and tested but the page calls <code>sweep</code> only.</li>
           <li>The <code>?amt=</code> is the merchant's claim — the chain proves what was <em>paid</em>.</li>
         </ul>
-        <p class="hint"><a href="https://github.com/edycutjong/pigeonhole" target="_blank" rel="noopener">Repository ↗</a> · <a href="https://github.com/edycutjong/pigeonhole/blob/main/DEMO.md" target="_blank" rel="noopener">DEMO.md ↗</a> · <a href="https://github.com/edycutjong/pigeonhole/blob/main/ARCHITECTURE.md" target="_blank" rel="noopener">ARCHITECTURE.md ↗</a></p>
+        <p class="hint"><a href="https://github.com/edycutjong/pigeonhole" target="_blank" rel="noopener">Repository ↗</a> · <a href="${VIDEO}" target="_blank" rel="noopener">Demo video (2:30) ↗</a> · <a href="https://github.com/edycutjong/pigeonhole/blob/main/DEMO.md" target="_blank" rel="noopener">DEMO.md ↗</a> · <a href="https://github.com/edycutjong/pigeonhole/blob/main/ARCHITECTURE.md" target="_blank" rel="noopener">ARCHITECTURE.md ↗</a></p>
       </div>
     </div>`;
 }
