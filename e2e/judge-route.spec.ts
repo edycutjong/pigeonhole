@@ -15,11 +15,12 @@ test.describe("/judge — the reviewer page", () => {
     await ctx.close();
   });
 
-  test("every explorer link on the page points at Arc's explorer and every repo link at the public repo", async ({ page }) => {
+  test("every external link on the page points at Arc's explorer, the public repo, or the demo video", async ({ page }) => {
     await page.goto("/#/judge");
     const hrefs = await page.locator("#app a[target=_blank]").evaluateAll((as) => as.map((a) => (a as HTMLAnchorElement).href));
     expect(hrefs.length).toBeGreaterThan(8);
-    for (const h of hrefs) expect(h).toMatch(/^https:\/\/(explorer\.arc\.io|github\.com\/edycutjong\/pigeonhole)/);
+    for (const h of hrefs) expect(h).toMatch(/^https:\/\/(explorer\.arc\.io|github\.com\/edycutjong\/pigeonhole|youtu\.be\/BGuzotTXQEA$)/);
+    expect(hrefs.filter((h) => h.startsWith("https://youtu.be/")).length).toBe(1); // exactly one video link, the pinned id
   });
 
   test("is reachable from the top bar", async ({ page }) => {
