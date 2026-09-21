@@ -48,7 +48,8 @@ p { margin: 0; }
 /* ---------- top bar ---------- */
 .topbar {
   position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 0 clamp(16px, 3vw, 32px); height: 60px; border-bottom: 1px solid rgba(255, 255, 255, .07);
+  /* Full-bleed bar, but the brand and nav sit on the same edges as <main> and .foot (width: min(1120px, 100% - 2 × gutter)). */
+  padding: 0 max(clamp(16px, 3vw, 32px), calc((100% - 1120px) / 2)); height: 60px; border-bottom: 1px solid rgba(255, 255, 255, .07);
   background: rgba(11, 13, 16, .72); backdrop-filter: blur(14px) saturate(1.4); -webkit-backdrop-filter: blur(14px) saturate(1.4);
 }
 .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; letter-spacing: -.01em; color: var(--fg); }
@@ -319,7 +320,7 @@ tr:last-child td { border-bottom: 0; }
 }
 @media (max-width: 760px) {
   .topbar { height: auto; padding-top: 10px; padding-bottom: 10px; flex-wrap: wrap; }
-  .topbar nav { width: 100%; margin: 0 -6px; gap: 0; }
+  .topbar nav { width: calc(100% + 12px); margin: 0 -6px; gap: 0; } /* the −6px optical margins must widen the row, not shift it */
   .topbar nav a { font-size: 13px; padding: 10px 8px; }
   .mech .frame { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; -webkit-mask-image: linear-gradient(90deg, #000 94%, transparent); mask-image: linear-gradient(90deg, #000 94%, transparent); }
   .mech svg { min-width: 1120px; }
