@@ -301,6 +301,7 @@ async function viewInvoice(id: string, amtStr?: string, fromStr?: string) {
             <button id="sweep" class="ghost" disabled>Sweep → treasury</button>
             <p class="hint">Or send USDC to the address from any wallet on Arc — native send or ERC-20 <code>transfer()</code>. ${amtStr ? `Asked: <b>${esc(amtStr)} USDC</b>.` : ""}</p>
             <div id="msg" class="hint"></div>
+            <div id="next" class="hint"></div>
           </div>
         </div>
         <p class="hint" style="margin-top:14px">No transaction created this address and no key exists for it. <b>Sweep</b> is permissionless: anyone may call it, and funds can only reach the treasury.</p>
@@ -348,6 +349,11 @@ async function viewInvoice(id: string, amtStr?: string, fromStr?: string) {
     verified = true; if (stale) stale.textContent = "";
     document.getElementById("st")!.innerHTML = badge(s.status);
     (document.getElementById("sweep") as HTMLButtonElement).disabled = s.unswept === 0n; // nothing to sweep (spec: disabled at 0 unswept)
+    // What a first-time reader should do next — the seeded invoices are SWEPT forever, and a swept address is reusable.
+    document.getElementById("next")!.innerHTML =
+      s.status === "SWEPT" ? `Swept — the address is empty and reusable (code <code>0x</code>, nonce 0). Pay it again to start a new cycle, or <a href="#/">create your own invoice →</a>`
+      : s.status === "PAID" ? `Paid — anyone can sweep it. <b>Sweep → treasury</b> is permissionless.`
+      : "";
     document.getElementById("paidin")!.textContent = `${fmtUsdc18(s.paidIn)} USDC`;
     document.getElementById("unswept")!.textContent = `${fmtUsdc18(s.unswept)} USDC`;
     document.getElementById("i2")!.innerHTML = s.i2 ? `<span class="ok">holds</span> (eth_getBalance ${fmtUsdc18(s.balance)})${s.rescanned ? " · window widened" : ""}` : `<span class="err">mismatch</span> — Σlogs ${fmtUsdc18(s.unswept)} vs balance ${fmtUsdc18(s.balance)} USDC, re-checking next poll`;

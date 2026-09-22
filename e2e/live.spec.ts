@@ -16,6 +16,7 @@ test.describe("live — state read from Arc mainnet", () => {
     await expect(page.locator("#i2")).toContainText("holds", { timeout: 30_000 });
     await expect(page.locator("#paidin")).toHaveText("0.020000 USDC");
     await expect(page.locator("#unswept")).toHaveText("0.000000 USDC");
+    await expect(page.locator("#next")).toContainText("reusable"); // a swept invoice tells the reader what to do next
     const rows = page.locator("#moves tbody tr");
     await expect(rows).toHaveCount(2); // one ↓ pay, one ↑ sweep
     await expect(rows.nth(1).locator("a")).toHaveAttribute("href", /0xe639255a/);
