@@ -455,7 +455,8 @@ function viewJudge() {
           <span class="k">Chain</span><span class="mono">Arc mainnet · 5042</span>
           <span class="k">Factory</span><span class="mono"><a href="${addrUrl(FACTORY)}" target="_blank" rel="noopener">${short(FACTORY)} ↗</a></span>
           <span class="k">Treasury</span><span class="mono"><a href="${addrUrl(TREASURY)}" target="_blank" rel="noopener">${short(TREASURY)} ↗</a></span>
-          <span class="k">Sweep gas</span><span class="mono">64,162 p50 · N=25 · ≈ $0.0013</span>
+          <span class="k">Source</span><span class="mono">explorer shows <em>unverified</em> (its verify API is behind a challenge page) — the on-chain runtime code, keccak <code>0x8806de8d…</code>, is byte-identical to <code>forge build</code>; reproduce: <code>cast code &lt;factory&gt; | cast keccak</code> vs the build's <code>deployedBytecode</code> (recipe in <code>deployments/arc-mainnet.json</code>)</span>
+          <span class="k">Sweep gas</span><span class="mono">64,162 p50 / p95 · N=25 · ≈ $0.0013 · PAID latency 452 ms p50 / 850 ms p95 (N=10)</span>
           <span class="k">Tests</span><span class="mono">38 (13 Foundry + 25 vitest)</span>
           <span class="k">Property cases</span><span class="mono">20,000 (fast-check, 4 properties)</span>
           <span class="k">Backend</span><span class="mono">none — eth_getLogs only</span>
