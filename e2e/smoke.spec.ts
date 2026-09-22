@@ -6,9 +6,12 @@ test.describe("smoke — the page loads on its own", () => {
     const raw = await (await request.get("/")).text();
     await page.goto("/");
     await expect(page.locator("#id")).toBeVisible(); // viewNew has replaced the shell content
-    const rendered = await page.locator("main .hero h1").innerText();
+    // textContent, whitespace-collapsed, on both sides: innerText would inject a newline for the `display: block` .hl span
+    // in the rendered heading but not in an unstyled detached copy, and the comparison is about words, not layout.
+    const norm = (t: string) => t.replace(/\s+/g, " ").trim();
+    const rendered = norm(await page.locator("main .hero h1").evaluate((el) => el.textContent ?? ""));
     const staticHtml = /<section class="hero" data-static>[\s\S]*?<h1>([\s\S]*?)<\/h1>/.exec(raw)?.[1] ?? "";
-    const staticText = await page.evaluate((html) => { const d = document.createElement("div"); d.innerHTML = html; return d.innerText; }, staticHtml);
+    const staticText = norm(await page.evaluate((html) => { const d = document.createElement("div"); d.innerHTML = html; return d.textContent ?? ""; }, staticHtml));
     expect(staticText).toBe(rendered);
     expect(await page.locator("main [data-static]").count()).toBe(0);
   });
