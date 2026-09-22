@@ -44,7 +44,7 @@ git clone --recurse-submodules https://github.com/edycutjong/pigeonhole && cd pi
 npm install
 npm run verify              # offline predict() == on-chain predict() for 50 random ids; invariant I2 for both seeded cycles
 npm test                    # 25 vitest incl. 20,000 property cases
-forge test --root contracts # 12 contract tests
+forge test --root contracts # 13 contract tests
 npm run e2e                 # Playwright against the production bundle
 ```
 The gas benchmark is the only thing that spends: `KS=… PW=… N=25 R=8 zsh scripts/bench.sh` (≈ $0.05 of USDC on Arc).

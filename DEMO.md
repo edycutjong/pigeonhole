@@ -31,7 +31,7 @@ npm install
 npm run verify                  # read-only: offline predict() == on-chain (N=50), invariant I2 for both seeded cycles. No wallet.
 npm test                        # 25 vitest: formula vs real addresses, the no-DB reducer, decimals, eth_getLogs chunking/dedupe/overlap/race, 20,000 fast-check cases
 git submodule update --init     # forge-std (or clone with --recurse-submodules)
-forge test --root contracts     # 12 contract tests incl. fuzz + I1/I3
+forge test --root contracts     # 13 contract tests incl. fuzz + I1/I3
 # gas benchmark (spends ~$0.05 of USDC on Arc; any funded cast keystore):
 KS=/path/to/keystore.json PW=/path/to/password.txt N=25 R=8 zsh scripts/bench.sh
 ```

@@ -42,6 +42,14 @@ with no key anywhere in the system.
 
 ---
 
+**In three lines**
+
+- **Problem:** a deposit address per invoice normally means a private key per address (a KMS), a sweep transaction someone has to sign, an indexer to see it paid, and a gas token to pay for all of it.
+- **On Arc:** USDC is the native balance, so a CREATE2-predicted address receives USDC before any code exists; one transaction later a 61-line contract is born there, `SELFDESTRUCT` moves the balance to the immutable treasury, and it is gone. No key, no indexer — PAID and SWEPT are read straight from the system emitter's logs.
+- **Proof:** factory [`0x942b…9A40`](https://explorer.arc.io/address/0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40) on Arc mainnet · sweep 64,162 gas ≈ $0.0013 (N=25) · PAID 452 ms p50 / 850 ms p95 (N=10) · 13 Foundry + 25 vitest + 20,000 property cases · on-chain bytecode == `forge build`.
+
+---
+
 ## 📸 See it in action
 
 **Demo video (2:30):** [youtu.be/BGuzotTXQEA](https://youtu.be/BGuzotTXQEA) — a real cycle on Arc mainnet recorded from the live page (invoice `acme-2026-0922`: pay 0.02 USDC → PAID → sweep → SWEPT), captions included.
@@ -116,7 +124,7 @@ git clone --recurse-submodules https://github.com/edycutjong/pigeonhole && cd pi
 npm install
 npm run verify                 # read-only proof, no wallet
 npm test                       # 25 vitest incl. 20,000 fast-check cases
-forge test --root contracts    # 12 contract tests (forge-std is a submodule: `git submodule update --init` if you cloned plain)
+forge test --root contracts    # 13 contract tests (forge-std is a submodule: `git submodule update --init` if you cloned plain)
 npm run dev                    # the page locally
 ```
 No `.env`, no keys: the page is static and reads Arc mainnet anonymously. Only the gas benchmark spends (`.env.example`).
@@ -141,7 +149,7 @@ npm run readiness        # fails if any placeholder is left in judge-facing docs
 | Code quality | oxlint + `tsc --noEmit` | ✅ |
 | Unit tests | vitest, 97% statements / 99% lines on `src/lib` | ✅ 25 |
 | Property-based | fast-check, 4 properties × 5,000 cases | ✅ 20,000 |
-| Contracts | Foundry: fuzz + invariants I1/I3 + gas snapshot | ✅ 12 |
+| Contracts | Foundry: fuzz + invariants I1/I3 + gas snapshot | ✅ 13 |
 | E2E | Playwright, chromium + Pixel 7, read-only vs mainnet | ✅ 34 |
 | Security (SAST) | CodeQL | ✅ |
 | Security (SCA) | Dependabot (npm, actions, submodule) + npm audit + license check | ✅ |
