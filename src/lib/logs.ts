@@ -106,7 +106,7 @@ const keyOf = (m: Movement) => `${m.tx}:${m.logIndex}`;
 
 /**
  * Incremental, deduplicated cache: the first call scans fromBlock..latest; later calls scan only the blocks since the
- * last scan (minus a small overlap), so a 3-second poll costs one small getLogs pair, not a full-history walk.
+ * last scan (minus a small overlap), so a 5-second poll costs one small getLogs pair, not a full-history walk.
  * Logs are keyed by (tx, logIndex) so overlapping polls and the overlap window never double-count, and concurrent
  * callers for the same address share one in-flight scan.
  */

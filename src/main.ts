@@ -221,7 +221,7 @@ function viewNew() {
       <ul class="limits">
         <li>The immutable treasury is also a <b>single point of failure</b>: if it were ever blocklisted, unswept invoices freeze until a new factory is deployed.</li>
         <li>The static page needs an <b>anonymous Arc RPC</b> and scans logs in 9,000-block chunks — an invoice URL without <code>?from=</code> scans from the deploy block and gets slower every day; the treasury view always does.</li>
-        <li><b>PAID latency is not benchmarked.</b> <code>sweepMany</code> is on-chain and tested, but the page calls <code>sweep</code> only — no per-invoice unswept totals or <em>Sweep all</em> in the treasury view.</li>
+        <li><b>No <em>Sweep all</em> yet.</b> <code>sweepMany</code> is on-chain and tested, but the page calls <code>sweep</code> only — no per-invoice unswept totals or <em>Sweep all</em> in the treasury view.</li>
         <li>The <code>?amt=</code> amount is the merchant's claim — the chain proves what was <em>paid</em>.</li>
       </ul>
     </section>
@@ -437,7 +437,7 @@ function viewJudge() {
         <ol class="steps">
           <li><a href="#/">New invoice</a> → type any id and <code>0.02</code> → <b>Create deposit address</b>. No transaction; the address is CREATE2 arithmetic.</li>
           <li>Open that address on <a href="${ARC.explorer}" target="_blank" rel="noopener">explorer.arc.io ↗</a> (the invoice page links it): an empty account, no code, nonce 0.</li>
-          <li><b>Pay with wallet</b> (or send 0.02 USDC from any Arc wallet). The badge flips <b>PAID</b> on the next 3-second poll — one <code>eth_getLogs</code> on the system emitter, no backend.</li>
+          <li><b>Pay with wallet</b> (or send 0.02 USDC from any Arc wallet). The badge flips <b>PAID</b> on the next 5-second poll — one <code>eth_getLogs</code> on the system emitter, no backend.</li>
           <li><b>Sweep → treasury</b>. One transaction (~$0.0013): the throwaway is born at that address, moves the balance, and is deleted in the same tx.</li>
           <li><a href="#/treasury">Treasury</a> lists the sweep from the factory's <code>Swept</code> events.</li>
         </ol>
@@ -469,7 +469,7 @@ git submodule update --init &amp;&amp; forge test --root contracts</div>
         <ul class="steps">
           <li>The immutable treasury is a single point of failure: if it were blocklisted, unswept invoices freeze until a new factory.</li>
           <li>The page needs an anonymous Arc RPC and scans logs in 9,000-block chunks, paced to that RPC's ≈0.5 calls/s — the first read of an old invoice takes minutes (progress is shown; the walk is checkpointed in the browser and never repeated). The seeded <code>demo-paid</code> / <code>demo-erc20</code> ship a committed history checkpoint (<code>deployments/history-checkpoints.json</code>, every movement re-checked by <code>npm run verify</code>) so they open fast.</li>
-          <li>PAID latency is not benchmarked; <code>sweepMany</code> is on-chain and tested but the page calls <code>sweep</code> only.</li>
+          <li><code>sweepMany</code> is on-chain and tested but the page calls <code>sweep</code> only — no <em>Sweep all</em> in the treasury view.</li>
           <li>The <code>?amt=</code> is the merchant's claim — the chain proves what was <em>paid</em>.</li>
         </ul>
         <p class="hint"><a href="https://github.com/edycutjong/pigeonhole" target="_blank" rel="noopener">Repository ↗</a> · <a href="${VIDEO}" target="_blank" rel="noopener">Demo video (2:30) ↗</a> · <a href="https://github.com/edycutjong/pigeonhole/blob/main/DEMO.md" target="_blank" rel="noopener">DEMO.md ↗</a> · <a href="https://github.com/edycutjong/pigeonhole/blob/main/ARCHITECTURE.md" target="_blank" rel="noopener">ARCHITECTURE.md ↗</a></p>

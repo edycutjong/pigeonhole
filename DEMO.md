@@ -5,7 +5,7 @@
 ## 60-second reviewer path (≤ $0.10 of USDC on Arc, one wallet)
 1. Open the live URL → **New invoice** → type any id (e.g. `demo-1`) and `0.02` → **Create deposit address**.
 2. You get a fresh address + QR. Nothing is deployed yet — open it on the explorer and it's an empty account.
-3. **Pay with wallet** (or send 0.02 USDC to the address from any Arc wallet). On the next 3-second poll the badge flips **PAID**, from a single `eth_getLogs` on the system emitter — no backend. (Finality is one block; the poll-to-PAID latency is not benchmarked.)
+3. **Pay with wallet** (or send 0.02 USDC to the address from any Arc wallet). On the next 5-second poll the badge flips **PAID**, from a single `eth_getLogs` on the system emitter — no backend. (Measured: a deposit is in a block 452 ms p50 / 850 ms p95 after broadcast and visible to the log filter at 579 / 1,010 ms, N=10 — `bench/latency.json`; the poll adds up to one interval.)
 4. **Sweep → treasury**. One transaction (~$0.0013). The explorer shows the balance leaving the address for the treasury, and the address returns to *no code, nonce 0*.
 5. **Treasury view** lists that sweep, read from the factory's `Swept` events.
 

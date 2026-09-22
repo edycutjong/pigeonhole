@@ -7,7 +7,7 @@ Live mirror of this page: **https://pigeonhole.edycu.dev/#/judge** (no auth, no 
 ## The 60-second path (one Arc wallet holding ≥ 0.05 USDC; total cost ≤ $0.10)
 1. Open **https://pigeonhole.edycu.dev/** → type any invoice id and `0.02` → **Create deposit address**. No transaction: the address is `CREATE2(factory, keccak256(id), treasury)`, computed offline.
 2. Open that address on https://explorer.arc.io — an empty account: no code, nonce 0.
-3. **Pay with wallet** (or send 0.02 USDC from any Arc wallet). The badge flips **PAID** on the next 3-second poll — one `eth_getLogs` on the system emitter `0xffff…fffE`. No backend, no database.
+3. **Pay with wallet** (or send 0.02 USDC from any Arc wallet). The badge flips **PAID** on the next 5-second poll — one `eth_getLogs` on the system emitter `0xffff…fffE`. No backend, no database.
 4. **Sweep → treasury**. One transaction (≈ $0.0013): the 22-byte throwaway is born at that exact address, its constructor moves the whole balance to the immutable treasury and self-destructs — same tx. The address is back to no code, nonce 0, and can be paid again.
 5. **Treasury** view lists the sweep from the factory's `Swept` events.
 
@@ -52,7 +52,7 @@ The gas benchmark is the only thing that spends: `KS=… PW=… N=25 R=8 zsh scr
 ## Honest limitations
 - The immutable treasury is a **single point of failure**: if it were blocklisted, unswept invoices freeze until a new factory is deployed.
 - The static page needs an **anonymous Arc RPC** and scans logs in 9,000-block chunks — an invoice URL without `?from=` scans from the deploy block and gets slower every day; the treasury view always does.
-- **PAID latency is not benchmarked**; `sweepMany` is on-chain and tested but the page calls `sweep` only.
+- **No _Sweep all_ yet**: `sweepMany` is on-chain and tested but the page calls `sweep` only.
 - The `?amt=` is the merchant's claim — the chain proves what was *paid*.
 
 ## Links
