@@ -330,8 +330,11 @@ async function viewInvoice(id: string, amtStr?: string, fromStr?: string) {
   // offline address, and a key-less, code-less address that the factory will never deploy to has no recovery path.
   // Sweep stays enabled: it sends `sweep(salt)` to the factory, which computes the address on-chain itself.
   let predictMismatch = false;
+  let gone = false; // set when the route changes; declared here so refresh() and both predict() callbacks can see it —
+  //                   #pred / #pay exist on the NEXT invoice route too, so "element present" is not "still my route"
   pub.readContract({ address: FACTORY, abi: factoryAbi, functionName: "predict", args: [salt] })
     .then((a) => {
+      if (gone) return; // the route changed while the read was in flight
       const match = a.toLowerCase() === pigeonhole.toLowerCase();
       const el = document.getElementById("pred"); if (!el) return;
       el.innerHTML = match ? `<span class="ok">✓</span> on-chain <code>predict()</code> == offline formula` : `<span class="err">≠</span> on-chain predict() returned ${short(a)} — payment disabled`;
@@ -341,9 +344,8 @@ async function viewInvoice(id: string, amtStr?: string, fromStr?: string) {
         if (pay) { pay.disabled = true; pay.textContent = "Payment disabled — address mismatch"; }
       }
     })
-    .catch(() => { const el = document.getElementById("pred"); if (el) el.innerHTML = `offline formula · on-chain check unavailable (RPC)`; });
+    .catch(() => { if (gone) return; const el = document.getElementById("pred"); if (el) el.innerHTML = `offline formula · on-chain check unavailable (RPC)`; });
   let verified = false;
-  let gone = false; // set when the route changes; declared here so refresh() can see it
   // First read of an old invoice walks its whole history at the RPC's pace (~3 getLogs/s): say so, with a count.
   const offProgress = onScanProgress((addr, p) => {
     if (verified || gone || addr.toLowerCase() !== pigeonhole.toLowerCase() || p.total < 2) return;
