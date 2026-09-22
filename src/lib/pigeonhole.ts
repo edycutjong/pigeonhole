@@ -94,3 +94,26 @@ export function fmtUsdc18(v: bigint): string {
   const s = `${whole}.${frac6.toString().padStart(6, "0")}`;
   return neg ? `-${s}` : s;
 }
+
+/** One row of the treasury view's "open invoices" table: a known pigeonhole and what is sitting in it right now. */
+export type OpenInvoice = { salt: Hex; pigeonhole: Address; id?: string; unswept: bigint };
+
+/**
+ * The set of pigeonholes the page can know about without a database: every address the factory has ever swept
+ * (`Swept.salt` — the salt travels with the event, so the address is re-sweepable from the event alone) plus the invoices
+ * this browser created (id → salt). De-duplicated by address; a browser id wins over a bare event salt so the table can
+ * show a name. `unswept` is the live `eth_getBalance` — one cheap call per address instead of a log walk, because
+ * invariant I2 makes the balance and Σin − Σout the same number.
+ */
+export function knownPigeonholes(swept: { salt: Hex; pigeonhole: Address }[], mine: { id: string; pigeonhole: Address }[]): { salt: Hex; pigeonhole: Address; id?: string }[] {
+  const by = new Map<string, { salt: Hex; pigeonhole: Address; id?: string }>();
+  for (const e of swept) by.set(e.pigeonhole.toLowerCase(), { salt: e.salt, pigeonhole: getAddress(e.pigeonhole) });
+  for (const m of mine) by.set(m.pigeonhole.toLowerCase(), { salt: saltOf(m.id), pigeonhole: getAddress(m.pigeonhole), id: m.id });
+  return [...by.values()];
+}
+
+/** Rows with a balance, largest first, plus the total a single `sweepMany(salts)` would move. */
+export function openInvoices(known: { salt: Hex; pigeonhole: Address; id?: string }[], balances: bigint[]): { open: OpenInvoice[]; total: bigint } {
+  const open = known.map((k, i) => ({ ...k, unswept: balances[i] ?? 0n })).filter((r) => r.unswept > 0n).sort((a, b) => (a.unswept > b.unswept ? -1 : a.unswept < b.unswept ? 1 : 0));
+  return { open, total: open.reduce((acc, r) => acc + r.unswept, 0n) };
+}

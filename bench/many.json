@@ -1,0 +1,43 @@
+{
+  "network": "arc-mainnet",
+  "chainId": 5042,
+  "factory": "0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40",
+  "singleSweepGasP50": 64162,
+  "batches": [
+    {
+      "n": 1,
+      "gasUsed": 64681,
+      "gasPerAddress": 64681,
+      "vsSingle": 1.0081,
+      "effGasPriceWei": 32500000000,
+      "feeUsdc": 0.002102133,
+      "feeUsdcPerAddress": 0.002102133,
+      "tx": "0x67864250ea44465ced28829fa310c66f3746f43a3ff75b7dd3b64732b75ab5e6"
+    },
+    {
+      "n": 10,
+      "gasUsed": 450831,
+      "gasPerAddress": 45083,
+      "vsSingle": 0.7026,
+      "effGasPriceWei": 20001000000,
+      "feeUsdc": 0.009017071,
+      "feeUsdcPerAddress": 0.000901707,
+      "tx": "0xeca586ea70ecff47d03941d2c3b6973af7c9d6c73929650fa041ef21ebc45d7f"
+    },
+    {
+      "n": 50,
+      "gasUsed": 2167267,
+      "gasPerAddress": 43345,
+      "vsSingle": 0.6756,
+      "effGasPriceWei": 20100000000,
+      "feeUsdc": 0.043562067,
+      "feeUsdcPerAddress": 0.000871241,
+      "tx": "0x3c9a151b56225aefc84233f3e97653c8b9596f9c2b99c0e538f91ae96637b8bc"
+    }
+  ],
+  "fit": {
+    "fixedGas": 21722,
+    "marginalGasPerAddress": 42911,
+    "from": "n=10 and n=50"
+  }
+}

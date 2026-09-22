@@ -46,3 +46,13 @@ test.describe("smoke — the page loads on its own", () => {
     await expect(page.locator("footer")).toContainText("no backend, no database");
   });
 });
+
+test.describe("treasury — Sweep all is one sweepMany, and never armed on a guess", () => {
+  test("the open-invoices card renders with Sweep all disabled until balances have been read", async ({ page }) => {
+    await page.goto("/#/treasury");
+    await expect(page.locator(".card.open h2")).toHaveText("Open invoices");
+    await expect(page.locator("#sweep-all")).toBeDisabled(); // no balances read yet → nothing to sweep
+    await expect(page.locator("#tr-open")).toHaveText("—");
+    await expect(page.locator(".card.open .hint")).toContainText("sweepMany(salts)");
+  });
+});

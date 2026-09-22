@@ -46,7 +46,7 @@ with no key anywhere in the system.
 
 - **Problem:** a deposit address per invoice normally means a private key per address (a KMS), a sweep transaction someone has to sign, an indexer to see it paid, and a gas token to pay for all of it.
 - **On Arc:** USDC is the native balance, so a CREATE2-predicted address receives USDC before any code exists; one transaction later a 61-line contract is born there, `SELFDESTRUCT` moves the balance to the immutable treasury, and it is gone. No key, no indexer — PAID and SWEPT are read straight from the system emitter's logs.
-- **Proof:** factory [`0x942b…9A40`](https://explorer.arc.io/address/0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40) on Arc mainnet · sweep 64,162 gas ≈ $0.0013 (N=25) · PAID 452 ms p50 / 850 ms p95 (N=10) · 13 Foundry + 25 vitest + 20,000 property cases · on-chain bytecode == `forge build`.
+- **Proof:** factory [`0x942b…9A40`](https://explorer.arc.io/address/0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40) on Arc mainnet · sweep 64,162 gas ≈ $0.0013 (N=25) · batch sweep 43,345 gas/address at N=50 · PAID 452 ms p50 / 850 ms p95 (N=10) · 14 Foundry + 28 vitest + 20,000 property cases · on-chain bytecode == `forge build`.
 
 ---
 
@@ -110,11 +110,12 @@ Take Arc out and you'd need: a key-management service (HD wallets + signing), an
 ## 🧾 Proof (all on mainnet)
 
 - **Verified live:** `npm run verify` — offline `predict()` byte-matches on-chain `predict()` for 50 random ids, and invariant I2 (Σin − Σout == balance) holds for both seeded invoices. No wallet needed. The page runs the same I2 check on every refresh and shows it.
-- **38 tests:** 13 Foundry (incl. a fuzz test + invariants I1 no-code-after-sweep, I3 funds-only-to-treasury) + 25 vitest (offline formula vs real on-chain addresses, the no-DB reducer, decimals, and eight regression tests named for the `eth_getLogs` defects they pin: the 10k-block cap, poll overlap, RPC head skew, re-created invoice ids, the invalidate-while-scanning race).
+- **42 tests:** 14 Foundry (incl. a fuzz test, invariants I1 no-code-after-sweep, I3 funds-only-to-treasury, and the `sweepMany` gas shape) + 28 vitest (offline formula vs real on-chain addresses, the no-DB reducer, the *Sweep all* set, decimals, and eight regression tests named for the `eth_getLogs` defects they pin: the 10k-block cap, poll overlap, RPC head skew, re-created invoice ids, the invalidate-while-scanning race).
 - **Solidity coverage 100 % / 100 % / 100 % / 100 %** (lines · statements · branches · functions) on `src/PigeonholeFactory.sol` — `forge coverage`, gated in CI at 100 % lines; the one revert the mechanism can produce (`Create2Mismatch`, a CREATE2 collision) is exercised by planting code at the predicted address.
 - **20,000 property-based cases** (fast-check, `test/properties.test.ts`) per `npm test`: the ledger's Σin − Σout identity and status rules over random log sets, order-independence under any permutation, `predict()` against viem's *independent* CREATE2 implementation for random factory/treasury/salt triples, and the chunker never asking the RPC for ≥ 10,000 blocks.
-- **34 E2E checks** (Playwright, desktop + mobile) against the production bundle, read-only on mainnet: `/judge` renders with no session, the seeded `demo-paid` invoice reads SWEPT from the system emitter with I2 holding, the treasury view lists real `Swept` events.
+- **38 E2E checks** (Playwright, desktop + mobile — `npx playwright test --list`) against the production bundle, read-only on mainnet: `/judge` renders with no session, the seeded `demo-paid` invoice reads SWEPT from the system emitter with I2 holding, the treasury view lists real `Swept` events and re-reads every known address for *Sweep all*.
 - **Benchmark (invariant I4):** a balance-moving sweep on the production factory costs **64,162 gas (p50 and p95) ≈ $0.0013** — N=25 in `bench/results.json`, min 64,150 when the salt happens to contain a zero byte (calldata pricing, not execution); the probe factory, a different contract, measures 64,140.
+- **Batch sweep:** *Sweep all* in the treasury view is one `sweepMany(salts)` — measured **43,345 gas per address at N=50** (2,167,267 gas, $0.044 for fifty invoices) against 64,162 one at a time; gas ≈ 21,722 + 42,911 × N on mainnet (`bench/many.json`, tx links in [`DEMO.md`](./DEMO.md#batch-sweep-sweepmany--readme-milestone-1-measured-2026-09-22)).
 - **Latency, measured:** a deposit is in a block **452 ms p50 / 850 ms p95** after broadcast and visible to the page's `eth_getLogs` filter at **579 / 1,010 ms** — N=10 mainnet sends, every row a tx hash in `bench/latency.csv` (`npm run latency`); the page's 5 s poll adds up to one interval on top.
 - **Edge cases with tx links** (re-pay after sweep, empty sweep, native send **and** ERC-20 `transfer()` payment — both flip PAID from the same system-emitter log): [`DEMO.md`](./DEMO.md).
 
@@ -123,8 +124,8 @@ Take Arc out and you'd need: a key-management service (HD wallets + signing), an
 git clone --recurse-submodules https://github.com/edycutjong/pigeonhole && cd pigeonhole
 npm install
 npm run verify                 # read-only proof, no wallet
-npm test                       # 25 vitest incl. 20,000 fast-check cases
-forge test --root contracts    # 13 contract tests (forge-std is a submodule: `git submodule update --init` if you cloned plain)
+npm test                       # 28 vitest incl. 20,000 fast-check cases
+forge test --root contracts    # 14 contract tests (forge-std is a submodule: `git submodule update --init` if you cloned plain)
 npm run dev                    # the page locally
 ```
 No `.env`, no keys: the page is static and reads Arc mainnet anonymously. Only the gas benchmark spends (`.env.example`).
@@ -172,7 +173,7 @@ load, and that is what the next 6–8 weeks would buy — with Arc office hours 
 
 | # | milestone | what it proves | how it's measured |
 |---|---|---|---|
-| 1 | **`sweepMany` on the page** — per-invoice unswept totals and a *Sweep all* action in the treasury view (the contract call already exists and is tested) | a merchant with hundreds of open invoices settles in one transaction | gas per swept address at N = 1, 10, 50; a `bench/` row per size |
+| 1 | ~~**`sweepMany` on the page**~~ — **done 2026-09-22**: the treasury view lists every known pigeonhole with its live balance and *Sweep all* sends one `sweepMany(salts)` | a merchant with hundreds of open invoices settles in one transaction | measured on mainnet: **64,681 / 45,083 / 43,345 gas per address at N = 1 / 10 / 50** — one more address in a batch costs 42,911 gas, 33 % under a standalone sweep (`bench/many.json`, three tx links in `DEMO.md`) |
 | 2 | **Batch reconciliation** from `Swept` events alone — thousands of invoices, no per-invoice scan | the ledger stays correct when the invoice count outgrows the `eth_getLogs` budget (≈0.5 calls/s on the public RPC) | time-to-reconcile for 1,000 synthetic invoices; must stay under the 9,000-block chunk cap without a backend |
 | 3 | **Blocklist recovery drill** — a documented, tested path when the immutable treasury is blocklisted (today's single point of failure, see Limitations): new factory, same salts, re-predicted addresses | the failure mode has a rehearsed exit, not a paragraph | Foundry test that migrates every open invoice; a written runbook |
 | 4 | **Two questions for Arc office hours**: (a) is anonymous RPC access a commitment for early mainnet, or should a merchant run a node — the page's design hinges on it; (b) `SELFDESTRUCT`-in-creation-tx (EIP-6780) is what lets the address be reused — is that behaviour stable across Arc upgrades? | the two assumptions the whole design rests on are confirmed or the design changes early | written answers linked from this README |
@@ -189,7 +190,7 @@ The DX report behind milestone 4 is filed with Arc as [circlefin/arc-node#455](h
 ## ⚠️ Limitations (honest)
 - The treasury's immutability is also a **single point of failure**: if it were ever blocklisted, unswept invoices freeze until it's unblocked; recovery means a new factory.
 - The static page needs an **anonymous Arc RPC** (the docs call early-mainnet RPC "permissioned"), and it scans logs in 9,000-block chunks, one call at a time, paced to what `rpc.mainnet.arc.io` sustains (measured 2026-09-20: ≈0.5 `eth_getLogs`/s; bursts are refused with `-32005`). An invoice URL without `?from=` scans from the factory's deploy block — ≈38 calls per day of chain, so a first read of an old invoice takes minutes (progress is shown; each completed chunk is checkpointed in the browser, so it is never repeated). The seeded `demo-paid` / `demo-erc20` ship a committed history checkpoint (`deployments/history-checkpoints.json` — refresh with `npm run checkpoints`; `npm run verify` re-checks every movement against its receipt) so they open in seconds; the treasury view always scans from the deploy block. When the live I2 check mismatches twice in a row, the page rescans that invoice from the deploy block.
-- **Not built:** per-invoice unswept totals and a *Sweep all* button in the treasury view (`sweepMany` exists on-chain and is tested; the page calls `sweep` only).
+- **Sweep all** knows only the addresses it can derive without a database: every salt the factory has ever emitted in `Swept` plus this browser's own invoices. An invoice that was paid but never swept, created on another device, is not in the set until it is swept once (or opened here).
 - The `?amt=` amount is the merchant's claim — the chain proves what was *paid*.
 
 ## 📁 Project structure

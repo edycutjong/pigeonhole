@@ -1,6 +1,6 @@
 import QRCode from "qrcode";
 import { encodeFunctionData } from "viem";
-import { predict, saltOf, fmtUsdc18, ARC, type InvoiceState } from "./lib/pigeonhole";
+import { predict, saltOf, fmtUsdc18, knownPigeonholes, openInvoices, ARC, type InvoiceState } from "./lib/pigeonhole";
 import { FACTORY, TREASURY, DEPLOY_BLOCK, pub, factoryAbi, invoiceState, sweptEvents, connectWallet, txUrl, addrUrl, onScanProgress, type LiveInvoiceState } from "./chain";
 
 const app = () => document.getElementById("app")!;
@@ -206,7 +206,7 @@ function viewNew() {
         <div class="card"><h3>Numbers</h3><div class="numbers">
           <div class="stat"><div class="v">64,162</div><div class="l">gas per sweep · p50, N=25</div></div>
           <div class="stat"><div class="v">≈ $0.0013</div><div class="l">per sweep · at the measured p50 gas price</div></div>
-          <div class="stat"><div class="v">38</div><div class="l">tests · 13 Foundry + 25 vitest</div></div>
+          <div class="stat"><div class="v">42</div><div class="l">tests · 14 Foundry + 28 vitest</div></div>
           <div class="stat"><div class="v">20,000</div><div class="l">property cases · fast-check</div></div>
           <div class="stat"><div class="v">34</div><div class="l">E2E checks · desktop + mobile</div></div>
           <div class="stat"><div class="v">0</div><div class="l">keys held · 0 backends</div></div>
@@ -221,7 +221,7 @@ function viewNew() {
       <ul class="limits">
         <li>The immutable treasury is also a <b>single point of failure</b>: if it were ever blocklisted, unswept invoices freeze until a new factory is deployed.</li>
         <li>The static page needs an <b>anonymous Arc RPC</b> and scans logs in 9,000-block chunks — an invoice URL without <code>?from=</code> scans from the deploy block and gets slower every day; the treasury view always does.</li>
-        <li><b>No <em>Sweep all</em> yet.</b> <code>sweepMany</code> is on-chain and tested, but the page calls <code>sweep</code> only — no per-invoice unswept totals or <em>Sweep all</em> in the treasury view.</li>
+        <li><b><em>Sweep all</em> sees only derivable addresses</b> — every <code>Swept.salt</code> plus this browser's invoices; an invoice paid on another device and never swept joins the set once it is swept (or opened here).</li>
         <li>The <code>?amt=</code> amount is the merchant's claim — the chain proves what was <em>paid</em>.</li>
       </ul>
     </section>
@@ -410,6 +410,12 @@ async function viewInvoice(id: string, amtStr?: string, fromStr?: string) {
 }
 
 // ---------- Treasury / log view ----------
+/** Live balance of every known pigeonhole, a few at a time — getBalance is one cheap call; only getLogs is paced. */
+async function balancesOf(addrs: `0x${string}`[]): Promise<bigint[]> {
+  const out: bigint[] = [];
+  for (let i = 0; i < addrs.length; i += 8) out.push(...await Promise.all(addrs.slice(i, i + 8).map((a) => pub.getBalance({ address: a }).catch(() => 0n)))); // a failed read is 0: never sweeps on a guess
+  return out;
+}
 async function viewTreasury() {
   app().className = "";
   app().innerHTML = `
@@ -418,18 +424,47 @@ async function viewTreasury() {
     <div class="stat-row">
       <div class="stat"><div class="v" id="tr-count">—</div><div class="l">sweeps</div></div>
       <div class="stat"><div class="v ok" id="tr-total">—</div><div class="l">USDC swept to the treasury</div></div>
+      <div class="stat"><div class="v acc" id="tr-open">—</div><div class="l">USDC unswept · open invoices</div></div>
       <div class="stat"><div class="v" id="tr-last">—</div><div class="l">latest sweep · block</div></div>
+    </div>
+    <div class="card open">
+      <div class="head"><h2>Open invoices</h2><span class="muted mono" style="font-size:12px" id="open-n"></span></div>
+      <p class="hint" style="margin:0 0 12px">Every address the factory has ever swept (<code>Swept.salt</code>) plus the invoices this browser created, with its live balance. <b>Sweep all</b> sends one <code>sweepMany(salts)</code> — one transaction, every funded address, funds can only reach the treasury.</p>
+      <div id="open"><p class="muted">Waiting for the Swept scan…</p></div>
+      <p class="row" style="margin-top:12px"><button id="sweep-all" disabled>Sweep all → treasury</button><span id="open-msg" class="muted"></span></p>
     </div>
     <div class="card"><h2>Sweeps</h2><div id="tbl"><p class="muted">Reading Swept events from block ${DEPLOY_BLOCK} in 9,000-block chunks…</p></div></div>
     <div class="card"><h2>Invoices this browser created</h2><div id="mine"></div></div>`;
   const mine = load();
-  document.getElementById("mine")!.innerHTML = mine.length ? `<table><thead><tr><th>id</th><th>asked</th><th></th></tr></thead><tbody>${
-    mine.map((m) => { const q = new URLSearchParams(); if (m.amount) q.set("amt", m.amount); if (m.from) q.set("from", m.from); return `<tr><td class="mono">${esc(m.id)}</td><td class="mono">${m.amount ? esc(m.amount) + " USDC" : "—"}</td><td><a href="#/i/${encodeURIComponent(m.id)}${q.toString() ? "?" + q : ""}">open →</a></td></tr>`; }).join("")
-  }</tbody></table>` : `<p class="muted">None yet — create one from <a href="#/">New invoice</a>.</p>`;
+  const mineRows = mine.map((m) => ({ id: m.id, pigeonhole: predict(FACTORY, TREASURY, saltOf(m.id)), amount: m.amount, from: m.from }));
+  const renderMine = (bal?: Map<string, bigint>) => {
+    const el = document.getElementById("mine"); if (!el) return;
+    el.innerHTML = mineRows.length ? `<table><thead><tr><th>id</th><th>asked</th><th>unswept</th><th></th></tr></thead><tbody>${
+      mineRows.map((m) => { const q = new URLSearchParams(); if (m.amount) q.set("amt", m.amount); if (m.from) q.set("from", m.from); const b = bal?.get(m.pigeonhole.toLowerCase()); return `<tr><td class="mono">${esc(m.id)}</td><td class="mono">${m.amount ? esc(m.amount) + " USDC" : "—"}</td><td class="mono">${b === undefined ? "…" : fmtUsdc18(b) + " USDC"}</td><td><a href="#/i/${encodeURIComponent(m.id)}${q.toString() ? "?" + q : ""}">open →</a></td></tr>`; }).join("")
+    }</tbody></table>` : `<p class="muted">None yet — create one from <a href="#/">New invoice</a>.</p>`;
+  };
+  renderMine();
   // The scan walks from the deploy block every time (≈ 90 chunks, one paced getLogs each, on 2026-09-22): show how far
   // it has got, and stop touching the DOM once the route has changed underneath a scan that is still running.
   let gone = false;
   window.addEventListener("hashchange", () => { gone = true; }, { once: true });
+  const set = (id: string, t: string) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+  // Open invoices: the balance of every known pigeonhole. Re-read after a Sweep all lands.
+  let salts: `0x${string}`[] = [];
+  const readOpen = async (evs: any[]) => {
+    const known = knownPigeonholes(evs.map((e: any) => ({ salt: e.args.salt, pigeonhole: e.args.pigeonhole })), mineRows);
+    const balances = await balancesOf(known.map((k) => k.pigeonhole));
+    if (gone || !document.getElementById("open")) return;
+    const { open, total } = openInvoices(known, balances);
+    salts = open.map((o) => o.salt);
+    renderMine(new Map(known.map((k, i) => [k.pigeonhole.toLowerCase(), balances[i]])));
+    set("tr-open", fmtUsdc18(total)); set("open-n", `${open.length} of ${known.length} known addresses hold funds`);
+    document.getElementById("open")!.innerHTML = open.length ? `<table><thead><tr><th>invoice</th><th>pigeonhole</th><th>unswept</th></tr></thead><tbody>${
+      open.map((o) => `<tr><td class="mono">${o.id ? `<a href="#/i/${encodeURIComponent(o.id)}">${esc(o.id)}</a>` : `<span class="muted">salt ${short(o.salt)}</span>`}</td><td class="mono"><a href="${addrUrl(o.pigeonhole)}" target="_blank" rel="noopener">${short(o.pigeonhole)} ↗</a></td><td class="mono">${fmtUsdc18(o.unswept)} USDC</td></tr>`).join("")
+    }</tbody></table>` : `<p class="muted">Nothing to sweep — every known address is empty.</p>`;
+    const btn = document.getElementById("sweep-all") as HTMLButtonElement | null;
+    if (btn) { btn.disabled = open.length === 0; btn.textContent = open.length ? `Sweep all → treasury (${open.length} address${open.length === 1 ? "" : "es"}, ${fmtUsdc18(total)} USDC)` : "Sweep all → treasury"; }
+  };
   try {
     const evs = await sweptEvents((done, total) => {
       const tbl = document.getElementById("tbl");
@@ -437,11 +472,26 @@ async function viewTreasury() {
     });
     if (gone || !document.getElementById("tbl")) return;
     const total = evs.reduce((acc: bigint, e: any) => acc + (e.args.amount as bigint), 0n);
-    const set = (id: string, t: string) => { const el = document.getElementById(id); if (el) el.textContent = t; };
     set("tr-count", String(evs.length)); set("tr-total", fmtUsdc18(total)); set("tr-last", evs.length ? String(evs[evs.length - 1].blockNumber) : "—");
     document.getElementById("tbl")!.innerHTML = evs.length ? `<table><thead><tr><th>pigeonhole</th><th>amount</th><th>block</th><th>tx</th></tr></thead><tbody>${
       evs.slice().reverse().map((e: any) => `<tr><td class="mono">${short(e.args.pigeonhole)}</td><td class="mono">${fmtUsdc18(e.args.amount)} USDC</td><td class="mono">${e.blockNumber}</td><td><a href="${txUrl(e.transactionHash)}" target="_blank" rel="noopener">${short(e.transactionHash)} ↗</a></td></tr>`).join("")
     }</tbody></table>` : `<p class="muted">No sweeps yet.</p>`;
+    document.getElementById("open")!.innerHTML = `<p class="muted">Reading the balance of ${evs.length + mineRows.length} known addresses…</p>`;
+    await readOpen(evs);
+    document.getElementById("sweep-all")!.onclick = async () => {
+      const msg = document.getElementById("open-msg")!;
+      try {
+        if (!salts.length) return;
+        const { address, provider } = await connectWallet();
+        const data = encodeFunctionData({ abi: factoryAbi, functionName: "sweepMany", args: [salts] });
+        const hash = (await provider.request({ method: "eth_sendTransaction", params: [{ from: address, to: FACTORY, data }] })) as string; // wallet estimates the fee (base fee floor 20 Gwei; never pin it)
+        msg.innerHTML = `Sweeping ${salts.length} in one tx: <a href="${txUrl(hash)}" target="_blank" rel="noopener">${short(hash)} ↗</a>`;
+        const rc = await pub.waitForTransactionReceipt({ hash: hash as `0x${string}` }).catch(() => null);
+        if (gone) return;
+        if (rc) msg.innerHTML += ` — ${rc.status === "success" ? `mined, ${rc.gasUsed.toLocaleString()} gas` : `<span class="err">reverted</span>`}`;
+        await readOpen(evs); // balances only — the Swept table refreshes on the next visit (a full re-walk is minutes)
+      } catch (e: any) { msg.innerHTML = `<span class="err">${esc(e.message || String(e))}</span>`; }
+    };
   } catch (e: any) {
     if (gone || !document.getElementById("tbl")) return;
     document.getElementById("tbl")!.innerHTML = `<p class="err">RPC error: ${esc(e.shortMessage || e.message || String(e))}</p><p class="row" style="margin-top:12px"><button id="tr-retry" class="ghost">Retry the scan</button></p>`;
@@ -460,7 +510,7 @@ function viewJudge() {
     <div class="stat-row">
       <div class="stat"><div class="v">64,162</div><div class="l">gas per sweep · p50 · N=25</div></div>
       <div class="stat"><div class="v">≈ $0.0013</div><div class="l">per sweep · measured p50 gas price</div></div>
-      <div class="stat"><div class="v">38 + 20,000</div><div class="l">tests + property cases</div></div>
+      <div class="stat"><div class="v">42 + 20,000</div><div class="l">tests + property cases</div></div>
       <div class="stat"><div class="v">34</div><div class="l">E2E checks · read-only vs mainnet</div></div>
     </div>
     <div class="split">
@@ -489,7 +539,7 @@ function viewJudge() {
           <span class="k">Treasury</span><span class="mono"><a href="${addrUrl(TREASURY)}" target="_blank" rel="noopener">${short(TREASURY)} ↗</a></span>
           <span class="k">Source</span><span class="mono">explorer shows <em>unverified</em> (its verify API is behind a challenge page) — the on-chain runtime code, keccak <code>0x8806de8d…</code>, is byte-identical to <code>forge build</code>; reproduce: <code>cast code &lt;factory&gt; | cast keccak</code> vs the build's <code>deployedBytecode</code> (recipe in <code>deployments/arc-mainnet.json</code>)</span>
           <span class="k">Sweep gas</span><span class="mono">64,162 p50 / p95 · N=25 · ≈ $0.0013 · PAID latency 452 ms p50 / 850 ms p95 (N=10)</span>
-          <span class="k">Tests</span><span class="mono">38 (13 Foundry + 25 vitest)</span>
+          <span class="k">Tests</span><span class="mono">42 (14 Foundry + 28 vitest)</span>
           <span class="k">Property cases</span><span class="mono">20,000 (fast-check, 4 properties)</span>
           <span class="k">Backend</span><span class="mono">none — eth_getLogs only</span>
           <span class="k">Keys held</span><span class="mono">0</span>
@@ -501,7 +551,7 @@ git submodule update --init &amp;&amp; forge test --root contracts</div>
         <ul class="steps">
           <li>The immutable treasury is a single point of failure: if it were blocklisted, unswept invoices freeze until a new factory.</li>
           <li>The page needs an anonymous Arc RPC and scans logs in 9,000-block chunks, paced to that RPC's ≈0.5 calls/s — the first read of an old invoice takes minutes (progress is shown; the walk is checkpointed in the browser and never repeated). The seeded <code>demo-paid</code> / <code>demo-erc20</code> ship a committed history checkpoint (<code>deployments/history-checkpoints.json</code>, every movement re-checked by <code>npm run verify</code>) so they open fast.</li>
-          <li><code>sweepMany</code> is on-chain and tested but the page calls <code>sweep</code> only — no <em>Sweep all</em> in the treasury view.</li>
+          <li><em>Sweep all</em> (one <code>sweepMany</code>) covers every <code>Swept.salt</code> plus this browser's invoices — an invoice paid elsewhere and never swept is not in the set until swept once.</li>
           <li>The <code>?amt=</code> is the merchant's claim — the chain proves what was <em>paid</em>.</li>
         </ul>
         <p class="hint"><a href="https://github.com/edycutjong/pigeonhole" target="_blank" rel="noopener">Repository ↗</a> · <a href="${VIDEO}" target="_blank" rel="noopener">Demo video (2:30) ↗</a> · <a href="https://github.com/edycutjong/pigeonhole/blob/main/DEMO.md" target="_blank" rel="noopener">DEMO.md ↗</a> · <a href="https://github.com/edycutjong/pigeonhole/blob/main/ARCHITECTURE.md" target="_blank" rel="noopener">ARCHITECTURE.md ↗</a></p>

@@ -29,11 +29,13 @@ Screenshot of a same-tx create+destruct sweep rendering on the explorer (logged-
 ```sh
 npm install
 npm run verify                  # read-only: offline predict() == on-chain (N=50), invariant I2 for both seeded cycles. No wallet.
-npm test                        # 25 vitest: formula vs real addresses, the no-DB reducer, decimals, eth_getLogs chunking/dedupe/overlap/race, 20,000 fast-check cases
+npm test                        # 28 vitest: formula vs real addresses, the no-DB reducer, the Sweep-all set, decimals, eth_getLogs chunking/dedupe/overlap/race, 20,000 fast-check cases
 git submodule update --init     # forge-std (or clone with --recurse-submodules)
-forge test --root contracts     # 13 contract tests incl. fuzz + I1/I3
+forge test --root contracts     # 14 contract tests incl. fuzz + I1/I3 + the sweepMany gas shape
 # gas benchmark (spends ~$0.05 of USDC on Arc; any funded cast keystore):
 KS=/path/to/keystore.json PW=/path/to/password.txt N=25 R=8 zsh scripts/bench.sh
+# batch-sweep benchmark (spends ~$0.08: funds 61 fresh pigeonholes, sweeps them in three sweepMany transactions):
+KS=/path/to/keystore.json PW=/path/to/password.txt SIZES="1 10 50" zsh scripts/bench_many.sh
 ```
 
 ## Source verification (honest status)
@@ -52,6 +54,28 @@ zero-treasury guard), not a mis-measurement of this one.
 
 (N=25 rows: p50 **64,162** / p95 **64,162** / max 64,162 — the distribution is flat because the sweep's work is fixed; only the
 salt's zero bytes move it.)
+
+## Batch sweep (`sweepMany` — README milestone 1, measured 2026-09-22)
+The treasury view's *Sweep all* sends one `sweepMany(salts)` for every known funded address. Measured on the production
+factory with `scripts/bench_many.sh`: N fresh pigeonholes each paid 0.000001 USDC, then swept in **one** transaction
+(`bench/many.csv`, `bench/many.json`; every funded address and its payment tx in `bench/many-salts.csv`).
+
+| N in one tx | gas used | gas per address | vs one `sweep` per tx (64,162) | fee at the receipt's gas price | tx |
+|---|---|---|---|---|---|
+| 1 | 64,681 | 64,681 | 1.008× | 0.002102 USDC¹ | [`0x67864250…`](https://explorer.arc.io/tx/0x67864250ea44465ced28829fa310c66f3746f43a3ff75b7dd3b64732b75ab5e6) |
+| 10 | 450,831 | 45,083 | 0.703× | 0.009017 USDC | [`0xeca586ea…`](https://explorer.arc.io/tx/0xeca586ea70ecff47d03941d2c3b6973af7c9d6c73929650fa041ef21ebc45d7f) |
+| 50 | 2,167,267 | 43,345 | 0.676× | 0.043562 USDC | [`0x3c9a151b…`](https://explorer.arc.io/tx/0x3c9a151b56225aefc84233f3e97653c8b9596f9c2b99c0e538f91ae96637b8bc) |
+
+Fit from the N=10 and N=50 rows: **gas ≈ 21,722 + 42,911 × N** — the fixed part is the transaction itself (21,000 intrinsic +
+calldata), the marginal 42,911 is one CREATE2 + constructor-`SELFDESTRUCT` + its `Swept` log. So a batch saves the 21,000
+intrinsic per address minus the `bytes32` of calldata it adds, and the per-address cost floors at ≈ 43k: **50 invoices settle
+for $0.044**, against $0.065 as 50 separate sweeps. The N=1 row is 519 gas over a plain `sweep(salt)`: the array
+calldata and the loop.
+
+¹ The N=1 row paid 32.5 Gwei effective (base fee 20 Gwei — the same floor as every other row — plus a 12.5 Gwei priority
+fee that `cast`'s estimator chose for that send); the gas column is what the milestone measures, the fee column is what
+the receipt says. The Foundry test `test_sweepMany_marginal_gas_below_single_sweep` pins the shape (marginal < standalone,
+50-in-one < 50 separate) so a regression shows up offline.
 
 ## Latency (invoice → PAID)
 Measured 2026-09-22 on mainnet, N=10 native sends of 0.001 USDC to fresh pigeonholes (`npm run latency`, `bench/latency.json`,

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { predict, saltOf, addressForInvoice, reduceLogs, fmtUsdc18, initCode, ARC, type Movement } from "../src/lib/pigeonhole";
+import { predict, saltOf, addressForInvoice, reduceLogs, fmtUsdc18, initCode, knownPigeonholes, openInvoices, ARC, type Movement } from "../src/lib/pigeonhole";
 import type { Address, Hex } from "viem";
 
 // Known on-chain vectors from _specs/probes.md and the production deploy (build/deployments/arc-mainnet.json).
@@ -112,5 +112,29 @@ describe("ARC constants", () => {
   it("chain id and system emitter", () => {
     expect(ARC.chainId).toBe(5042);
     expect(ARC.systemEmitter).toBe("0xfffffffffffffffffffffffffffffffffffffffe");
+  });
+});
+
+describe("knownPigeonholes / openInvoices — the treasury view's Sweep all set", () => {
+  const F = "0x942b8c102e73aeea1a652ebC8F2d319fD08D9A40" as const, T = "0xA8965A47c9b6ed34F47B374f36cF6c752D24852a" as const;
+  const a = addressForInvoice(F, T, "a"), b = addressForInvoice(F, T, "b"), c = addressForInvoice(F, T, "c");
+  it("unions Swept salts with browser invoices, de-duplicated by address, and keeps the id when both know it", () => {
+    const known = knownPigeonholes(
+      [{ salt: saltOf("a"), pigeonhole: a }, { salt: saltOf("b"), pigeonhole: b.toLowerCase() as any }, { salt: saltOf("a"), pigeonhole: a }],
+      [{ id: "b", pigeonhole: b }, { id: "c", pigeonhole: c }],
+    );
+    expect(known.map((k) => k.pigeonhole)).toEqual([a, b, c]);
+    expect(known.map((k) => k.id)).toEqual([undefined, "b", "c"]);
+    expect(known[1].salt).toBe(saltOf("b"));
+  });
+  it("keeps only funded addresses, largest first, and totals what one sweepMany would move", () => {
+    const known = knownPigeonholes([], [{ id: "a", pigeonhole: a }, { id: "b", pigeonhole: b }, { id: "c", pigeonhole: c }]);
+    const { open, total } = openInvoices(known, [5n * 10n ** 15n, 0n, 20n * 10n ** 15n]);
+    expect(open.map((o) => o.id)).toEqual(["c", "a"]);
+    expect(total).toBe(25n * 10n ** 15n);
+  });
+  it("a missing balance counts as 0 (a getBalance that failed must not put an address into the sweep)", () => {
+    const { open, total } = openInvoices(knownPigeonholes([], [{ id: "a", pigeonhole: a }, { id: "b", pigeonhole: b }]), [1n]);
+    expect(open.map((o) => o.id)).toEqual(["a"]); expect(total).toBe(1n);
   });
 });

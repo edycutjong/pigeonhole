@@ -32,9 +32,9 @@ Full edge-case table with the empty-sweep and never-seen-beneficiary cases: [`DE
 | Treasury | [`0xA8965A47c9b6ed34F47B374f36cF6c752D24852a`](https://explorer.arc.io/address/0xA8965A47c9b6ed34F47B374f36cF6c752D24852a) |
 | Sweep gas | **64,162 p50 / p95** (N=25 in [`bench/results.json`](./bench/results.json); min 64,150 — salts with a zero byte) ≈ **$0.0013** |
 | Invoice → PAID latency | inclusion **452 ms p50 / 850 ms p95**, visible to the page's log filter **579 / 1,010 ms** (N=10 mainnet sends, [`bench/latency.json`](./bench/latency.json)); + up to one 5 s page poll |
-| Tests | **38** — 13 Foundry (fuzz + invariants I1/I3) + 25 vitest (8 regression tests named for the `eth_getLogs` defects they pin) |
+| Tests | **42** — 14 Foundry (fuzz + invariants I1/I3 + `sweepMany` gas shape) + 28 vitest (8 regression tests named for the `eth_getLogs` defects they pin) |
 | Property cases | **20,000** fast-check cases per `npm test`: ledger identity Σin−Σout, order-independence, `predict` vs viem's independent CREATE2, chunker never ≥ 10,000 blocks |
-| E2E | 34 Playwright checks across desktop + mobile, read-only against mainnet (`/judge` with no session, the seeded `demo-paid` cycle reading SWEPT, the treasury view) |
+| E2E | 38 Playwright checks across desktop + mobile, read-only against mainnet (`/judge` with no session, the seeded `demo-paid` cycle reading SWEPT, the treasury view incl. the *Sweep all* set) |
 | Backend | none — PAID/SWEPT are `eth_getLogs` on the system emitter; the page checks invariant I2 (Σlogs == `eth_getBalance`) live on every poll |
 | Keys held | **0** |
 
@@ -43,8 +43,8 @@ Full edge-case table with the empty-sweep and never-seen-beneficiary cases: [`DE
 git clone --recurse-submodules https://github.com/edycutjong/pigeonhole && cd pigeonhole
 npm install
 npm run verify              # offline predict() == on-chain predict() for 50 random ids; invariant I2 for both seeded cycles
-npm test                    # 25 vitest incl. 20,000 property cases
-forge test --root contracts # 13 contract tests
+npm test                    # 28 vitest incl. 20,000 property cases
+forge test --root contracts # 14 contract tests
 npm run e2e                 # Playwright against the production bundle
 ```
 The gas benchmark is the only thing that spends: `KS=… PW=… N=25 R=8 zsh scripts/bench.sh` (≈ $0.05 of USDC on Arc).
@@ -52,7 +52,7 @@ The gas benchmark is the only thing that spends: `KS=… PW=… N=25 R=8 zsh scr
 ## Honest limitations
 - The immutable treasury is a **single point of failure**: if it were blocklisted, unswept invoices freeze until a new factory is deployed.
 - The static page needs an **anonymous Arc RPC** and scans logs in 9,000-block chunks — an invoice URL without `?from=` scans from the deploy block and gets slower every day; the treasury view always does.
-- **No _Sweep all_ yet**: `sweepMany` is on-chain and tested but the page calls `sweep` only.
+- **_Sweep all_ sees only derivable addresses**: every `Swept.salt` plus this browser's invoices — an invoice paid on another device and never swept is invisible to it until swept once.
 - The `?amt=` is the merchant's claim — the chain proves what was *paid*.
 
 ## Links

@@ -107,6 +107,31 @@ contract PigeonholeFactoryTest is Test {
         for (uint256 i; i < 3; ++i) assertEq(factory.predict(salts[i]).balance, 0);
     }
 
+    /// Milestone 1 (README): the marginal cost of one more address in a batch is well under a standalone sweep.
+    /// Mainnet rows (bench/many.json) are the judged numbers; this pins the shape so a regression in sweepMany shows up locally.
+    function test_sweepMany_marginal_gas_below_single_sweep() public {
+        uint256 g1 = _sweepManyGas(1);
+        uint256 g10 = _sweepManyGas(10);
+        uint256 g50 = _sweepManyGas(50);
+        uint256 marginal = (g50 - g10) / 40;
+        assertLt(marginal, g1, "one more address in a batch must cost less than a whole sweep");
+        assertLt(g50, 50 * g1, "50 in one tx must cost less than 50 separate sweeps");
+        assertGt(g50, g10);
+    }
+
+    function _sweepManyGas(uint256 n) internal returns (uint256 gas) {
+        bytes32[] memory salts = new bytes32[](n);
+        for (uint256 i; i < n; ++i) {
+            salts[i] = keccak256(abi.encodePacked("many", n, i));
+            vm.deal(factory.predict(salts[i]), 1e12);
+        }
+        uint256 t0 = TREASURY.balance;
+        uint256 g0 = gasleft();
+        factory.sweepMany(salts);
+        gas = g0 - gasleft();
+        assertEq(TREASURY.balance, t0 + n * 1e12);
+    }
+
     // --- fuzz: any salt predicts an address that sweeps cleanly ---
 
     function testFuzz_predict_then_sweep(bytes32 salt, uint96 amount) public {
