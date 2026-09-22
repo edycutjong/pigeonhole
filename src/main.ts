@@ -424,8 +424,16 @@ async function viewTreasury() {
   document.getElementById("mine")!.innerHTML = mine.length ? `<table><thead><tr><th>id</th><th>asked</th><th></th></tr></thead><tbody>${
     mine.map((m) => { const q = new URLSearchParams(); if (m.amount) q.set("amt", m.amount); if (m.from) q.set("from", m.from); return `<tr><td class="mono">${esc(m.id)}</td><td class="mono">${m.amount ? esc(m.amount) + " USDC" : "—"}</td><td><a href="#/i/${encodeURIComponent(m.id)}${q.toString() ? "?" + q : ""}">open →</a></td></tr>`; }).join("")
   }</tbody></table>` : `<p class="muted">None yet — create one from <a href="#/">New invoice</a>.</p>`;
+  // The scan walks from the deploy block every time (≈ 90 chunks, one paced getLogs each, on 2026-09-22): show how far
+  // it has got, and stop touching the DOM once the route has changed underneath a scan that is still running.
+  let gone = false;
+  window.addEventListener("hashchange", () => { gone = true; }, { once: true });
   try {
-    const evs = await sweptEvents();
+    const evs = await sweptEvents((done, total) => {
+      const tbl = document.getElementById("tbl");
+      if (!gone && tbl && total > 1) tbl.innerHTML = `<p class="muted">Reading <b>Swept</b> events from block ${DEPLOY_BLOCK} · chunk ${done} / ${total} of 9,000 blocks…</p>`;
+    });
+    if (gone || !document.getElementById("tbl")) return;
     const total = evs.reduce((acc: bigint, e: any) => acc + (e.args.amount as bigint), 0n);
     const set = (id: string, t: string) => { const el = document.getElementById(id); if (el) el.textContent = t; };
     set("tr-count", String(evs.length)); set("tr-total", fmtUsdc18(total)); set("tr-last", evs.length ? String(evs[evs.length - 1].blockNumber) : "—");
@@ -433,6 +441,7 @@ async function viewTreasury() {
       evs.slice().reverse().map((e: any) => `<tr><td class="mono">${short(e.args.pigeonhole)}</td><td class="mono">${fmtUsdc18(e.args.amount)} USDC</td><td class="mono">${e.blockNumber}</td><td><a href="${txUrl(e.transactionHash)}" target="_blank" rel="noopener">${short(e.transactionHash)} ↗</a></td></tr>`).join("")
     }</tbody></table>` : `<p class="muted">No sweeps yet.</p>`;
   } catch (e: any) {
+    if (gone || !document.getElementById("tbl")) return;
     document.getElementById("tbl")!.innerHTML = `<p class="err">RPC error: ${esc(e.shortMessage || e.message || String(e))}</p><p class="row" style="margin-top:12px"><button id="tr-retry" class="ghost">Retry the scan</button></p>`;
     const live = document.getElementById("tr-live"); if (live) { live.className = "live off"; live.innerHTML = "<i></i>RPC unavailable — not live"; }
     document.getElementById("tr-retry")!.onclick = () => viewTreasury();

@@ -73,16 +73,19 @@ export async function invoiceState(pigeonhole: Address, amount18?: bigint, fromB
   return { ...state, balance, i2: state.unswept === balance, rescanned };
 }
 
-/** All Swept events from the factory → the treasury view's source of truth. */
-export async function sweptEvents() {
+/** All Swept events from the factory → the treasury view's source of truth. Walks from the deploy block in
+ *  MAX_LOG_SPAN chunks (one paced call each); `onProgress(done, total)` fires after every chunk so the view can say
+ *  how far a multi-minute scan has got. Not routed through MovementCache: that cache is per-pigeonhole, this is global. */
+export async function sweptEvents(onProgress?: (done: number, total: number) => void) {
   const latest = await pub.getBlockNumber();
+  const all = [...spans(DEPLOY_BLOCK, latest, MAX_LOG_SPAN)];
   const out: any[] = [];
-  let first = true;
-  for (const [a, b] of spans(DEPLOY_BLOCK, latest, MAX_LOG_SPAN)) {
-    if (!first) await new Promise((r) => setTimeout(r, CALL_PACE_MS)); // same pacing + retry as the invoice walk
-    first = false;
+  for (let i = 0; i < all.length; i++) {
+    if (i > 0) await new Promise((r) => setTimeout(r, CALL_PACE_MS)); // same pacing + retry as the invoice walk
+    const [a, b] = all[i];
     const logs = await withRetry(() => pub.getContractEvents({ address: FACTORY, abi: factoryAbi, eventName: "Swept", fromBlock: a, toBlock: b }));
     out.push(...logs);
+    onProgress?.(i + 1, all.length);
   }
   return out;
 }
