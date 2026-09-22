@@ -324,9 +324,23 @@ async function viewInvoice(id: string, amtStr?: string, fromStr?: string) {
     </div>`;
   QRCode.toCanvas(pigeonhole, { width: 168, margin: 1 }).then((c: HTMLCanvasElement) => document.getElementById("qr")!.appendChild(c)).catch(() => {});
 
-  // One read-only call: the factory's own predict(salt) must equal the offline formula (the address above). Fails soft.
+  // One read-only call: the factory's own predict(salt) must equal the offline formula (the address above). Fails soft
+  // when the RPC is down (the formula is deterministic and property-tested against viem's CREATE2), but a *returned*
+  // mismatch means the page's constants disagree with the chain — then Pay is disabled: the payment leg sends to the
+  // offline address, and a key-less, code-less address that the factory will never deploy to has no recovery path.
+  // Sweep stays enabled: it sends `sweep(salt)` to the factory, which computes the address on-chain itself.
+  let predictMismatch = false;
   pub.readContract({ address: FACTORY, abi: factoryAbi, functionName: "predict", args: [salt] })
-    .then((a) => { document.getElementById("pred")!.innerHTML = a.toLowerCase() === pigeonhole.toLowerCase() ? `<span class="ok">✓</span> on-chain <code>predict()</code> == offline formula` : `<span class="err">≠</span> on-chain predict() returned ${short(a)}`; })
+    .then((a) => {
+      const match = a.toLowerCase() === pigeonhole.toLowerCase();
+      const el = document.getElementById("pred"); if (!el) return;
+      el.innerHTML = match ? `<span class="ok">✓</span> on-chain <code>predict()</code> == offline formula` : `<span class="err">≠</span> on-chain predict() returned ${short(a)} — payment disabled`;
+      if (!match) {
+        predictMismatch = true;
+        const pay = document.getElementById("pay") as HTMLButtonElement | null;
+        if (pay) { pay.disabled = true; pay.textContent = "Payment disabled — address mismatch"; }
+      }
+    })
     .catch(() => { const el = document.getElementById("pred"); if (el) el.innerHTML = `offline formula · on-chain check unavailable (RPC)`; });
   let verified = false;
   let gone = false; // set when the route changes; declared here so refresh() can see it
@@ -373,6 +387,7 @@ async function viewInvoice(id: string, amtStr?: string, fromStr?: string) {
   document.getElementById("pay")!.onclick = async () => {
     const msg = document.getElementById("msg")!;
     try {
+      if (predictMismatch) throw new Error("Refusing to pay: the factory's on-chain predict() disagrees with this page's address.");
       const { address, provider } = await connectWallet();
       const value = amount18 ?? 10n ** 16n; // default 0.01 if no amount asked
       const hash = (await provider.request({ method: "eth_sendTransaction", params: [{ from: address, to: pigeonhole, value: `0x${value.toString(16)}` }] })) as string;
