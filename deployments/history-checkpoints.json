@@ -1,13 +1,13 @@
 {
-  "generated": "2026-09-20T16:38:38Z",
-  "toBlock": "21867277",
+  "generated": "2026-09-22T05:47:29Z",
+  "toBlock": "22129669",
   "rpc": "https://rpc.mainnet.arc.io",
   "note": "eth_getLogs history of the seeded invoices, committed so the page walks only the tail; refresh with `npm run checkpoints`; `npm run verify` checks every movement against its receipt",
   "pigeonholes": {
     "0xb356c620e45d8d8c884a6235dd660c32f0a1f26b": {
       "id": "demo-paid",
       "from": "21337182",
-      "to": "21867277",
+      "to": "22129669",
       "moves": [
         {
           "block": "21337228",
@@ -30,7 +30,7 @@
     "0x0986f94ad0960255a819f360c24f2ec2f8085558": {
       "id": "demo-erc20",
       "from": "21337182",
-      "to": "21867277",
+      "to": "22129669",
       "moves": [
         {
           "block": "21345737",
